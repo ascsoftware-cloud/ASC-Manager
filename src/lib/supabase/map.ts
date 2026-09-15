@@ -1,10 +1,13 @@
 import type {
+  AdvertLinkType,
+  AdvertStatus,
   Booking,
   BookingStatus,
   CalendarEvent,
   ChangeLog,
   Client,
   ContentBlock,
+  ContentSection,
   Enquiry,
   Incident,
   Invoice,
@@ -12,7 +15,9 @@ import type {
   Monitor,
   Product,
   Renewal,
+  SectionKey,
   Site,
+  WeeklyAdvert,
   SupportRequest,
   User,
   VisitorDay,
@@ -156,7 +161,63 @@ export function mapProduct(row: Row): Product {
     stock: num(row.stock),
     live: bool(row.live),
     photo: publicMediaUrl(path),
+    photoPath: path,
     note: str(row.note),
+    sortOrder: num(row.sort_order),
+    featured: bool(row.featured),
+  };
+}
+
+const SECTION_KEYS: SectionKey[] = [
+  "welcome",
+  "this_week",
+  "this_sunday",
+  "featured",
+  "hours",
+];
+
+export function mapSection(row: Row): ContentSection {
+  const key = SECTION_KEYS.includes(row.key as SectionKey)
+    ? (row.key as SectionKey)
+    : "welcome";
+  const payload =
+    row.payload && typeof row.payload === "object" && !Array.isArray(row.payload)
+      ? (row.payload as Record<string, unknown>)
+      : {};
+  return {
+    id: str(row.id),
+    clientId: str(row.tenant_id),
+    key,
+    sortOrder: num(row.sort_order),
+    visible: row.visible !== false,
+    payload,
+    updatedAt: str(row.updated_at),
+  };
+}
+
+export function mapAdvert(row: Row): WeeklyAdvert {
+  const status = row.status;
+  const st: AdvertStatus =
+    status === "scheduled" || status === "live" || status === "expired"
+      ? status
+      : "draft";
+  const link = row.link_type;
+  const linkType: AdvertLinkType =
+    link === "product" || link === "event" || link === "url" ? link : "none";
+  const path = str(row.photo_path);
+  return {
+    id: str(row.id),
+    clientId: str(row.tenant_id),
+    startsOn: str(row.starts_on).slice(0, 10),
+    endsOn: str(row.ends_on).slice(0, 10),
+    status: st,
+    photoPath: path,
+    photoUrl: publicMediaUrl(path),
+    headline: str(row.headline),
+    body: str(row.body),
+    linkType,
+    linkId: str(row.link_id),
+    updatedAt: str(row.updated_at),
   };
 }
 

@@ -34,7 +34,10 @@ export type Product = {
   stock: number;
   live: boolean;
   photo: string;
+  photoPath: string;
   note: string;
+  sortOrder: number;
+  featured: boolean;
 };
 
 export type CalendarEvent = {
@@ -150,6 +153,41 @@ export type SupportRequest = {
   authorName: string;
 };
 
+export type SectionKey =
+  | "welcome"
+  | "this_week"
+  | "this_sunday"
+  | "featured"
+  | "hours";
+
+export type ContentSection = {
+  id: string;
+  clientId: string;
+  key: SectionKey;
+  sortOrder: number;
+  visible: boolean;
+  payload: Record<string, unknown>;
+  updatedAt: string;
+};
+
+export type AdvertStatus = "draft" | "scheduled" | "live" | "expired";
+export type AdvertLinkType = "none" | "product" | "event" | "url";
+
+export type WeeklyAdvert = {
+  id: string;
+  clientId: string;
+  startsOn: string;
+  endsOn: string;
+  status: AdvertStatus;
+  photoPath: string;
+  photoUrl: string;
+  headline: string;
+  body: string;
+  linkType: AdvertLinkType;
+  linkId: string;
+  updatedAt: string;
+};
+
 export type BlockKind = "image" | "url" | "text";
 
 export type ContentBlock = {
@@ -194,4 +232,6 @@ export type AppTables = {
   products: Product[];
   events: CalendarEvent[];
   bookings: Booking[];
+  sections: ContentSection[];
+  adverts: WeeklyAdvert[];
 };

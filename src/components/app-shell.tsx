@@ -134,14 +134,14 @@ function ClientNav({
             to={item.to}
             onClick={onNavigate}
             className={cn(
-              "flex min-h-11 items-center gap-3 rounded-md px-3 text-sm transition-colors",
+              "flex min-h-11 items-center gap-3 rounded-md px-3 text-sm transition-colors duration-150",
               active
-                ? "bg-accent text-champagne"
-                : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                ? "border-l-2 border-l-emerald bg-accent text-champagne"
+                : "border-l-2 border-l-transparent text-muted-foreground hover:bg-accent/60 hover:text-champagne",
             )}
           >
             <Icon className={cn("size-4", active ? "text-emerald" : "")} />
-            <span className="flex-1">{item.label}</span>
+            <span className={cn("flex-1", active && "text-champagne")}>{item.label}</span>
             {badge ? (
               <span className="rounded-full bg-emerald px-1.5 py-0.5 text-[10px] font-medium text-ink">
                 {badge}
@@ -234,7 +234,7 @@ function ClientSidebar({ current, onNavigate }: { current: string; onNavigate?: 
     <div className="flex h-full flex-col gap-6 p-5">
       <AscLockup />
       <div>
-        <p className="text-[11px] uppercase tracking-[0.16em] text-emerald">Your site</p>
+        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-emerald">Your site</p>
         <p className="mt-1 font-display text-xl text-champagne">{client?.name}</p>
         <p className="text-xs text-muted-foreground">{client?.city}</p>
       </div>
@@ -248,7 +248,7 @@ function ClientSidebar({ current, onNavigate }: { current: string; onNavigate?: 
         </div>
         <button
           type="button"
-          className="text-left text-xs text-muted-foreground hover:text-champagne"
+          className="min-h-11 text-left text-sm text-muted-foreground hover:text-champagne"
           onClick={() => {
             void signOut().then(() => navigate({ to: "/" }));
           }}

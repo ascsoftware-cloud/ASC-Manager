@@ -51,10 +51,12 @@ function MediaPage() {
       />
       {rows.length === 0 ? (
         <Surface>
-          <p className="px-5 py-10 text-sm text-muted-foreground">
-            No photos yet. Add the rooms, food, or shop floor — then use them on
-            the website.
-          </p>
+          <div className="flex flex-col items-start gap-4 px-5 py-12">
+            <h2 className="font-display text-2xl text-champagne">No photos yet.</h2>
+            <p className="max-w-md text-sm text-muted-foreground">
+              Add one picture. Store and This week pick from here.
+            </p>
+          </div>
         </Surface>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

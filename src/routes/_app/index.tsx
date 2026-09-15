@@ -119,56 +119,14 @@ function ClientOverview() {
         />
       </section>
 
-      <Surface>
-        <div className="border-b border-border px-5 py-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            Needs you
-          </p>
-        </div>
-        {fresh.length === 0 && dueInvoices.length === 0 ? (
-          <p className="px-5 py-8 text-sm text-muted-foreground">
-            Quiet. When someone writes from the site, it will show here.
-          </p>
-        ) : (
-          <ul className="divide-y divide-border">
-            {fresh.map((e) => (
-              <li key={e.id}>
-                <Link
-                  to="/enquiries"
-                  className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-accent/40"
-                >
-                  <div>
-                    <p className="text-champagne">{e.name} wrote in</p>
-                    <p className="line-clamp-1 text-sm text-muted-foreground">{e.message}</p>
-                  </div>
-                  <span className="text-sm text-emerald">Open</span>
-                </Link>
-              </li>
-            ))}
-            {dueInvoices.map((inv) => (
-              <li key={inv.id}>
-                <Link
-                  to="/billing"
-                  className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-accent/40"
-                >
-                  <div>
-                    <p className="text-champagne">{inv.item} is due</p>
-                    <p className="text-sm text-muted-foreground">{inv.ref}</p>
-                  </div>
-                  <span className="text-sm text-emerald">Billing</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Surface>
+      <NeedsYou />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Link
           to="/content"
           className="border border-border bg-card px-5 py-4 hover:border-emerald/40"
         >
-          <p className="text-[11px] uppercase tracking-[0.16em] text-emerald">Website</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-emerald">Website</p>
           <p className="mt-2 font-display text-xl text-champagne">Change a page</p>
           <p className="mt-1 text-sm text-muted-foreground">Specials, captions, links.</p>
         </Link>
@@ -227,6 +185,78 @@ function ClientOverview() {
         <ChangesPanel />
       </div>
     </div>
+  );
+}
+
+function NeedsYou() {
+  const user = useCurrentUser();
+  const store = useAscStore();
+  const ids = visibleClientIds(store, user);
+  const today = new Date().toISOString().slice(0, 10);
+  const fresh = store.enquiries.filter((e) => ids.includes(e.clientId) && e.status === "new");
+  const dueInvoices = store.invoices.filter(
+    (i) => ids.includes(i.clientId) && i.status === "due",
+  );
+  const welcome = store.sections.find((s) => ids.includes(s.clientId) && s.key === "welcome");
+  const welcomeLine = String(welcome?.payload.line ?? "").trim();
+  const adverts = store.adverts.filter((a) => ids.includes(a.clientId));
+  const live = adverts.find((a) => a.status === "live" && a.startsOn <= today && a.endsOn >= today);
+  const expired = adverts.some((a) => a.status === "live" && a.endsOn < today) || (!live && adverts.some((a) => a.status === "expired"));
+  const noAdvert = !live;
+  const out = store.products.filter(
+    (p) => ids.includes(p.clientId) && p.live && p.stock === 0,
+  );
+  const items: { to: "/enquiries" | "/content" | "/store" | "/billing"; title: string; detail: string }[] = [];
+  for (const e of fresh) {
+    items.push({ to: "/enquiries", title: `${e.name} wrote in`, detail: e.message });
+  }
+  if (noAdvert || expired) {
+    items.push({
+      to: "/content",
+      title: expired ? "This week’s advert expired" : "No live advert",
+      detail: "Set This week on Website.",
+    });
+  }
+  for (const p of out) {
+    items.push({ to: "/store", title: `${p.name} is live with 0 left`, detail: "Hide it or restock." });
+  }
+  if (!welcomeLine) {
+    items.push({ to: "/content", title: "No welcome line", detail: "The hero on your homepage is empty." });
+  }
+  for (const inv of dueInvoices) {
+    items.push({ to: "/billing", title: `${inv.item} is due`, detail: inv.ref });
+  }
+
+  return (
+    <Surface>
+      <div className="border-b border-border px-5 py-3">
+        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+          Needs you
+        </p>
+      </div>
+      {items.length === 0 ? (
+        <p className="px-5 py-8 text-sm text-muted-foreground">
+          Quiet. When something needs you, it shows here.
+        </p>
+      ) : (
+        <ul className="divide-y divide-border">
+          {items.map((item, i) => (
+            <li key={`${item.to}-${i}`}>
+              <Link
+                to={item.to}
+                className="flex min-h-11 items-center justify-between gap-3 px-5 py-4 hover:bg-accent/40"
+              >
+                <div>
+                  <p className="text-champagne">{item.title}</p>
+                  <p className="line-clamp-1 text-sm text-muted-foreground">{item.detail}</p>
+                </div>
+                <span className="text-sm text-emerald">Open</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Surface>
   );
 }
 

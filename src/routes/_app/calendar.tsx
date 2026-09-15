@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { addDays, format, isSameDay, parseISO, startOfWeek } from "date-fns";
+import { EmptyDesk } from "@/components/desk-ui";
 import { Field, PageHeader, Surface } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +28,8 @@ function CalendarPage() {
   const store = useAscStore();
   const addEvent = useAscStore((s) => s.addEvent);
   const removeEvent = useAscStore((s) => s.removeEvent);
+  const ensureSections = useAscStore((s) => s.ensureSections);
+  const updateSection = useAscStore((s) => s.updateSection);
   const ids = visibleClientIds(store, user);
   const rows = store.events
     .filter((e) => ids.includes(e.clientId))
@@ -37,12 +41,15 @@ function CalendarPage() {
 
   if (!allowed) {
     return (
-      <PageHeader
+      <EmptyDesk
         title="Calendar is off"
-        description="This site does not run a public diary. Ask ASC if you need one."
+        detail="This site does not run a public diary. Ask ASC if you need one."
       />
     );
   }
+
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 0 });
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8">
@@ -56,6 +63,20 @@ function CalendarPage() {
           </Button>
         }
       />
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((d) => {
+          const n = rows.filter((e) => isSameDay(parseISO(e.startsAt), d)).length;
+          return (
+            <div key={d.toISOString()} className="border border-border bg-card px-1 py-3 text-center">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                {format(d, "EEE")}
+              </p>
+              <p className="mt-1 text-sm text-champagne">{format(d, "d")}</p>
+              {n > 0 ? <span className="mt-1 inline-block size-1.5 rounded-full bg-emerald" /> : null}
+            </div>
+          );
+        })}
+      </div>
       <Surface>
         {rows.length === 0 ? (
           <p className="px-5 py-10 text-sm text-muted-foreground">
@@ -84,15 +105,33 @@ function CalendarPage() {
                       <p className="mt-1 text-sm text-muted-foreground">{e.notes}</p>
                     ) : null}
                   </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      void saveAction("Taken off", () => removeEvent(e.id));
-                    }}
-                  >
-                    Remove
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        if (!clientId) return;
+                        void saveAction("On the homepage", async () => {
+                          await ensureSections(clientId);
+                          const sec = useAscStore
+                            .getState()
+                            .sections.find((s) => s.clientId === clientId && s.key === "this_sunday");
+                          if (sec) await updateSection(sec.id, { payload: { eventId: e.id } });
+                        });
+                      }}
+                    >
+                      Use on homepage
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        void saveAction("Taken off", () => removeEvent(e.id));
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </div>
                 </li>
               );
             })}

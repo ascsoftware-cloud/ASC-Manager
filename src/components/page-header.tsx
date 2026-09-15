@@ -23,7 +23,7 @@ export function PageHeader({
     >
       <div className="min-w-0 space-y-2">
         {eyebrow ? (
-          <p className="text-[11px] uppercase tracking-[0.2em] text-emerald">
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-emerald">
             {eyebrow}
           </p>
         ) : null}
@@ -50,7 +50,7 @@ export function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+      <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
         {label}
       </span>
       {children}
@@ -131,7 +131,7 @@ export function Kpi({
         accent && "border-l-2 border-l-emerald",
       )}
     >
-      <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+      <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
         {label}
       </p>
       <p className={cn("mt-2 font-display text-4xl", valueClass ?? "text-champagne")}>{value}</p>

@@ -3,6 +3,7 @@ import { inviteUserFn } from "@/lib/invite";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { getSupabase, requireSupabase } from "@/lib/supabase/client";
 import {
+  mapAdvert,
   mapBlock,
   mapBooking,
   mapEnquiry,
@@ -15,6 +16,7 @@ import {
   mapProduct,
   mapRenewal,
   mapRequest,
+  mapSection,
   mapSite,
   mapTenant,
   mapUser,
@@ -22,20 +24,24 @@ import {
 } from "@/lib/supabase/map";
 import { removeStoragePath, uploadTenantImage } from "@/lib/supabase/storage";
 import type {
+  AdvertStatus,
   AppTables,
   Booking,
   BookingStatus,
   CalendarEvent,
   Client,
   ContentBlock,
+  ContentSection,
   EnquiryStatus,
   InvoiceStatus,
   MonitorStatus,
   Product,
   RequestStatus,
+  SectionKey,
   Session,
   Site,
   User,
+  WeeklyAdvert,
 } from "@/lib/types";
 
 const COOKIE_KEY = "asc-cookies-v1";
@@ -103,8 +109,18 @@ function emptyTables(): AppTables {
     products: [],
     events: [],
     bookings: [],
+    sections: [],
+    adverts: [],
   };
 }
+
+const DEFAULT_SECTION_KEYS: SectionKey[] = [
+  "welcome",
+  "this_week",
+  "this_sunday",
+  "featured",
+  "hours",
+];
 
 function readCookies(): boolean | null {
   if (typeof window === "undefined") return null;
@@ -140,6 +156,8 @@ async function loadTables(): Promise<AppTables> {
     products,
     events,
     bookings,
+    sections,
+    adverts,
     enquiries,
     media,
     invoices,
@@ -157,6 +175,8 @@ async function loadTables(): Promise<AppTables> {
     sb.from("products").select("*").order("name"),
     sb.from("calendar_events").select("*").order("starts_at"),
     sb.from("bookings").select("*").order("starts_at"),
+    sb.from("content_sections").select("*").order("sort_order"),
+    sb.from("weekly_adverts").select("*").order("starts_on", { ascending: false }),
     sb.from("enquiries").select("*").order("created_at", { ascending: false }),
     sb.from("media").select("*").order("added_at", { ascending: false }),
     sb.from("invoices").select("*").order("due_at"),
@@ -195,6 +215,8 @@ async function loadTables(): Promise<AppTables> {
     products: (products.data ?? []).map(mapProduct),
     events: (events.data ?? []).map(mapEvent),
     bookings: bookings.error ? [] : (bookings.data ?? []).map(mapBooking),
+    sections: sections.error ? [] : (sections.data ?? []).map(mapSection),
+    adverts: adverts.error ? [] : (adverts.data ?? []).map(mapAdvert),
     enquiries: (enquiries.data ?? []).map(mapEnquiry),
     media: (media.data ?? []).map(mapMedia),
     invoices: (invoices.data ?? []).map(mapInvoice),
@@ -248,7 +270,7 @@ type AscStore = AppTables & {
   addMedia: (input: { clientId: string; name: string; file: File }) => Promise<void>;
   removeMedia: (id: string) => Promise<void>;
   setInvoiceStatus: (id: string, status: InvoiceStatus) => Promise<void>;
-  addProduct: (input: Omit<Product, "id">) => Promise<void>;
+  addProduct: (input: Omit<Product, "id" | "sortOrder" | "photo">) => Promise<void>;
   updateProduct: (id: string, patch: Partial<Product>) => Promise<void>;
   removeProduct: (id: string) => Promise<void>;
   addEvent: (input: Omit<CalendarEvent, "id">) => Promise<void>;
@@ -257,6 +279,17 @@ type AscStore = AppTables & {
   addBooking: (input: Omit<Booking, "id">) => Promise<void>;
   setBookingStatus: (id: string, status: BookingStatus) => Promise<void>;
   removeBooking: (id: string) => Promise<void>;
+  reorderProducts: (clientId: string, orderedIds: string[]) => Promise<void>;
+  ensureSections: (clientId: string) => Promise<void>;
+  updateSection: (
+    id: string,
+    patch: Partial<Pick<ContentSection, "visible" | "payload" | "sortOrder">>,
+  ) => Promise<void>;
+  reorderSections: (clientId: string, orderedIds: string[]) => Promise<void>;
+  saveAdvert: (
+    input: Omit<WeeklyAdvert, "id" | "photoUrl" | "updatedAt"> & { id?: string },
+  ) => Promise<void>;
+  setAdvertStatus: (id: string, status: AdvertStatus) => Promise<void>;
 };
 
 let listening = false;
@@ -719,6 +752,9 @@ export const useAscStore = create<AscStore>()((set, get) => ({
 
   addProduct: async (input) => {
     const sb = requireSupabase();
+    const max = get()
+      .products.filter((p) => p.clientId === input.clientId)
+      .reduce((n, p) => Math.max(n, p.sortOrder), -1);
     const { data, error } = await sb
       .from("products")
       .insert({
@@ -727,13 +763,15 @@ export const useAscStore = create<AscStore>()((set, get) => ({
         price_zar: input.priceZar,
         stock: input.stock,
         live: input.live,
-        photo_path: "",
+        photo_path: input.photoPath ?? "",
         note: input.note,
+        sort_order: max + 1,
+        featured: input.featured ?? false,
       })
       .select("*")
       .single();
     fail(error, "Could not add that item.");
-    set((s) => ({ products: [mapProduct(data), ...s.products] }));
+    set((s) => ({ products: [...s.products, mapProduct(data)] }));
   },
 
   updateProduct: async (id, patch) => {
@@ -744,6 +782,9 @@ export const useAscStore = create<AscStore>()((set, get) => ({
     if (patch.stock != null) row.stock = patch.stock;
     if (patch.live != null) row.live = patch.live;
     if (patch.note != null) row.note = patch.note;
+    if (patch.photoPath != null) row.photo_path = patch.photoPath;
+    if (patch.sortOrder != null) row.sort_order = patch.sortOrder;
+    if (patch.featured != null) row.featured = patch.featured;
     const { data, error } = await sb
       .from("products")
       .update(row)
@@ -841,6 +882,125 @@ export const useAscStore = create<AscStore>()((set, get) => ({
     const { error } = await sb.from("bookings").delete().eq("id", id);
     fail(error, "Could not remove that booking.");
     set((s) => ({ bookings: s.bookings.filter((b) => b.id !== id) }));
+  },
+
+  reorderProducts: async (clientId, orderedIds) => {
+    const sb = requireSupabase();
+    const updates = orderedIds.map((id, i) =>
+      sb.from("products").update({ sort_order: i }).eq("id", id),
+    );
+    const results = await Promise.all(updates);
+    if (results.some((r) => r.error)) throw new Error("Could not save that order.");
+    set((s) => ({
+      products: s.products.map((p) => {
+        if (p.clientId !== clientId) return p;
+        const i = orderedIds.indexOf(p.id);
+        return i < 0 ? p : { ...p, sortOrder: i };
+      }),
+    }));
+  },
+
+  ensureSections: async (clientId) => {
+    const existing = get().sections.filter((s) => s.clientId === clientId);
+    const missing = DEFAULT_SECTION_KEYS.filter((k) => !existing.some((s) => s.key === k));
+    if (missing.length === 0) return;
+    const sb = requireSupabase();
+    const start = existing.length;
+    const { data, error } = await sb
+      .from("content_sections")
+      .insert(
+        missing.map((key, i) => ({
+          tenant_id: clientId,
+          key,
+          sort_order: start + i,
+          visible: true,
+          payload: {},
+        })),
+      )
+      .select("*");
+    if (error) return;
+    set((s) => ({
+      sections: [...s.sections, ...(data ?? []).map(mapSection)],
+    }));
+  },
+
+  updateSection: async (id, patch) => {
+    const sb = requireSupabase();
+    const row: Record<string, unknown> = {};
+    if (patch.visible != null) row.visible = patch.visible;
+    if (patch.payload != null) row.payload = patch.payload;
+    if (patch.sortOrder != null) row.sort_order = patch.sortOrder;
+    const { data, error } = await sb
+      .from("content_sections")
+      .update(row)
+      .eq("id", id)
+      .select("*")
+      .single();
+    fail(error, "Could not save that section.");
+    set((s) => ({
+      sections: s.sections.map((x) => (x.id === id ? mapSection(data) : x)),
+    }));
+  },
+
+  reorderSections: async (clientId, orderedIds) => {
+    const sb = requireSupabase();
+    const results = await Promise.all(
+      orderedIds.map((id, i) =>
+        sb.from("content_sections").update({ sort_order: i }).eq("id", id),
+      ),
+    );
+    if (results.some((r) => r.error)) throw new Error("Could not save that order.");
+    set((s) => ({
+      sections: s.sections.map((x) => {
+        if (x.clientId !== clientId) return x;
+        const i = orderedIds.indexOf(x.id);
+        return i < 0 ? x : { ...x, sortOrder: i };
+      }),
+    }));
+  },
+
+  saveAdvert: async (input) => {
+    const sb = requireSupabase();
+    const row = {
+      tenant_id: input.clientId,
+      starts_on: input.startsOn,
+      ends_on: input.endsOn,
+      status: input.status,
+      photo_path: input.photoPath,
+      headline: input.headline,
+      body: input.body,
+      link_type: input.linkType,
+      link_id: input.linkId,
+    };
+    if (input.status === "live") {
+      await sb
+        .from("weekly_adverts")
+        .update({ status: "expired" })
+        .eq("tenant_id", input.clientId)
+        .eq("status", "live")
+        .neq("id", input.id ?? "00000000-0000-0000-0000-000000000000");
+    }
+    const q = input.id
+      ? sb.from("weekly_adverts").update(row).eq("id", input.id).select("*").single()
+      : sb.from("weekly_adverts").insert(row).select("*").single();
+    const { data, error } = await q;
+    fail(error, "Could not save that advert.");
+    const mapped = mapAdvert(data);
+    set((s) => ({
+      adverts: input.id
+        ? s.adverts.map((a) => (a.id === mapped.id ? mapped : a)).map((a) =>
+            a.clientId === input.clientId && a.id !== mapped.id && a.status === "live"
+              ? { ...a, status: "expired" as AdvertStatus }
+              : a,
+          )
+        : [mapped, ...s.adverts],
+    }));
+  },
+
+  setAdvertStatus: async (id, status) => {
+    const current = get().adverts.find((a) => a.id === id);
+    if (!current) throw new Error("Advert not found.");
+    await get().saveAdvert({ ...current, status });
   },
 }));
 
