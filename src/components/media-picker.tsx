@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Field } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +23,11 @@ export function MediaPicker({
   onPick: (path: string) => void;
   label?: string;
 }) {
-  const media = useAscStore((s) => s.media.filter((m) => m.clientId === clientId));
+  const allMedia = useAscStore((s) => s.media);
+  const media = useMemo(
+    () => allMedia.filter((m) => m.clientId === clientId),
+    [allMedia, clientId],
+  );
   const addMedia = useAscStore((s) => s.addMedia);
   const [open, setOpen] = useState(false);
   const current = media.find((m) => m.path === valuePath);

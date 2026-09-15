@@ -32,15 +32,37 @@ function WebsitePage() {
   const [picked, setPicked] = useState(own?.id ?? ids[0] ?? "");
   const clientId = own?.id ?? picked;
   const client = clients.find((c) => c.id === clientId);
-  const sections = useAscStore((s) =>
-    s.sections.filter((x) => x.clientId === clientId).slice().sort((a, b) => a.sortOrder - b.sortOrder),
+  const allSections = useAscStore((s) => s.sections);
+  const allAdverts = useAscStore((s) => s.adverts);
+  const allProducts = useAscStore((s) => s.products);
+  const allEvents = useAscStore((s) => s.events);
+  const sections = useMemo(
+    () =>
+      allSections
+        .filter((x) => x.clientId === clientId)
+        .slice()
+        .sort((a, b) => a.sortOrder - b.sortOrder),
+    [allSections, clientId],
   );
-  const adverts = useAscStore((s) => s.adverts.filter((a) => a.clientId === clientId));
-  const products = useAscStore((s) =>
-    s.products.filter((p) => p.clientId === clientId && p.live).sort((a, b) => a.sortOrder - b.sortOrder),
+  const adverts = useMemo(
+    () => allAdverts.filter((a) => a.clientId === clientId),
+    [allAdverts, clientId],
   );
-  const events = useAscStore((s) =>
-    s.events.filter((e) => e.clientId === clientId).sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+  const products = useMemo(
+    () =>
+      allProducts
+        .filter((p) => p.clientId === clientId && p.live)
+        .slice()
+        .sort((a, b) => a.sortOrder - b.sortOrder),
+    [allProducts, clientId],
+  );
+  const events = useMemo(
+    () =>
+      allEvents
+        .filter((e) => e.clientId === clientId)
+        .slice()
+        .sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+    [allEvents, clientId],
   );
   const ensureSections = useAscStore((s) => s.ensureSections);
   const updateSection = useAscStore((s) => s.updateSection);
