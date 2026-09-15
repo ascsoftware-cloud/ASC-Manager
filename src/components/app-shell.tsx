@@ -141,7 +141,9 @@ function ClientNav({
             )}
           >
             <Icon className={cn("size-4", active ? "text-emerald" : "")} />
-            <span className={cn("flex-1", active && "text-champagne")}>{item.label}</span>
+            <span className={cn("flex-1", active && "text-champagne")}>
+              {item.to === "/content" && client?.modules.advert ? "Advert" : item.label}
+            </span>
             {badge ? (
               <span className="rounded-full bg-emerald px-1.5 py-0.5 text-[10px] font-medium text-ink">
                 {badge}

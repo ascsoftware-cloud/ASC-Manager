@@ -27,7 +27,8 @@ Returns:
 - `tenant` — name, city, phone, hours, WhatsApp, modules
 - `site` — host, url
 - `sections` — homepage blocks (`welcome`, `this_week`, `this_sunday`, `featured`, `hours`), `sortOrder`, `visible`, `payload`
-- `advert` — the one **live** weekly advert whose dates cover today, or `null`. Only present when the tenant’s **Advert** module is on (Collage-style sites). Other tenants never get This week.
+- `advert` — latest live advert covering today, or `null` (compat).
+- `adverts` — **all** live adverts covering today (many at once: nine a day or one a month). Empty if the Advert module is off.
 - `products` — live items only, `sortOrder` is shop order (empty if store module off)
 - `events` — upcoming calendar rows (empty if calendar module off)
 

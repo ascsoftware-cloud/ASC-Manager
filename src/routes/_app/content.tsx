@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { formatDay, formatZar, mondayOf, plainText, reorderIds, sundayOf } from "@/lib/format";
+import { formatDay, formatZar, plainText, reorderIds } from "@/lib/format";
 import { saveAction } from "@/lib/mutate";
 import { useAscStore, useCurrentUser, useOwnClient, visibleClientIds } from "@/lib/store";
 import type { AdvertLinkType, AdvertStatus, ContentSection, SectionKey, WeeklyAdvert } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/content")({
   component: WebsitePage,
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/_app/content")({
 
 const LABELS: Record<SectionKey, string> = {
   welcome: "Welcome",
-  this_week: "This week",
+  this_week: "Adverts",
   this_sunday: "This Sunday",
   featured: "Featured from the shop",
   hours: "Hours & contact",
@@ -67,7 +68,6 @@ function WebsitePage() {
   const ensureSections = useAscStore((s) => s.ensureSections);
   const updateSection = useAscStore((s) => s.updateSection);
   const reorderSections = useAscStore((s) => s.reorderSections);
-  const saveAdvert = useAscStore((s) => s.saveAdvert);
   const [dragId, setDragId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -95,12 +95,12 @@ function WebsitePage() {
     <div className="mx-auto grid max-w-6xl gap-8 xl:grid-cols-[1fr_20rem]">
       <div className="flex flex-col gap-8">
         <PageHeader
-          eyebrow="Website"
-          title="Website"
+          eyebrow={client?.modules.advert ? "Advert" : "Website"}
+          title={client?.modules.advert ? "Advert" : "Website"}
           description={
             client?.modules.advert
-              ? "Welcome, This week, and the rest of the homepage. This week is the banner they change regularly."
-              : "Welcome, hours, and the rest of the homepage. This site has no weekly advert."
+              ? "Post as many as you need — nine in a day or one a month. Live ones show on the public site for their dates."
+              : "Welcome, hours, and the rest of the homepage. This site has no advert board."
           }
         />
         {user?.role === "operator" ? (
@@ -114,14 +114,12 @@ function WebsitePage() {
         ) : null}
 
         {client?.modules.advert ? (
-          <WeeklyAdvertCard
+          <AdvertBoard
             clientId={clientId}
             storeOn={Boolean(client?.modules.store)}
-            advert={liveAdvert}
-            last={adverts.filter((a) => a.id !== liveAdvert?.id).slice(0, 1)[0]}
+            adverts={adverts}
             products={products}
             events={events}
-            onSave={(input) => saveAction("Advert saved", () => saveAdvert(input))}
           />
         ) : null}
 
@@ -201,17 +199,19 @@ function WebsitePage() {
                   {s.key === "this_week" ? (
                     <div>
                       <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-emerald">
-                        This week
+                        Adverts
                       </p>
-                      {liveAdvert && liveAdvert.status === "live" ? (
-                        <>
-                          {liveAdvert.photoUrl ? (
-                            <img src={liveAdvert.photoUrl} alt="" className="mt-2 h-20 w-full object-cover" />
-                          ) : null}
-                          <p className="mt-2 text-sm text-champagne">{liveAdvert.headline || "Advert"}</p>
-                        </>
+                      {adverts.filter((a) => a.status === "live").length === 0 ? (
+                        <p className="mt-1 text-xs text-muted-foreground">Nothing live</p>
                       ) : (
-                        <p className="mt-1 text-xs text-muted-foreground">No live advert</p>
+                        adverts
+                          .filter((a) => a.status === "live")
+                          .slice(0, 5)
+                          .map((a) => (
+                            <p key={a.id} className="mt-1 text-xs text-champagne">
+                              {a.headline || "Advert"}
+                            </p>
+                          ))
                       )}
                     </div>
                   ) : null}
@@ -280,9 +280,7 @@ function SectionEditor({
   if (section.key === "this_week") {
     return (
       <p className="text-sm text-muted-foreground">
-        {advert?.status === "live"
-          ? `Live: ${advert.headline || "This week"}`
-          : "Edit the weekly advert card above. Expired adverts do not show on the public site."}
+        Adverts you mark Live show here on the public site for their from–to dates. You can run many at once.
       </p>
     );
   }
@@ -349,25 +347,35 @@ function SectionEditor({
   );
 }
 
-function WeeklyAdvertCard({
+function todayStamp(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function AdvertBoard({
   clientId,
   storeOn,
-  advert,
-  last,
+  adverts,
   products,
   events,
-  onSave,
 }: {
   clientId: string;
   storeOn: boolean;
-  advert: WeeklyAdvert | null;
-  last?: WeeklyAdvert;
+  adverts: WeeklyAdvert[];
   products: { id: string; name: string; photoPath: string; priceZar: number }[];
   events: { id: string; title: string }[];
-  onSave: (input: Parameters<ReturnType<typeof useAscStore.getState>["saveAdvert"]>[0]) => Promise<boolean>;
 }) {
-  const [startsOn, setStartsOn] = useState(advert?.startsOn ?? mondayOf());
-  const [endsOn, setEndsOn] = useState(advert?.endsOn ?? sundayOf());
+  const saveAdvert = useAscStore((s) => s.saveAdvert);
+  const removeAdvert = useAscStore((s) => s.removeAdvert);
+  const [selectedId, setSelectedId] = useState<string | "new" | null>(
+    adverts[0]?.id ?? null,
+  );
+  const advert =
+    selectedId && selectedId !== "new"
+      ? (adverts.find((a) => a.id === selectedId) ?? null)
+      : null;
+
+  const [startsOn, setStartsOn] = useState(advert?.startsOn ?? todayStamp());
+  const [endsOn, setEndsOn] = useState(advert?.endsOn ?? todayStamp());
   const [headline, setHeadline] = useState(advert?.headline ?? "");
   const [body, setBody] = useState(advert?.body ?? "");
   const [photoPath, setPhotoPath] = useState(advert?.photoPath ?? "");
@@ -376,15 +384,26 @@ function WeeklyAdvertCard({
   const [linkId, setLinkId] = useState(advert?.linkId ?? "");
 
   useEffect(() => {
-    setStartsOn(advert?.startsOn ?? mondayOf());
-    setEndsOn(advert?.endsOn ?? sundayOf());
+    if (selectedId === "new") {
+      setStartsOn(todayStamp());
+      setEndsOn(todayStamp());
+      setHeadline("");
+      setBody("");
+      setPhotoPath("");
+      setStatus("draft");
+      setLinkType("none");
+      setLinkId("");
+      return;
+    }
+    setStartsOn(advert?.startsOn ?? todayStamp());
+    setEndsOn(advert?.endsOn ?? todayStamp());
     setHeadline(advert?.headline ?? "");
     setBody(advert?.body ?? "");
     setPhotoPath(advert?.photoPath ?? "");
     setStatus(advert?.status ?? "draft");
     setLinkType(advert?.linkType ?? "none");
     setLinkId(advert?.linkId ?? "");
-  }, [advert?.id]);
+  }, [advert?.id, selectedId]);
 
   const expired = status === "live" && endsOn < new Date().toISOString().slice(0, 10);
 
@@ -401,13 +420,46 @@ function WeeklyAdvertCard({
     <Surface className="p-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-emerald">This week</p>
-          <p className="mt-1 font-display text-2xl text-champagne">Weekly advert</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-emerald">Adverts</p>
+          <p className="mt-1 font-display text-2xl text-champagne">Post an advert</p>
+          <p className="mt-1 max-w-md text-sm text-muted-foreground">
+            As many as you like. Same day or a whole month. Live ones all show.
+          </p>
         </div>
-        <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-          {expired ? "Expired" : status}
-        </p>
+        <Button
+          type="button"
+          className="rounded-full"
+          onClick={() => setSelectedId("new")}
+        >
+          Add advert
+        </Button>
       </div>
+      {adverts.length > 0 ? (
+        <ul className="mt-5 divide-y divide-border border border-border">
+          {adverts.map((a) => (
+            <li key={a.id}>
+              <button
+                type="button"
+                onClick={() => setSelectedId(a.id)}
+                className={cn(
+                  "flex min-h-11 w-full items-center justify-between gap-3 px-3 py-3 text-left",
+                  selectedId === a.id ? "bg-accent" : "hover:bg-accent/50",
+                )}
+              >
+                <span className="text-sm text-champagne">{a.headline || "Untitled"}</span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                  {a.status} · {formatDay(a.startsOn)}–{formatDay(a.endsOn)}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-4 text-sm text-muted-foreground">None yet. Add one.</p>
+      )}
+      <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+        {selectedId === "new" ? "New" : expired ? "Expired" : status}
+      </p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <Field label="From">
           <Input type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />
@@ -484,46 +536,40 @@ function WeeklyAdvertCard({
           type="button"
           className="rounded-full"
           onClick={() =>
-            void onSave({
-              id: advert?.id,
-              clientId,
-              startsOn,
-              endsOn,
-              status,
-              photoPath,
-              headline: plainText(headline),
-              body: plainText(body),
-              linkType,
-              linkId,
+            void saveAction("Advert saved", async () => {
+              await saveAdvert({
+                id: selectedId === "new" ? undefined : advert?.id,
+                clientId,
+                startsOn,
+                endsOn,
+                status,
+                photoPath,
+                headline: plainText(headline),
+                body: plainText(body),
+                linkType,
+                linkId,
+              });
+              setSelectedId(null);
             })
           }
         >
-          Save advert
+          Save
         </Button>
-      </div>
-      {last ? (
-        <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
-          <p className="text-sm text-muted-foreground">
-            Last week · {formatDay(last.startsOn)} · {last.headline || "No headline"}
-          </p>
+        {advert ? (
           <Button
             type="button"
             variant="ghost"
             onClick={() => {
-              setHeadline(last.headline);
-              setBody(last.body);
-              setPhotoPath(last.photoPath);
-              setLinkType(last.linkType);
-              setLinkId(last.linkId);
-              setStartsOn(mondayOf());
-              setEndsOn(sundayOf());
-              setStatus("draft");
+              void saveAction("Removed", async () => {
+                await removeAdvert(advert.id);
+                setSelectedId(null);
+              });
             }}
           >
-            Duplicate forward
+            Delete
           </Button>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </Surface>
   );
 }

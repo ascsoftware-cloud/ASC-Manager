@@ -290,6 +290,7 @@ type AscStore = AppTables & {
     input: Omit<WeeklyAdvert, "id" | "photoUrl" | "updatedAt"> & { id?: string },
   ) => Promise<void>;
   setAdvertStatus: (id: string, status: AdvertStatus) => Promise<void>;
+  removeAdvert: (id: string) => Promise<void>;
 };
 
 let listening = false;
@@ -974,14 +975,6 @@ export const useAscStore = create<AscStore>()((set, get) => ({
       link_type: input.linkType,
       link_id: input.linkId,
     };
-    if (input.status === "live") {
-      await sb
-        .from("weekly_adverts")
-        .update({ status: "expired" })
-        .eq("tenant_id", input.clientId)
-        .eq("status", "live")
-        .neq("id", input.id ?? "00000000-0000-0000-0000-000000000000");
-    }
     const q = input.id
       ? sb.from("weekly_adverts").update(row).eq("id", input.id).select("*").single()
       : sb.from("weekly_adverts").insert(row).select("*").single();
@@ -990,11 +983,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
     const mapped = mapAdvert(data);
     set((s) => ({
       adverts: input.id
-        ? s.adverts.map((a) => (a.id === mapped.id ? mapped : a)).map((a) =>
-            a.clientId === input.clientId && a.id !== mapped.id && a.status === "live"
-              ? { ...a, status: "expired" as AdvertStatus }
-              : a,
-          )
+        ? s.adverts.map((a) => (a.id === mapped.id ? mapped : a))
         : [mapped, ...s.adverts],
     }));
   },
@@ -1003,6 +992,13 @@ export const useAscStore = create<AscStore>()((set, get) => ({
     const current = get().adverts.find((a) => a.id === id);
     if (!current) throw new Error("Advert not found.");
     await get().saveAdvert({ ...current, status });
+  },
+
+  removeAdvert: async (id) => {
+    const sb = requireSupabase();
+    const { error } = await sb.from("weekly_adverts").delete().eq("id", id);
+    fail(error, "Could not remove that advert.");
+    set((s) => ({ adverts: s.adverts.filter((a) => a.id !== id) }));
   },
 }));
 
