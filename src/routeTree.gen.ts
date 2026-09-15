@@ -15,6 +15,7 @@ import { Route as SetPasswordRouteImport } from './routes/set-password'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppBillingRouteImport } from './routes/_app/billing'
+import { Route as AppBookingsRouteImport } from './routes/_app/bookings'
 import { Route as AppBusinessRouteImport } from './routes/_app/business'
 import { Route as AppCalendarRouteImport } from './routes/_app/calendar'
 import { Route as AppClientsRouteImport } from './routes/_app/clients'
@@ -60,6 +61,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
 const AppBillingRoute = AppBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBookingsRoute = AppBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
   getParentRoute: () => AppRoute,
 } as any)
 const AppBusinessRoute = AppBusinessRouteImport.update({
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/set-password': typeof SetPasswordRoute
   '/admin': typeof AppAdminRoute
   '/billing': typeof AppBillingRoute
+  '/bookings': typeof AppBookingsRoute
   '/business': typeof AppBusinessRoute
   '/calendar': typeof AppCalendarRoute
   '/clients': typeof AppClientsRoute
@@ -177,6 +184,7 @@ export interface FileRoutesByTo {
   '/set-password': typeof SetPasswordRoute
   '/admin': typeof AppAdminRoute
   '/billing': typeof AppBillingRoute
+  '/bookings': typeof AppBookingsRoute
   '/business': typeof AppBusinessRoute
   '/calendar': typeof AppCalendarRoute
   '/clients': typeof AppClientsRoute
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/set-password': typeof SetPasswordRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/billing': typeof AppBillingRoute
+  '/_app/bookings': typeof AppBookingsRoute
   '/_app/business': typeof AppBusinessRoute
   '/_app/calendar': typeof AppCalendarRoute
   '/_app/clients': typeof AppClientsRoute
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/set-password'
     | '/admin'
     | '/billing'
+    | '/bookings'
     | '/business'
     | '/calendar'
     | '/clients'
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/set-password'
     | '/admin'
     | '/billing'
+    | '/bookings'
     | '/business'
     | '/calendar'
     | '/clients'
@@ -278,6 +289,7 @@ export interface FileRouteTypes {
     | '/set-password'
     | '/_app/admin'
     | '/_app/billing'
+    | '/_app/bookings'
     | '/_app/business'
     | '/_app/calendar'
     | '/_app/clients'
@@ -348,6 +360,13 @@ declare module '@tanstack/react-router' {
       path: '/billing'
       fullPath: '/billing'
       preLoaderRoute: typeof AppBillingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/bookings': {
+      id: '/_app/bookings'
+      path: '/bookings'
+      fullPath: '/bookings'
+      preLoaderRoute: typeof AppBookingsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/business': {
@@ -475,6 +494,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppBillingRoute: typeof AppBillingRoute
+  AppBookingsRoute: typeof AppBookingsRoute
   AppBusinessRoute: typeof AppBusinessRoute
   AppCalendarRoute: typeof AppCalendarRoute
   AppClientsRoute: typeof AppClientsRoute
@@ -496,6 +516,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppBillingRoute: AppBillingRoute,
+  AppBookingsRoute: AppBookingsRoute,
   AppBusinessRoute: AppBusinessRoute,
   AppCalendarRoute: AppCalendarRoute,
   AppClientsRoute: AppClientsRoute,

@@ -4,6 +4,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { getSupabase, requireSupabase } from "@/lib/supabase/client";
 import {
   mapBlock,
+  mapBooking,
   mapEnquiry,
   mapEvent,
   mapIncident,
@@ -22,6 +23,8 @@ import {
 import { removeStoragePath, uploadTenantImage } from "@/lib/supabase/storage";
 import type {
   AppTables,
+  Booking,
+  BookingStatus,
   CalendarEvent,
   Client,
   ContentBlock,
@@ -99,6 +102,7 @@ function emptyTables(): AppTables {
     invoices: [],
     products: [],
     events: [],
+    bookings: [],
   };
 }
 
@@ -135,6 +139,7 @@ async function loadTables(): Promise<AppTables> {
     blocks,
     products,
     events,
+    bookings,
     enquiries,
     media,
     invoices,
@@ -151,6 +156,7 @@ async function loadTables(): Promise<AppTables> {
     sb.from("content_blocks").select("*"),
     sb.from("products").select("*").order("name"),
     sb.from("calendar_events").select("*").order("starts_at"),
+    sb.from("bookings").select("*").order("starts_at"),
     sb.from("enquiries").select("*").order("created_at", { ascending: false }),
     sb.from("media").select("*").order("added_at", { ascending: false }),
     sb.from("invoices").select("*").order("due_at"),
@@ -188,6 +194,7 @@ async function loadTables(): Promise<AppTables> {
     blocks: (blocks.data ?? []).map(mapBlock),
     products: (products.data ?? []).map(mapProduct),
     events: (events.data ?? []).map(mapEvent),
+    bookings: bookings.error ? [] : (bookings.data ?? []).map(mapBooking),
     enquiries: (enquiries.data ?? []).map(mapEnquiry),
     media: (media.data ?? []).map(mapMedia),
     invoices: (invoices.data ?? []).map(mapInvoice),
@@ -247,6 +254,9 @@ type AscStore = AppTables & {
   addEvent: (input: Omit<CalendarEvent, "id">) => Promise<void>;
   updateEvent: (id: string, patch: Partial<CalendarEvent>) => Promise<void>;
   removeEvent: (id: string) => Promise<void>;
+  addBooking: (input: Omit<Booking, "id">) => Promise<void>;
+  setBookingStatus: (id: string, status: BookingStatus) => Promise<void>;
+  removeBooking: (id: string) => Promise<void>;
 };
 
 let listening = false;
@@ -554,6 +564,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
         status: "active",
         modules_store: false,
         modules_calendar: false,
+        modules_bookings: false,
       })
       .select("*")
       .single();
@@ -645,6 +656,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
     if (patch.modules) {
       row.modules_store = patch.modules.store;
       row.modules_calendar = patch.modules.calendar;
+      row.modules_bookings = patch.modules.bookings;
     }
     const { data, error } = await sb
       .from("tenants")
@@ -794,6 +806,41 @@ export const useAscStore = create<AscStore>()((set, get) => ({
     const { error } = await sb.from("calendar_events").delete().eq("id", id);
     fail(error, "Could not take that date off.");
     set((s) => ({ events: s.events.filter((e) => e.id !== id) }));
+  },
+
+  addBooking: async (input) => {
+    const sb = requireSupabase();
+    const { data, error } = await sb
+      .from("bookings")
+      .insert({
+        tenant_id: input.clientId,
+        guest_name: input.guestName,
+        email: input.email,
+        phone: input.phone,
+        starts_at: input.startsAt,
+        notes: input.notes,
+        status: input.status,
+      })
+      .select("*")
+      .single();
+    fail(error, "Could not add that booking.");
+    set((s) => ({ bookings: [mapBooking(data), ...s.bookings] }));
+  },
+
+  setBookingStatus: async (id, status) => {
+    const sb = requireSupabase();
+    const { error } = await sb.from("bookings").update({ status }).eq("id", id);
+    fail(error, "Could not update that booking.");
+    set((s) => ({
+      bookings: s.bookings.map((b) => (b.id === id ? { ...b, status } : b)),
+    }));
+  },
+
+  removeBooking: async (id) => {
+    const sb = requireSupabase();
+    const { error } = await sb.from("bookings").delete().eq("id", id);
+    fail(error, "Could not remove that booking.");
+    set((s) => ({ bookings: s.bookings.filter((b) => b.id !== id) }));
   },
 }));
 

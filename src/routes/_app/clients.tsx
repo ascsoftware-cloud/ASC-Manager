@@ -67,6 +67,7 @@ function ClientsPage() {
                 <th className="px-5 py-3 font-medium">Logins</th>
                 <th className="px-5 py-3 font-medium">Store</th>
                 <th className="px-5 py-3 font-medium">Calendar</th>
+                <th className="px-5 py-3 font-medium">Bookings</th>
                 <th className="px-5 py-3 font-medium">Status</th>
                 <th className="px-5 py-3 font-medium" />
               </tr>
@@ -112,6 +113,19 @@ function ClientsPage() {
                           );
                         }}
                         aria-label={`Calendar for ${c.name}`}
+                      />
+                    </td>
+                    <td className="px-5 py-4">
+                      <Switch
+                        checked={c.modules.bookings}
+                        onCheckedChange={(on) => {
+                          void saveAction(on ? "Bookings on" : "Bookings off", () =>
+                            updateClient(c.id, {
+                              modules: { ...c.modules, bookings: on },
+                            }),
+                          );
+                        }}
+                        aria-label={`Bookings for ${c.name}`}
                       />
                     </td>
                     <td className="px-5 py-4">

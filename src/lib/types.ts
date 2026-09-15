@@ -22,6 +22,7 @@ export type Client = {
   modules: {
     store: boolean;
     calendar: boolean;
+    bookings: boolean;
   };
 };
 
@@ -44,6 +45,19 @@ export type CalendarEvent = {
   endsAt: string;
   place: string;
   notes: string;
+};
+
+export type BookingStatus = "requested" | "confirmed" | "cancelled";
+
+export type Booking = {
+  id: string;
+  clientId: string;
+  guestName: string;
+  email: string;
+  phone: string;
+  startsAt: string;
+  notes: string;
+  status: BookingStatus;
 };
 
 export type EnquiryStatus = "new" | "read" | "done";
@@ -179,4 +193,5 @@ export type AppTables = {
   invoices: Invoice[];
   products: Product[];
   events: CalendarEvent[];
+  bookings: Booking[];
 };

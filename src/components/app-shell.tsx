@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Building2,
+  CalendarCheck,
   CalendarDays,
   ChevronDown,
   FileText,
@@ -48,12 +49,13 @@ const CLIENT_NAV: {
   label: string;
   icon: typeof LayoutDashboard;
   badge?: "enquiries";
-  module?: "store" | "calendar";
+  module?: "store" | "calendar" | "bookings";
 }[] = [
   { to: "/", label: "Overview", icon: LayoutDashboard },
   { to: "/content", label: "Website", icon: FileText },
   { to: "/store", label: "Store", icon: ShoppingBag, module: "store" },
   { to: "/calendar", label: "Calendar", icon: CalendarDays, module: "calendar" },
+  { to: "/bookings", label: "Bookings", icon: CalendarCheck, module: "bookings" },
   { to: "/enquiries", label: "Enquiries", icon: Inbox, badge: "enquiries" },
   { to: "/media", label: "Photos", icon: Image },
   { to: "/visitors", label: "Visitors", icon: Users },

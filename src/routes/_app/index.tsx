@@ -192,6 +192,16 @@ function ClientOverview() {
             <p className="mt-1 text-sm text-muted-foreground">Services, camps, closed days.</p>
           </Link>
         ) : null}
+        {own?.modules.bookings ? (
+          <Link
+            to="/bookings"
+            className="border border-border bg-card px-5 py-4 hover:border-emerald/40"
+          >
+            <p className="text-[11px] uppercase tracking-[0.16em] text-emerald">Bookings</p>
+            <p className="mt-2 font-display text-xl text-champagne">Reservations</p>
+            <p className="mt-1 text-sm text-muted-foreground">Rooms, tables, slots.</p>
+          </Link>
+        ) : null}
         <Link
           to="/business"
           className="border border-border bg-card px-5 py-4 hover:border-emerald/40"

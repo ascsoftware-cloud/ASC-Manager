@@ -35,6 +35,14 @@ function env(key: string): string {
   return process.env[key]?.trim() || readDotEnv()[key]?.trim() || "";
 }
 
+function appOrigin(): string {
+  let raw = (env("VITE_APP_URL") || "http://localhost:8080").trim().replace(/\/$/, "");
+  if (!/^https?:\/\//i.test(raw)) {
+    raw = raw.includes("localhost") ? `http://${raw}` : `https://${raw}`;
+  }
+  return raw;
+}
+
 export async function inviteUser(data: InviteInput): Promise<{ ok: true }> {
   const url = env("VITE_SUPABASE_URL") || env("SUPABASE_URL");
   const anon = env("VITE_SUPABASE_ANON_KEY");
@@ -78,7 +86,7 @@ export async function inviteUser(data: InviteInput): Promise<{ ok: true }> {
     throw new Error("Staff accounts are not tied to a client.");
   }
 
-  const redirectTo = `${(env("VITE_APP_URL") || "http://localhost:8080").replace(/\/$/, "")}/auth/callback`;
+  const redirectTo = `${appOrigin()}/auth/callback`;
   const { error } = await admin.auth.admin.inviteUserByEmail(email, {
     data: {
       role: data.role,

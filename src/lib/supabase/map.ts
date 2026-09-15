@@ -1,4 +1,6 @@
 import type {
+  Booking,
+  BookingStatus,
   CalendarEvent,
   ChangeLog,
   Client,
@@ -58,6 +60,7 @@ export function mapTenant(row: Row): Client {
     modules: {
       store: bool(row.modules_store),
       calendar: bool(row.modules_calendar),
+      bookings: bool(row.modules_bookings),
     },
   };
 }
@@ -154,6 +157,22 @@ export function mapProduct(row: Row): Product {
     live: bool(row.live),
     photo: publicMediaUrl(path),
     note: str(row.note),
+  };
+}
+
+export function mapBooking(row: Row): Booking {
+  const status = row.status;
+  const ok: BookingStatus =
+    status === "confirmed" || status === "cancelled" ? status : "requested";
+  return {
+    id: str(row.id),
+    clientId: str(row.tenant_id),
+    guestName: str(row.guest_name),
+    email: str(row.email),
+    phone: str(row.phone),
+    startsAt: str(row.starts_at),
+    notes: str(row.notes),
+    status: ok,
   };
 }
 

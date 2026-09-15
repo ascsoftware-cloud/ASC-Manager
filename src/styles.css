@@ -75,6 +75,17 @@
     line-height: 1.5;
   }
 
+  /* Vercel toolbar — sits over the account menu for team members. Not ours. */
+  vercel-live-feedback,
+  vercel-toolbar,
+  #vercel-toolbar,
+  #__vercel_toolbar,
+  [data-vercel-toolbar] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
   h1,
   h2,
   h3 {
