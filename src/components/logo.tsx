@@ -50,14 +50,15 @@ export function AscLockup({
   return (
     <Link
       to={to}
-      className={cn("flex items-center gap-2 text-champagne", className)}
+      className={cn("flex flex-col items-start gap-0.5 text-champagne", className)}
     >
-      <span className="font-display text-xl tracking-tight">ASC</span>
-      <span className="text-muted-foreground/50">|</span>
-      <span className="text-[10px] uppercase tracking-[0.22em] text-gold">
-        Software
+      <span className="flex items-center gap-2">
+        <span className="font-display text-xl tracking-tight">ASC</span>
+        <span className="text-muted-foreground/50">|</span>
+        <span className="text-[10px] uppercase tracking-[0.22em] text-gold">
+          Software
+        </span>
       </span>
-      <span className="text-muted-foreground/50">|</span>
       <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
         Manager
       </span>
