@@ -66,6 +66,7 @@ export function mapTenant(row: Row): Client {
       store: bool(row.modules_store),
       calendar: bool(row.modules_calendar),
       bookings: bool(row.modules_bookings),
+      advert: bool(row.modules_advert),
     },
   };
 }

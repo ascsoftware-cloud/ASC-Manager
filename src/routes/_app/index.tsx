@@ -190,6 +190,7 @@ function ClientOverview() {
 
 function NeedsYou() {
   const user = useCurrentUser();
+  const own = useOwnClient();
   const store = useAscStore();
   const ids = visibleClientIds(store, user);
   const today = new Date().toISOString().slice(0, 10);
@@ -210,7 +211,7 @@ function NeedsYou() {
   for (const e of fresh) {
     items.push({ to: "/enquiries", title: `${e.name} wrote in`, detail: e.message });
   }
-  if (noAdvert || expired) {
+  if (own?.modules.advert && (noAdvert || expired)) {
     items.push({
       to: "/content",
       title: expired ? "This week’s advert expired" : "No live advert",

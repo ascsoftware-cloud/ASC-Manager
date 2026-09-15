@@ -23,6 +23,7 @@ export type Client = {
     store: boolean;
     calendar: boolean;
     bookings: boolean;
+    advert: boolean;
   };
 };
 

@@ -39,6 +39,8 @@ function StorePage() {
   const [picked, setPicked] = useState(own?.id ?? ids[0] ?? "");
   const clientId = own?.id ?? picked;
   const allowed = user?.role === "operator" || own?.modules.store;
+  const selected = clients.find((c) => c.id === clientId);
+  const advertOn = Boolean(selected?.modules.advert);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -252,6 +254,7 @@ function StorePage() {
               key={openId}
               product={products.find((p) => p.id === openId)!}
               clientId={clientId}
+              advertOn={advertOn}
               onSave={(id, patch) => saveAction("Saved", () => updateProduct(id, patch))}
               onDelete={(id) =>
                 saveAction("Removed", async () => {
@@ -270,11 +273,13 @@ function StorePage() {
 function ProductDrawer({
   product,
   clientId,
+  advertOn,
   onSave,
   onDelete,
 }: {
   product: Product;
   clientId: string;
+  advertOn: boolean;
   onSave: (id: string, patch: Partial<Product>) => Promise<boolean>;
   onDelete: (id: string) => Promise<boolean>;
 }) {
@@ -349,12 +354,14 @@ function ProductDrawer({
           </span>
           <Switch checked={live} onCheckedChange={setLive} />
         </label>
-        <label className="flex min-h-11 items-center justify-between gap-3">
-          <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            Use on this week’s advert
-          </span>
-          <Switch checked={featured} onCheckedChange={setFeatured} />
-        </label>
+        {advertOn ? (
+          <label className="flex min-h-11 items-center justify-between gap-3">
+            <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+              Use on this week’s advert
+            </span>
+            <Switch checked={featured} onCheckedChange={setFeatured} />
+          </label>
+        ) : null}
         <Button type="submit" className="rounded-full">
           Save
         </Button>

@@ -43,7 +43,7 @@ function ClientsPage() {
       <PageHeader
         eyebrow="Clients"
         title="Clients"
-        description="Companies we look after. Each one signs in to their own site only."
+        description="Modules are what we actually built on their public site. Advert is the banner they change often — leave it off unless that site shows This week."
         action={
           <Button className="rounded-full" onClick={() => setOpen(true)}>
             <Plus className="size-4" />
@@ -68,6 +68,12 @@ function ClientsPage() {
                 <th className="px-5 py-3 font-medium">Store</th>
                 <th className="px-5 py-3 font-medium">Calendar</th>
                 <th className="px-5 py-3 font-medium">Bookings</th>
+                <th
+                  className="px-5 py-3 font-medium"
+                  title="Weekly banner they change often. Only if their public site is built to show it."
+                >
+                  Advert
+                </th>
                 <th className="px-5 py-3 font-medium">Status</th>
                 <th className="px-5 py-3 font-medium" />
               </tr>
@@ -126,6 +132,19 @@ function ClientsPage() {
                           );
                         }}
                         aria-label={`Bookings for ${c.name}`}
+                      />
+                    </td>
+                    <td className="px-5 py-4">
+                      <Switch
+                        checked={c.modules.advert}
+                        onCheckedChange={(on) => {
+                          void saveAction(on ? "Advert on" : "Advert off", () =>
+                            updateClient(c.id, {
+                              modules: { ...c.modules, advert: on },
+                            }),
+                          );
+                        }}
+                        aria-label={`Weekly advert for ${c.name}`}
                       />
                     </td>
                     <td className="px-5 py-4">

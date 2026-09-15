@@ -26,7 +26,7 @@ export type PublicSitePayload = {
     address: string;
     hours: string;
     whatsapp: string;
-    modules: { store: boolean; calendar: boolean; bookings: boolean };
+    modules: { store: boolean; calendar: boolean; bookings: boolean; advert: boolean };
   };
   site: { host: string; url: string };
   blocks: Array<{

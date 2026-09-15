@@ -598,6 +598,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
         modules_store: false,
         modules_calendar: false,
         modules_bookings: false,
+        modules_advert: false,
       })
       .select("*")
       .single();
@@ -690,6 +691,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
       row.modules_store = patch.modules.store;
       row.modules_calendar = patch.modules.calendar;
       row.modules_bookings = patch.modules.bookings;
+      row.modules_advert = patch.modules.advert;
     }
     const { data, error } = await sb
       .from("tenants")

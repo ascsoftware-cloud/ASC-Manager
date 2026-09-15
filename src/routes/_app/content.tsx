@@ -97,7 +97,11 @@ function WebsitePage() {
         <PageHeader
           eyebrow="Website"
           title="Website"
-          description="The public homepage, section by section. Not a page builder."
+          description={
+            client?.modules.advert
+              ? "Welcome, This week, and the rest of the homepage. This week is the banner they change regularly."
+              : "Welcome, hours, and the rest of the homepage. This site has no weekly advert."
+          }
         />
         {user?.role === "operator" ? (
           <NativeSelect className="max-w-xs" value={clientId} onChange={(e) => setPicked(e.target.value)}>
@@ -109,18 +113,22 @@ function WebsitePage() {
           </NativeSelect>
         ) : null}
 
-        <WeeklyAdvertCard
-          clientId={clientId}
-          storeOn={Boolean(client?.modules.store)}
-          advert={liveAdvert}
-          last={adverts.filter((a) => a.id !== liveAdvert?.id).slice(0, 1)[0]}
-          products={products}
-          events={events}
-          onSave={(input) => saveAction("Advert saved", () => saveAdvert(input))}
-        />
+        {client?.modules.advert ? (
+          <WeeklyAdvertCard
+            clientId={clientId}
+            storeOn={Boolean(client?.modules.store)}
+            advert={liveAdvert}
+            last={adverts.filter((a) => a.id !== liveAdvert?.id).slice(0, 1)[0]}
+            products={products}
+            events={events}
+            onSave={(input) => saveAction("Advert saved", () => saveAdvert(input))}
+          />
+        ) : null}
 
         <ul className="flex flex-col gap-3">
-          {sections.map((sec) => (
+          {sections
+            .filter((sec) => client?.modules.advert || sec.key !== "this_week")
+            .map((sec) => (
             <li
               key={sec.id}
               draggable
@@ -182,6 +190,7 @@ function WebsitePage() {
             </p>
             {sections
               .filter((s) => s.visible)
+              .filter((s) => client?.modules.advert || s.key !== "this_week")
               .map((s) => (
                 <div key={s.id} className="mt-4">
                   {s.key === "welcome" ? (
