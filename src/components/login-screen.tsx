@@ -6,26 +6,17 @@ import { useAscStore } from "@/lib/store";
 
 export function LoginScreen() {
   const signIn = useAscStore((s) => s.signIn);
-  const requestPasswordReset = useAscStore((s) => s.requestPasswordReset);
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
-  const [resetMode, setResetMode] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
-    setNotice("");
     setBusy(true);
     try {
-      if (resetMode) {
-        await requestPasswordReset(email);
-        setNotice("If that email is on the books, we sent a reset link.");
-        return;
-      }
       const result = await signIn(email, password);
       if (!result.ok) {
         setError(result.error);
@@ -75,13 +66,9 @@ export function LoginScreen() {
           <p className="text-[11px] uppercase tracking-[0.22em] text-emerald">
             Manager
           </p>
-          <h2 className="mt-3 font-display text-4xl text-champagne">
-            {resetMode ? "Reset password" : "Sign in"}
-          </h2>
+          <h2 className="mt-3 font-display text-4xl text-champagne">Sign in</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            {resetMode
-              ? "We’ll email a link if this address has an account."
-              : "Invite-only. Use the email ASC gave you."}
+            Invite-only. Use the email ASC gave you.
           </p>
           <form onSubmit={(e) => void onSubmit(e)} className="mt-10 flex flex-col gap-7">
             <label className="block" htmlFor="login-email">
@@ -98,43 +85,29 @@ export function LoginScreen() {
                 className="mt-3 h-11 w-full border-0 border-b border-emerald bg-transparent text-sm text-champagne placeholder:text-muted-foreground/50 focus-visible:border-champagne focus-visible:outline-none"
               />
             </label>
-            {resetMode ? null : (
-              <label className="block" htmlFor="login-password">
-                <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                  Password
-                </span>
-                <input
-                  id="login-password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="mt-3 h-11 w-full border-0 border-b border-emerald bg-transparent text-sm text-champagne focus-visible:border-champagne focus-visible:outline-none"
-                />
-              </label>
-            )}
+            <label className="block" htmlFor="login-password">
+              <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                Password
+              </span>
+              <input
+                id="login-password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-3 h-11 w-full border-0 border-b border-emerald bg-transparent text-sm text-champagne focus-visible:border-champagne focus-visible:outline-none"
+              />
+            </label>
             {error ? (
               <p role="alert" className="text-sm text-destructive">
                 {error}
               </p>
             ) : null}
-            {notice ? <p className="text-sm text-emerald">{notice}</p> : null}
             <Button type="submit" disabled={busy} className="h-12 w-full rounded-full text-sm">
-              {busy ? "Please wait" : resetMode ? "Send reset link" : "Sign in"}
+              {busy ? "Please wait" : "Sign in"}
             </Button>
           </form>
-          <button
-            type="button"
-            className="mt-4 min-h-11 text-left text-sm text-emerald hover:underline"
-            onClick={() => {
-              setResetMode((v) => !v);
-              setError("");
-              setNotice("");
-            }}
-          >
-            {resetMode ? "Back to sign in" : "Forgot password?"}
-          </button>
           <p className="mt-8 text-sm leading-relaxed text-muted-foreground">
             Trouble signing in?{" "}
             <a

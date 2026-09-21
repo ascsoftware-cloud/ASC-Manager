@@ -136,8 +136,8 @@ function ClientOverview() {
             className="border border-border bg-card px-5 py-4 hover:border-emerald/40"
           >
             <p className="text-[11px] uppercase tracking-[0.16em] text-emerald">Store</p>
-            <p className="mt-2 font-display text-xl text-champagne">Shop items</p>
-            <p className="mt-1 text-sm text-muted-foreground">Price, stock, live or hidden.</p>
+            <p className="mt-2 font-display text-xl text-champagne">Products</p>
+            <p className="mt-1 text-sm text-muted-foreground">Add items, set a price, mark them Active.</p>
           </Link>
         ) : null}
         {own?.modules.calendar ? (
@@ -167,14 +167,6 @@ function ClientOverview() {
           <p className="text-[11px] uppercase tracking-[0.16em] text-emerald">Business</p>
           <p className="mt-2 font-display text-xl text-champagne">Hours and phone</p>
           <p className="mt-1 text-sm text-muted-foreground">Footer details on the live site.</p>
-        </Link>
-        <Link
-          to="/media"
-          className="border border-border bg-card px-5 py-4 hover:border-emerald/40"
-        >
-          <p className="text-[11px] uppercase tracking-[0.16em] text-emerald">Photos</p>
-          <p className="mt-2 font-display text-xl text-champagne">Add a picture</p>
-          <p className="mt-1 text-sm text-muted-foreground">Rooms, food, the shop floor.</p>
         </Link>
       </div>
 
@@ -214,8 +206,8 @@ function NeedsYou() {
   if (own?.modules.advert && (noAdvert || expired)) {
     items.push({
       to: "/content",
-      title: expired ? "This week’s advert expired" : "No live advert",
-      detail: "Set This week on Website.",
+      title: expired ? "A site picture has run out" : "No pictures on the site",
+      detail: "Add a picture on Website and mark it Live.",
     });
   }
   for (const p of out) {

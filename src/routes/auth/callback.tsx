@@ -14,6 +14,7 @@ function AuthCallbackPage() {
 
   useEffect(() => {
     let cancelled = false;
+    let subscription: { unsubscribe: () => void } | null = null;
     async function run() {
       const sb = getSupabase();
       if (!sb) {
@@ -34,6 +35,13 @@ function AuthCallbackPage() {
       const code = url.searchParams.get("code");
       const type =
         url.searchParams.get("type") || hash.get("type") || "";
+      let needsPassword =
+        type === "invite" || type === "recovery" || type === "signup";
+
+      const authListener = sb.auth.onAuthStateChange((event) => {
+        if (event === "PASSWORD_RECOVERY") needsPassword = true;
+      });
+      subscription = authListener.data.subscription;
 
       if (code) {
         const { error: exchangeError } = await sb.auth.exchangeCodeForSession(code);
@@ -41,6 +49,8 @@ function AuthCallbackPage() {
           if (!cancelled) setError("That link is invalid or has expired.");
           return;
         }
+        // Invite + recovery both arrive as ?code=; type is often omitted.
+        needsPassword = true;
       } else {
         const accessToken = hash.get("access_token");
         const refreshToken = hash.get("refresh_token");
@@ -55,7 +65,6 @@ function AuthCallbackPage() {
           }
         }
       }
-
       const { data } = await sb.auth.getSession();
       if (!data.session) {
         if (!cancelled) setError("That link is invalid or has expired.");
@@ -63,8 +72,6 @@ function AuthCallbackPage() {
       }
 
       window.history.replaceState({}, "", "/auth/callback");
-      const needsPassword =
-        type === "invite" || type === "recovery" || type === "signup";
       if (!needsPassword) {
         await useAscStore.getState().hydrateFromSession();
       }
@@ -75,6 +82,7 @@ function AuthCallbackPage() {
     void run();
     return () => {
       cancelled = true;
+      subscription?.unsubscribe();
     };
   }, [navigate]);
 

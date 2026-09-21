@@ -17,6 +17,14 @@ loadLocalEnv();
 const url = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "").trim();
 const service = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 const appUrl = (process.env.VITE_APP_URL || "http://localhost:8080").replace(/\/$/, "");
+function callbackUrl() {
+  try {
+    const parsed = new URL(appUrl.includes("://") ? appUrl : `https://${appUrl}`);
+    return `${parsed.origin}/auth/callback`;
+  } catch {
+    return `${appUrl}/auth/callback`;
+  }
+}
 
 const people = [
   {
@@ -45,7 +53,7 @@ const admin = createClient(url, service, {
 for (const person of people) {
   const { error } = await admin.auth.admin.inviteUserByEmail(person.email.toLowerCase(), {
     data: { role: "operator", name: person.name || person.email, tenant_id: null },
-    redirectTo: `${appUrl}/auth/callback`,
+    redirectTo: callbackUrl(),
   });
   if (error) {
     console.error(`Failed for ${person.email}: ${error.message}`);

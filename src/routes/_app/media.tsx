@@ -54,7 +54,7 @@ function MediaPage() {
           <div className="flex flex-col items-start gap-4 px-5 py-12">
             <h2 className="font-display text-2xl text-champagne">No photos yet.</h2>
             <p className="max-w-md text-sm text-muted-foreground">
-              Add one picture. Store and This week pick from here.
+              Add one picture. Store and Website pick from here.
             </p>
           </div>
         </Surface>

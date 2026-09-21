@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent, type DragEvent } from "react";
+import { ImagePlus } from "lucide-react";
 import { Field } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,11 +18,13 @@ export function MediaPicker({
   valuePath,
   onPick,
   label = "Photo",
+  variant = "default",
 }: {
   clientId: string;
   valuePath: string;
   onPick: (path: string) => void;
   label?: string;
+  variant?: "default" | "dropzone";
 }) {
   const allMedia = useAscStore((s) => s.media);
   const media = useMemo(
@@ -30,7 +33,135 @@ export function MediaPicker({
   );
   const addMedia = useAscStore((s) => s.addMedia);
   const [open, setOpen] = useState(false);
+  const [over, setOver] = useState(false);
   const current = media.find((m) => m.path === valuePath);
+
+  async function ingest(file: File) {
+    await saveAction("Photo added", async () => {
+      const { path } = await addMedia({ clientId, name: file.name, file });
+      onPick(path);
+    });
+  }
+
+  function onFileInput(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    void ingest(file);
+  }
+
+  function onDrop(e: DragEvent) {
+    e.preventDefault();
+    setOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) void ingest(file);
+  }
+
+  const library = (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Photos</DialogTitle>
+          <DialogDescription>Pick a picture from your library, or upload a new one.</DialogDescription>
+        </DialogHeader>
+        <label className="inline-flex min-h-11 cursor-pointer items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">
+          Upload
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="sr-only"
+            onChange={onFileInput}
+          />
+        </label>
+        {media.length === 0 ? (
+          <p className="py-6 text-sm text-muted-foreground">No photos yet. Upload one above.</p>
+        ) : (
+          <ul className="grid max-h-80 grid-cols-3 gap-2 overflow-y-auto">
+            {media.map((m) => (
+              <li key={m.id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onPick(m.path);
+                    setOpen(false);
+                  }}
+                  className={cn(
+                    "block aspect-square w-full overflow-hidden rounded-md border",
+                    m.path === valuePath ? "border-emerald" : "border-border",
+                  )}
+                >
+                  {m.url ? (
+                    <img src={m.url} alt="" className="h-full w-full object-cover" />
+                  ) : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+
+  if (variant === "dropzone") {
+    return (
+      <div className="flex flex-col gap-3">
+        {current?.url ? (
+          <div className="overflow-hidden rounded-xl border border-border bg-muted">
+            <img src={current.url} alt="" className="max-h-72 w-full object-contain bg-muted" />
+            <div className="flex flex-wrap gap-2 border-t border-border p-3">
+              <Button type="button" variant="outline" onClick={() => setOpen(true)}>
+                Change
+              </Button>
+              <label className="inline-flex min-h-10 cursor-pointer items-center rounded-md px-3 text-sm font-medium text-foreground shadow-[var(--shadow-border)] hover:bg-accent">
+                Upload new
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="sr-only"
+                  onChange={onFileInput}
+                />
+              </label>
+              <Button type="button" variant="ghost" onClick={() => onPick("")}>
+                Remove
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setOver(true);
+            }}
+            onDragLeave={() => setOver(false)}
+            onDrop={onDrop}
+            className={cn(
+              "flex min-h-44 flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-8 text-center transition-colors",
+              over ? "border-ring bg-accent" : "border-input bg-muted/40",
+            )}
+          >
+            <ImagePlus className="size-8 text-muted-foreground" />
+            <p className="text-sm font-medium text-foreground">Add photos</p>
+            <p className="text-sm text-muted-foreground">Drag and drop, or upload from this device.</p>
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+              <label className="inline-flex min-h-11 cursor-pointer items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">
+                Upload
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="sr-only"
+                  onChange={onFileInput}
+                />
+              </label>
+              <Button type="button" variant="outline" onClick={() => setOpen(true)}>
+                Choose from Photos
+              </Button>
+            </div>
+          </div>
+        )}
+        {library}
+      </div>
+    );
+  }
 
   return (
     <Field label={label}>
@@ -59,55 +190,7 @@ export function MediaPicker({
           ) : null}
         </div>
       </div>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Photos</DialogTitle>
-            <DialogDescription>One library. Pick a picture or add one.</DialogDescription>
-          </DialogHeader>
-          <label className="inline-flex h-11 cursor-pointer items-center rounded-full bg-primary px-4 text-sm text-primary-foreground">
-            Upload
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="sr-only"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                e.target.value = "";
-                if (!file) return;
-                void saveAction("Photo added", async () => {
-                  await addMedia({ clientId, name: file.name, file });
-                });
-              }}
-            />
-          </label>
-          {media.length === 0 ? (
-            <p className="py-6 text-sm text-muted-foreground">Nothing in the cupboard yet.</p>
-          ) : (
-            <ul className="grid max-h-80 grid-cols-3 gap-2 overflow-y-auto">
-              {media.map((m) => (
-                <li key={m.id}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onPick(m.path);
-                      setOpen(false);
-                    }}
-                    className={cn(
-                      "block aspect-square w-full overflow-hidden border",
-                      m.path === valuePath ? "border-emerald" : "border-border",
-                    )}
-                  >
-                    {m.url ? (
-                      <img src={m.url} alt="" className="h-full w-full object-cover" />
-                    ) : null}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </DialogContent>
-      </Dialog>
+      {library}
     </Field>
   );
 }

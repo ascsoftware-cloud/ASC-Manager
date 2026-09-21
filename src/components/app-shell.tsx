@@ -5,8 +5,8 @@ import {
   CalendarCheck,
   CalendarDays,
   ChevronDown,
+  ExternalLink,
   FileText,
-  Image,
   Inbox,
   LayoutDashboard,
   LifeBuoy,
@@ -15,6 +15,7 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
+import { ClientJump } from "@/components/client-jump";
 import { CookieBanner } from "@/components/cookie-banner";
 import { LoginScreen } from "@/components/login-screen";
 import { AscLockup } from "@/components/logo";
@@ -30,6 +31,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { initials } from "@/lib/format";
 import { useAscStore, useCurrentUser, useOwnClient, useStoreReady } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -57,7 +59,6 @@ const CLIENT_NAV: {
   { to: "/calendar", label: "Calendar", icon: CalendarDays, module: "calendar" },
   { to: "/bookings", label: "Bookings", icon: CalendarCheck, module: "bookings" },
   { to: "/enquiries", label: "Enquiries", icon: Inbox, badge: "enquiries" },
-  { to: "/media", label: "Photos", icon: Image },
   { to: "/visitors", label: "Visitors", icon: Users },
   { to: "/billing", label: "Billing", icon: Wallet },
   { to: "/requests", label: "Ask ASC", icon: LifeBuoy },
@@ -101,6 +102,14 @@ function StaffNav({
   );
 }
 
+function visibleClientNav(client: ReturnType<typeof useOwnClient>) {
+  return CLIENT_NAV.filter((item) => {
+    if (!item.module) return true;
+    if (!client) return false;
+    return client.modules[item.module];
+  });
+}
+
 function ClientNav({
   current,
   onNavigate,
@@ -113,14 +122,10 @@ function ClientNav({
   const newEnquiries = useAscStore(
     (s) => s.enquiries.filter((e) => e.clientId === user?.clientId && e.status === "new").length,
   );
-  const items = CLIENT_NAV.filter((item) => {
-    if (!item.module) return true;
-    if (!client) return false;
-    return client.modules[item.module];
-  });
+  const items = visibleClientNav(client);
 
   return (
-    <nav className="flex flex-col gap-1">
+    <nav className="flex flex-col gap-0.5">
       {items.map((item) => {
         const active =
           item.to === "/"
@@ -134,18 +139,16 @@ function ClientNav({
             to={item.to}
             onClick={onNavigate}
             className={cn(
-              "flex min-h-11 items-center gap-3 rounded-md px-3 text-sm transition-colors duration-150",
+              "flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors duration-150",
               active
-                ? "border-l-2 border-l-emerald bg-accent text-champagne"
-                : "border-l-2 border-l-transparent text-muted-foreground hover:bg-accent/60 hover:text-champagne",
+                ? "bg-card text-foreground shadow-[var(--shadow-lift)]"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground",
             )}
           >
             <Icon className={cn("size-4", active ? "text-emerald" : "")} />
-            <span className={cn("flex-1", active && "text-champagne")}>
-              {item.to === "/content" && client?.modules.advert ? "Advert" : item.label}
-            </span>
+            <span className="flex-1">{item.label}</span>
             {badge ? (
-              <span className="rounded-full bg-emerald px-1.5 py-0.5 text-[10px] font-medium text-ink">
+              <span className="rounded-full bg-emerald px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">
                 {badge}
               </span>
             ) : null}
@@ -167,9 +170,19 @@ function UserMenu() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="inline-flex min-h-11 items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-champagne"
+          className={cn(
+            "inline-flex min-h-11 items-center gap-2 text-champagne",
+            user.role === "client"
+              ? "text-sm font-medium"
+              : "text-[11px] uppercase tracking-[0.16em]",
+          )}
         >
-          {user.name}
+          {user.role === "client" ? (
+            <span className="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+              {initials(user.name) || "•"}
+            </span>
+          ) : null}
+          <span className="hidden sm:inline">{user.name}</span>
           <ChevronDown className="size-3.5 text-muted-foreground" />
         </button>
       </DropdownMenuTrigger>
@@ -231,26 +244,34 @@ function ClientSidebar({ current, onNavigate }: { current: string; onNavigate?: 
   const client = useOwnClient();
   const signOut = useAscStore((s) => s.signOut);
   const navigate = useNavigate();
+  const liveSite = useAscStore((s) =>
+    s.sites.find((site) => site.clientId === client?.id && site.kind === "public"),
+  );
 
   return (
-    <div className="flex h-full flex-col gap-6 p-5">
+    <div className="flex h-full flex-col gap-5 p-4">
       <AscLockup />
-      <div>
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-emerald">Your site</p>
-        <p className="mt-1 font-display text-xl text-champagne">{client?.name}</p>
-        <p className="text-xs text-muted-foreground">{client?.city}</p>
+      <div className="rounded-2xl bg-card px-3 py-3 shadow-[var(--shadow-lift)]">
+        <p className="text-xs font-medium text-muted-foreground">Your site</p>
+        <p className="mt-0.5 truncate text-sm font-semibold text-foreground">{client?.name}</p>
+        <p className="truncate text-xs text-muted-foreground">{client?.city}</p>
       </div>
       <ClientNav current={current} onNavigate={onNavigate} />
-      <div className="mt-auto space-y-3 pt-4">
-        <div className="rounded-md bg-muted/70 p-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-emerald">Powered by ASC</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            You run the site. Your customers see the public side.
-          </p>
-        </div>
+      <div className="mt-auto space-y-2 pt-4">
+        {liveSite?.url ? (
+          <a
+            href={liveSite.url}
+            target="_blank"
+            rel="noreferrer"
+            className="flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium text-emerald hover:bg-accent"
+          >
+            <ExternalLink className="size-4" />
+            View live site
+          </a>
+        ) : null}
         <button
           type="button"
-          className="min-h-11 text-left text-sm text-muted-foreground hover:text-champagne"
+          className="flex min-h-10 w-full items-center rounded-xl px-3 text-left text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
           onClick={() => {
             void signOut().then(() => navigate({ to: "/" }));
           }}
@@ -271,6 +292,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const isLegal = pathname === "/privacy" || pathname === "/terms";
   const isClient = user?.role === "client";
+  const toastTheme = isClient ? "light" : "dark";
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isClient) root.classList.add("client-desk");
+    else root.classList.remove("client-desk");
+    return () => root.classList.remove("client-desk");
+  }, [isClient]);
 
   return (
     <HydrateGate>
@@ -285,15 +314,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="min-h-dvh bg-background">
             <LoginScreen />
             <CookieBanner />
-            <Toaster />
+            <Toaster theme={toastTheme} />
           </div>
         ) : isClient ? (
-          <div className="min-h-dvh bg-background text-foreground">
-            <aside className="fixed inset-y-0 left-0 hidden w-60 border-r border-border bg-sidebar lg:block">
+          <div className="client-desk min-h-dvh bg-background text-foreground">
+            <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-border bg-sidebar lg:block">
               <ClientSidebar current={pathname} />
             </aside>
-            <div className="flex min-h-dvh flex-col lg:pl-60">
-              <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-background/95 px-3 backdrop-blur-sm sm:px-6">
+            <div className="flex min-h-dvh flex-col lg:pl-64">
+              <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-3 backdrop-blur-md sm:px-6">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -303,18 +332,21 @@ export function AppShell({ children }: { children: ReactNode }) {
                 >
                   <Menu className="size-5" />
                 </Button>
-                <p className="truncate text-sm text-champagne lg:hidden">
+                <p className="truncate text-sm font-medium text-champagne lg:hidden">
                   {client?.name}
                 </p>
+                <div className="hidden min-w-0 flex-1 sm:flex">
+                  <ClientJump items={visibleClientNav(client).map(({ to, label }) => ({ to, label }))} />
+                </div>
                 <div className="ml-auto">
                   <UserMenu />
                 </div>
               </header>
-              <main className="flex-1 px-4 py-8 sm:px-8 sm:py-10">{children}</main>
+              <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">{children}</main>
               <Footer />
             </div>
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-              <SheetContent side="left" className="w-60 p-0">
+              <SheetContent side="left" className="client-desk w-64 p-0">
                 <SheetHeader className="sr-only">
                   <SheetTitle>Menu</SheetTitle>
                 </SheetHeader>
@@ -322,7 +354,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </SheetContent>
             </Sheet>
             <CookieBanner />
-            <Toaster />
+            <Toaster theme={toastTheme} />
           </div>
         ) : (
           <div className="flex min-h-dvh flex-col bg-background text-foreground">
@@ -368,7 +400,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </SheetContent>
             </Sheet>
             <CookieBanner />
-            <Toaster />
+            <Toaster theme={toastTheme} />
           </div>
         )}
       </TooltipProvider>

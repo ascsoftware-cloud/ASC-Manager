@@ -19,11 +19,17 @@ export const Route = createFileRoute("/_app/content")({
 
 const LABELS: Record<SectionKey, string> = {
   welcome: "Welcome",
-  this_week: "Adverts",
+  this_week: "Site pictures",
   this_sunday: "This Sunday",
   featured: "Featured from the shop",
   hours: "Hours & contact",
 };
+
+function showSection(sec: { key: SectionKey }, advertOn: boolean) {
+  if (sec.key === "this_sunday") return false;
+  if (sec.key === "this_week" && !advertOn) return false;
+  return true;
+}
 
 function WebsitePage() {
   const user = useCurrentUser();
@@ -74,15 +80,6 @@ function WebsitePage() {
     if (clientId) void ensureSections(clientId);
   }, [clientId, ensureSections]);
 
-  const liveAdvert = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    return (
-      adverts.find(
-        (a) => a.status === "live" && a.startsOn <= today && a.endsOn >= today,
-      ) ?? adverts.find((a) => a.status === "live") ?? null
-    );
-  }, [adverts]);
-
   const welcome = String(
     sections.find((s) => s.key === "welcome")?.payload.line ?? "",
   );
@@ -95,12 +92,12 @@ function WebsitePage() {
     <div className="mx-auto grid max-w-6xl gap-8 xl:grid-cols-[1fr_20rem]">
       <div className="flex flex-col gap-8">
         <PageHeader
-          eyebrow={client?.modules.advert ? "Advert" : "Website"}
-          title={client?.modules.advert ? "Advert" : "Website"}
+          eyebrow="Website"
+          title="Website"
           description={
             client?.modules.advert
-              ? "Post as many as you need — nine in a day or one a month. Live ones show on the public site for their dates."
-              : "Welcome, hours, and the rest of the homepage. This site has no advert board."
+              ? "Welcome, hours, and pictures that show on the public site. Only this site has the pictures slot."
+              : "Welcome, hours, and the rest of the homepage."
           }
         />
         {user?.role === "operator" ? (
@@ -114,7 +111,7 @@ function WebsitePage() {
         ) : null}
 
         {client?.modules.advert ? (
-          <AdvertBoard
+          <SiteMediaBoard
             clientId={clientId}
             storeOn={Boolean(client?.modules.store)}
             adverts={adverts}
@@ -125,7 +122,7 @@ function WebsitePage() {
 
         <ul className="flex flex-col gap-3">
           {sections
-            .filter((sec) => client?.modules.advert || sec.key !== "this_week")
+            .filter((sec) => showSection(sec, Boolean(client?.modules.advert)))
             .map((sec) => (
             <li
               key={sec.id}
@@ -139,15 +136,15 @@ function WebsitePage() {
                 setDragId(null);
                 void saveAction("Order saved", () => reorderSections(clientId, next));
               }}
-              className="border border-border bg-card"
+              className="overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-lift)]"
             >
               <div className="flex items-center gap-1 border-b border-border px-1">
                 <GripHandle />
-                <p className="flex-1 font-mono text-[11px] uppercase tracking-[0.16em] text-champagne">
+                <p className="flex-1 text-sm font-semibold text-foreground">
                   {LABELS[sec.key]}
                 </p>
                 <label className="flex min-h-11 items-center gap-2 pr-3">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                  <span className="text-xs font-medium text-muted-foreground">
                     {sec.visible ? "On" : "Hidden"}
                   </span>
                   <Switch
@@ -165,10 +162,7 @@ function WebsitePage() {
                   section={sec}
                   client={client}
                   products={products}
-                  events={events}
-                  advert={liveAdvert}
                   storeOn={Boolean(client?.modules.store)}
-                  calendarOn={Boolean(client?.modules.calendar)}
                   onChange={(payload) => {
                     void saveAction("Saved", () => updateSection(sec.id, { payload }));
                   }}
@@ -180,7 +174,7 @@ function WebsitePage() {
       </div>
 
       <aside className="xl:sticky xl:top-20">
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-emerald">On your site</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">On your site</p>
         <div className="mx-auto mt-3 w-[280px] overflow-hidden rounded-[2rem] border border-border bg-ink p-3 shadow-[var(--shadow-lift)]">
           <div className="aspect-[9/16] overflow-y-auto bg-[#081410] px-4 py-6">
             <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-emerald">
@@ -188,7 +182,7 @@ function WebsitePage() {
             </p>
             {sections
               .filter((s) => s.visible)
-              .filter((s) => client?.modules.advert || s.key !== "this_week")
+              .filter((s) => showSection(s, Boolean(client?.modules.advert)))
               .map((s) => (
                 <div key={s.id} className="mt-4">
                   {s.key === "welcome" ? (
@@ -199,7 +193,7 @@ function WebsitePage() {
                   {s.key === "this_week" ? (
                     <div>
                       <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-emerald">
-                        Adverts
+                        Pictures
                       </p>
                       {adverts.filter((a) => a.status === "live").length === 0 ? (
                         <p className="mt-1 text-xs text-muted-foreground">Nothing live</p>
@@ -209,16 +203,11 @@ function WebsitePage() {
                           .slice(0, 5)
                           .map((a) => (
                             <p key={a.id} className="mt-1 text-xs text-champagne">
-                              {a.headline || "Advert"}
+                              {a.headline || "Picture"}
                             </p>
                           ))
                       )}
                     </div>
-                  ) : null}
-                  {s.key === "this_sunday" ? (
-                    <p className="text-xs text-muted-foreground">
-                      {String(s.payload.override || events[0]?.title || "Next gathering")}
-                    </p>
                   ) : null}
                   {s.key === "featured" && client?.modules.store ? (
                     <ul className="mt-1 space-y-1">
@@ -250,19 +239,13 @@ function SectionEditor({
   section,
   client,
   products,
-  events,
-  advert,
   storeOn,
-  calendarOn,
   onChange,
 }: {
   section: ContentSection;
   client?: { hours: string; phone: string; address: string; whatsapp: string } | undefined;
   products: { id: string; name: string }[];
-  events: { id: string; title: string }[];
-  advert: WeeklyAdvert | null;
   storeOn: boolean;
-  calendarOn: boolean;
   onChange: (payload: Record<string, unknown>) => void;
 }) {
   if (section.key === "welcome") {
@@ -280,35 +263,8 @@ function SectionEditor({
   if (section.key === "this_week") {
     return (
       <p className="text-sm text-muted-foreground">
-        Adverts you mark Live show here on the public site for their from–to dates. You can run many at once.
+        Pictures you mark Live show in this slot on the public site for their dates. You can have more than one up at a time.
       </p>
-    );
-  }
-  if (section.key === "this_sunday") {
-    if (!calendarOn) {
-      return (
-        <Field label="Override">
-          <Input
-            defaultValue={String(section.payload.override ?? "")}
-            onBlur={(e) => onChange({ ...section.payload, override: plainText(e.target.value) })}
-          />
-        </Field>
-      );
-    }
-    return (
-      <Field label="From calendar">
-        <NativeSelect
-          value={String(section.payload.eventId ?? "")}
-          onChange={(e) => onChange({ ...section.payload, eventId: e.target.value })}
-        >
-          <option value="">Next upcoming</option>
-          {events.map((ev) => (
-            <option key={ev.id} value={ev.id}>
-              {ev.title}
-            </option>
-          ))}
-        </NativeSelect>
-      </Field>
     );
   }
   if (section.key === "featured") {
@@ -351,7 +307,7 @@ function todayStamp(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function AdvertBoard({
+function SiteMediaBoard({
   clientId,
   storeOn,
   adverts,
@@ -420,10 +376,10 @@ function AdvertBoard({
     <Surface className="p-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-emerald">Adverts</p>
-          <p className="mt-1 font-display text-2xl text-champagne">Post an advert</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald">Site pictures</p>
+          <p className="mt-1 text-xl font-semibold tracking-tight text-foreground">Add pictures to the site</p>
           <p className="mt-1 max-w-md text-sm text-muted-foreground">
-            As many as you like. Same day or a whole month. Live ones all show.
+            This slot is on your public homepage. Add a photo, give it a caption if you want, and mark it Live.
           </p>
         </div>
         <Button
@@ -431,7 +387,7 @@ function AdvertBoard({
           className="rounded-full"
           onClick={() => setSelectedId("new")}
         >
-          Add advert
+          Add picture
         </Button>
       </div>
       {adverts.length > 0 ? (
@@ -446,37 +402,54 @@ function AdvertBoard({
                   selectedId === a.id ? "bg-accent" : "hover:bg-accent/50",
                 )}
               >
-                <span className="text-sm text-champagne">{a.headline || "Untitled"}</span>
+                <span className="text-sm text-champagne">{a.headline || "Untitled picture"}</span>
                 <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                  {a.status} · {formatDay(a.startsOn)}–{formatDay(a.endsOn)}
+                  {a.status === "draft" ? "hidden" : a.status} · {formatDay(a.startsOn)}–{formatDay(a.endsOn)}
                 </span>
               </button>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-4 text-sm text-muted-foreground">None yet. Add one.</p>
+        <p className="mt-4 text-sm text-muted-foreground">No pictures on the site yet.</p>
       )}
       <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-        {selectedId === "new" ? "New" : expired ? "Expired" : status}
+        {selectedId === "new" ? "New picture" : expired ? "Dates ended" : status === "draft" ? "Hidden" : status}
       </p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <Field label="From">
+        <Field label="Show from">
           <Input type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />
         </Field>
-        <Field label="To">
+        <Field label="Show until">
           <Input type="date" value={endsOn} onChange={(e) => setEndsOn(e.target.value)} />
         </Field>
       </div>
       <div className="mt-4">
-        <MediaPicker clientId={clientId} valuePath={photoPath} onPick={setPhotoPath} label="Banner" />
+        <MediaPicker
+          clientId={clientId}
+          valuePath={photoPath}
+          onPick={setPhotoPath}
+          label="Picture"
+          variant="dropzone"
+        />
       </div>
       <div className="mt-4 grid gap-4">
-        <Field label="Headline">
-          <Input value={headline} onChange={(e) => setHeadline(e.target.value)} maxLength={80} />
+        <Field label="Caption">
+          <Input
+            value={headline}
+            onChange={(e) => setHeadline(e.target.value)}
+            maxLength={80}
+            placeholder="Optional"
+          />
         </Field>
-        <Field label="Body">
-          <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={2} maxLength={240} />
+        <Field label="Note">
+          <Textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={2}
+            maxLength={240}
+            placeholder="Optional"
+          />
         </Field>
       </div>
       {storeOn ? (
@@ -521,7 +494,11 @@ function AdvertBoard({
         </Field>
       )}
       <div className="mt-6 flex flex-wrap gap-2">
-        {(["draft", "scheduled", "live"] as const).map((st) => (
+        {([
+          ["draft", "Hidden"],
+          ["scheduled", "Scheduled"],
+          ["live", "Live"],
+        ] as const).map(([st, label]) => (
           <Button
             key={st}
             type="button"
@@ -529,14 +506,14 @@ function AdvertBoard({
             className="rounded-full"
             onClick={() => setStatus(st)}
           >
-            {st}
+            {label}
           </Button>
         ))}
         <Button
           type="button"
           className="rounded-full"
           onClick={() =>
-            void saveAction("Advert saved", async () => {
+            void saveAction("Picture saved", async () => {
               await saveAdvert({
                 id: selectedId === "new" ? undefined : advert?.id,
                 clientId,

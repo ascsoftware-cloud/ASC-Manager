@@ -128,3 +128,100 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Client desk: warm off-white canvas, white cards, green as accent only. */
+.client-desk {
+  color-scheme: light;
+  --font-sans: "Inter", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --color-background: #f3f4f2;
+  --color-foreground: #171c19;
+  --color-card: #ffffff;
+  --color-card-foreground: #171c19;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #171c19;
+  --color-primary: #166534;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #eef0ed;
+  --color-secondary-foreground: #171c19;
+  --color-muted: #eceeea;
+  --color-muted-foreground: #5c6560;
+  --color-accent: #e8ebe6;
+  --color-accent-foreground: #171c19;
+  --color-destructive: #b42318;
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgb(23 28 25 / 0.08);
+  --color-input: rgb(23 28 25 / 0.12);
+  --color-ring: #166534;
+  --color-sidebar: #eaece8;
+  --color-champagne: #171c19;
+  --color-ink: #171c19;
+  --color-gold: #8a7340;
+  --color-sage: #5c6560;
+  --color-emerald: #166534;
+  --color-success: #166534;
+  --color-warn: #9a6700;
+  --shadow-border: 0 0 0 1px rgb(23 28 25 / 0.08);
+  --shadow-border-hover: 0 0 0 1px rgb(23 28 25 / 0.16);
+  --shadow-lift: 0 1px 2px rgb(23 28 25 / 0.04), 0 10px 28px -16px rgb(23 28 25 / 0.12);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+}
+
+.client-desk input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+.client-desk textarea,
+.client-desk select {
+  background-color: #ffffff;
+  color: #171c19;
+  box-shadow: 0 0 0 1px rgb(23 28 25 / 0.12);
+  border-radius: 10px;
+}
+
+.client-desk input::placeholder,
+.client-desk textarea::placeholder {
+  color: #8a938d;
+}
+
+.client-desk input:focus-visible,
+.client-desk textarea:focus-visible,
+.client-desk select:focus-visible {
+  box-shadow: 0 0 0 2px #166534;
+  outline: none;
+}
+
+.client-desk button[role="switch"][data-state="checked"] {
+  background-color: #166534;
+}
+
+.client-desk button[role="switch"] span {
+  background-color: #ffffff;
+}
+
+.client-desk [data-page-header] h1 {
+  font-family: var(--font-sans);
+  font-size: 1.75rem;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+}
+
+@media (min-width: 640px) {
+  .client-desk [data-page-header] h1 {
+    font-size: 2rem;
+  }
+}
+
+.client-desk [data-surface] {
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: var(--shadow-lift);
+}
+
+.client-desk label > span.font-mono {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}

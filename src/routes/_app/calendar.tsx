@@ -28,8 +28,6 @@ function CalendarPage() {
   const store = useAscStore();
   const addEvent = useAscStore((s) => s.addEvent);
   const removeEvent = useAscStore((s) => s.removeEvent);
-  const ensureSections = useAscStore((s) => s.ensureSections);
-  const updateSection = useAscStore((s) => s.updateSection);
   const ids = visibleClientIds(store, user);
   const rows = store.events
     .filter((e) => ids.includes(e.clientId))
@@ -106,22 +104,6 @@ function CalendarPage() {
                     ) : null}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        if (!clientId) return;
-                        void saveAction("On the homepage", async () => {
-                          await ensureSections(clientId);
-                          const sec = useAscStore
-                            .getState()
-                            .sections.find((s) => s.clientId === clientId && s.key === "this_sunday");
-                          if (sec) await updateSection(sec.id, { payload: { eventId: e.id } });
-                        });
-                      }}
-                    >
-                      Use on homepage
-                    </Button>
                     <Button
                       size="sm"
                       variant="ghost"

@@ -1,9 +1,9 @@
 import { Toaster as Sonner } from "sonner";
 
-export function Toaster() {
+export function Toaster({ theme = "dark" }: { theme?: "dark" | "light" }) {
   return (
     <Sonner
-      theme="dark"
+      theme={theme}
       className="toaster group"
       toastOptions={{
         classNames: {

@@ -16,13 +16,14 @@ export function PageHeader({
 }) {
   return (
     <header
+      data-page-header
       className={cn(
         "flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between",
         className,
       )}
     >
       <div className="min-w-0 space-y-2">
-        {eyebrow ? (
+        {eyebrow && eyebrow !== title ? (
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-emerald">
             {eyebrow}
           </p>
@@ -68,6 +69,7 @@ export function Surface({
 }) {
   return (
     <section
+      data-surface
       className={cn("border border-border bg-card/80", className)}
     >
       {children}

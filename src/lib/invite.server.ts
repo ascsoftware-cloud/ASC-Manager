@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
+import { authCallbackUrl } from "./auth/email-callback";
 import type { InviteInput } from "./invite";
 
 let fileEnv: Record<string, string> | null = null;
@@ -86,7 +87,7 @@ export async function inviteUser(data: InviteInput): Promise<{ ok: true }> {
     throw new Error("Staff accounts are not tied to a client.");
   }
 
-  const redirectTo = `${appOrigin()}/auth/callback`;
+  const redirectTo = authCallbackUrl(appOrigin());
   const { error } = await admin.auth.admin.inviteUserByEmail(email, {
     data: {
       role: data.role,

@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 
-export async function saveAction(ok: string, fn: () => Promise<void>): Promise<boolean> {
+export async function saveAction(ok: string, fn: () => Promise<unknown>): Promise<boolean> {
   try {
     await fn();
     toast.success(ok);

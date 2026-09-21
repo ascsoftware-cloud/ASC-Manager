@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { inviteUserFn } from "@/lib/invite";
+import { authCallbackUrl } from "@/lib/auth/email-callback";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { getSupabase, requireSupabase } from "@/lib/supabase/client";
 import {
@@ -57,34 +58,27 @@ const DEFAULT_BLOCKS: Array<
     hint: "Hero on the public site.",
     maxLen: 80,
   },
+
   {
-    group: "Home",
-    key: "this_sunday",
-    label: "This Sunday",
-    kind: "text",
-    hint: "",
-    maxLen: 90,
-  },
-  {
-    group: "Advert",
+    group: "Site pictures",
     key: "advert_image",
-    label: "Advert image",
+    label: "Site picture",
     kind: "image",
     hint: "JPG, PNG, WEBP or GIF, up to 4 MB.",
     maxLen: 0,
   },
   {
-    group: "Advert",
+    group: "Site pictures",
     key: "advert_link",
-    label: "Advert links to",
+    label: "Picture links to",
     kind: "url",
     hint: "Full address including https://",
     maxLen: 240,
   },
   {
-    group: "Advert",
+    group: "Site pictures",
     key: "advert_caption",
-    label: "Advert caption",
+    label: "Picture caption",
     kind: "text",
     hint: "",
     maxLen: 80,
@@ -117,7 +111,6 @@ function emptyTables(): AppTables {
 const DEFAULT_SECTION_KEYS: SectionKey[] = [
   "welcome",
   "this_week",
-  "this_sunday",
   "featured",
   "hours",
 ];
@@ -267,7 +260,11 @@ type AscStore = AppTables & {
   addSite: (input: Omit<Site, "id">) => Promise<void>;
   updateClient: (id: string, patch: Partial<Client>) => Promise<void>;
   setEnquiryStatus: (id: string, status: EnquiryStatus) => Promise<void>;
-  addMedia: (input: { clientId: string; name: string; file: File }) => Promise<void>;
+  addMedia: (input: {
+    clientId: string;
+    name: string;
+    file: File;
+  }) => Promise<{ path: string }>;
   removeMedia: (id: string) => Promise<void>;
   setInvoiceStatus: (id: string, status: InvoiceStatus) => Promise<void>;
   addProduct: (input: Omit<Product, "id" | "sortOrder" | "photo">) => Promise<void>;
@@ -424,7 +421,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
     if (!isSupabaseConfigured()) return;
     const sb = requireSupabase();
     await sb.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: authCallbackUrl(),
     });
   },
 
@@ -733,6 +730,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
       throw new Error("Could not save that photo.");
     }
     set((s) => ({ media: [mapMedia(data), ...s.media] }));
+    return { path };
   },
 
   removeMedia: async (id) => {
@@ -979,7 +977,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
       ? sb.from("weekly_adverts").update(row).eq("id", input.id).select("*").single()
       : sb.from("weekly_adverts").insert(row).select("*").single();
     const { data, error } = await q;
-    fail(error, "Could not save that advert.");
+    fail(error, "Could not save that picture.");
     const mapped = mapAdvert(data);
     set((s) => ({
       adverts: input.id
@@ -990,14 +988,14 @@ export const useAscStore = create<AscStore>()((set, get) => ({
 
   setAdvertStatus: async (id, status) => {
     const current = get().adverts.find((a) => a.id === id);
-    if (!current) throw new Error("Advert not found.");
+    if (!current) throw new Error("Picture not found.");
     await get().saveAdvert({ ...current, status });
   },
 
   removeAdvert: async (id) => {
     const sb = requireSupabase();
     const { error } = await sb.from("weekly_adverts").delete().eq("id", id);
-    fail(error, "Could not remove that advert.");
+    fail(error, "Could not remove that picture.");
     set((s) => ({ adverts: s.adverts.filter((a) => a.id !== id) }));
   },
 }));
