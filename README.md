@@ -60,4 +60,4 @@ Until that site is wired, saving Website / Store / Calendar / Business only writ
 | `supabase/migrations/` | Schema + RLS + storage + public RPCs |
 | `src/routes/_app/` | Pages |
 
-Collage Gemeenskapskerk is a **client you create and invite**. Do not invent a church login in the repo.
+Collage Gemeenskapskerk is a **client you create and invite**. Do not invent a church login in the repo..
