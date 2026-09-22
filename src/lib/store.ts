@@ -217,6 +217,34 @@ async function loadTables(): Promise<AppTables> {
   };
 }
 
+function scopeTablesToTenant(tables: AppTables, tenantId: string): AppTables {
+  const siteIds = new Set(
+    tables.sites.filter((site) => site.clientId === tenantId).map((site) => site.id),
+  );
+
+  return {
+    ...tables,
+    users: tables.users.filter((user) => user.clientId === tenantId),
+    clients: tables.clients.filter((client) => client.id === tenantId),
+    sites: tables.sites.filter((site) => site.clientId === tenantId),
+    monitors: tables.monitors.filter((monitor) => siteIds.has(monitor.siteId)),
+    incidents: tables.incidents.filter((incident) => siteIds.has(incident.siteId)),
+    visitors: tables.visitors.filter((visitor) => siteIds.has(visitor.siteId)),
+    blocks: tables.blocks.filter((block) => siteIds.has(block.siteId)),
+    renewals: tables.renewals.filter((item) => item.clientId === tenantId),
+    requests: tables.requests.filter((request) => request.clientId === tenantId),
+    log: tables.log.filter((entry) => entry.clientId === tenantId),
+    enquiries: tables.enquiries.filter((enquiry) => enquiry.clientId === tenantId),
+    media: tables.media.filter((media) => media.clientId === tenantId),
+    invoices: tables.invoices.filter((invoice) => invoice.clientId === tenantId),
+    products: tables.products.filter((product) => product.clientId === tenantId),
+    events: tables.events.filter((event) => event.clientId === tenantId),
+    bookings: tables.bookings.filter((booking) => booking.clientId === tenantId),
+    sections: tables.sections.filter((section) => section.clientId === tenantId),
+    adverts: tables.adverts.filter((advert) => advert.clientId === tenantId),
+  };
+}
+
 type AscStore = AppTables & {
   ready: boolean;
   loadError: string | null;
@@ -371,8 +399,12 @@ export const useAscStore = create<AscStore>()((set, get) => ({
     }
     try {
       const tables = await loadTables();
+      const scopedTables =
+        profile.role === "client" && profile.tenant_id
+          ? scopeTablesToTenant(tables, profile.tenant_id)
+          : tables;
       set({
-        ...tables,
+        ...scopedTables,
         ready: true,
         loadError: null,
         session: { userId: session.user.id },

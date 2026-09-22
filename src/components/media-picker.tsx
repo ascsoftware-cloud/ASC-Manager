@@ -1,5 +1,5 @@
 import { useMemo, useState, type ChangeEvent, type DragEvent } from "react";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, X } from "lucide-react";
 import { Field } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +32,7 @@ export function MediaPicker({
     [allMedia, clientId],
   );
   const addMedia = useAscStore((s) => s.addMedia);
+  const removeMedia = useAscStore((s) => s.removeMedia);
   const [open, setOpen] = useState(false);
   const [over, setOver] = useState(false);
   const current = media.find((m) => m.path === valuePath);
@@ -78,7 +79,7 @@ export function MediaPicker({
         ) : (
           <ul className="grid max-h-80 grid-cols-3 gap-2 overflow-y-auto">
             {media.map((m) => (
-              <li key={m.id}>
+              <li key={m.id} className="relative">
                 <button
                   type="button"
                   onClick={() => {
@@ -93,6 +94,20 @@ export function MediaPicker({
                   {m.url ? (
                     <img src={m.url} alt="" className="h-full w-full object-cover" />
                   ) : null}
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Remove ${m.name}`}
+                  title="Remove photo"
+                  onClick={() => {
+                    void saveAction("Photo removed", async () => {
+                      await removeMedia(m.id);
+                      if (m.path === valuePath) onPick("");
+                    });
+                  }}
+                  className="absolute right-1 top-1 inline-flex size-7 items-center justify-center rounded-full bg-black/70 text-white shadow-sm transition-colors hover:bg-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <X className="size-4" />
                 </button>
               </li>
             ))}
