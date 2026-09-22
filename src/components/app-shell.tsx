@@ -245,7 +245,7 @@ function HydrateGate({ children }: { children: ReactNode }) {
 function Splash() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background text-champagne">
-      <AscLockup />
+      <AscLockup size="lg" />
       <p className="animate-pulse text-[11px] uppercase tracking-[0.22em] text-emerald">
         Loading
       </p>
