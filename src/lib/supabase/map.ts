@@ -17,6 +17,7 @@ import type {
   Renewal,
   SectionKey,
   Site,
+  SiteRedesign,
   WeeklyAdvert,
   SupportRequest,
   User,
@@ -79,6 +80,17 @@ export function mapSite(row: Row): Site {
     host: str(row.host),
     url: str(row.url),
     kind: row.kind === "admin" ? "admin" : "public",
+  };
+}
+
+export function mapSiteRedesign(row: Row): SiteRedesign {
+  return {
+    id: str(row.id),
+    siteId: str(row.site_id),
+    clientId: str(row.tenant_id),
+    redesignUrl: str(row.redesign_url),
+    notes: str(row.notes),
+    updatedAt: str(row.updated_at),
   };
 }
 

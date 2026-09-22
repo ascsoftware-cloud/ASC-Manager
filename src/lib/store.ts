@@ -19,6 +19,7 @@ import {
   mapRequest,
   mapSection,
   mapSite,
+  mapSiteRedesign,
   mapTenant,
   mapUser,
   mapVisitor,
@@ -105,6 +106,7 @@ function emptyTables(): AppTables {
     bookings: [],
     sections: [],
     adverts: [],
+    siteRedesigns: [],
   };
 }
 
@@ -151,6 +153,7 @@ async function loadTables(): Promise<AppTables> {
     bookings,
     sections,
     adverts,
+    siteRedesigns,
     enquiries,
     media,
     invoices,
@@ -170,6 +173,7 @@ async function loadTables(): Promise<AppTables> {
     sb.from("bookings").select("*").order("starts_at"),
     sb.from("content_sections").select("*").order("sort_order"),
     sb.from("weekly_adverts").select("*").order("starts_on", { ascending: false }),
+    sb.from("site_redesigns").select("*"),
     sb.from("enquiries").select("*").order("created_at", { ascending: false }),
     sb.from("media").select("*").order("added_at", { ascending: false }),
     sb.from("invoices").select("*").order("due_at"),
@@ -210,6 +214,9 @@ async function loadTables(): Promise<AppTables> {
     bookings: bookings.error ? [] : (bookings.data ?? []).map(mapBooking),
     sections: sections.error ? [] : (sections.data ?? []).map(mapSection),
     adverts: adverts.error ? [] : (adverts.data ?? []).map(mapAdvert),
+    siteRedesigns: siteRedesigns.error
+      ? []
+      : (siteRedesigns.data ?? []).map(mapSiteRedesign),
     enquiries: (enquiries.data ?? []).map(mapEnquiry),
     media: (media.data ?? []).map(mapMedia),
     invoices: (invoices.data ?? []).map(mapInvoice),
@@ -258,6 +265,10 @@ type AscStore = AppTables & {
     email: string;
   }) => Promise<void>;
   addSite: (input: Omit<Site, "id">) => Promise<void>;
+  saveSiteRedesign: (
+    siteId: string,
+    input: { redesignUrl: string; notes: string },
+  ) => Promise<void>;
   updateClient: (id: string, patch: Partial<Client>) => Promise<void>;
   setEnquiryStatus: (id: string, status: EnquiryStatus) => Promise<void>;
   addMedia: (input: {
@@ -670,6 +681,33 @@ export const useAscStore = create<AscStore>()((set, get) => ({
       sites: [...s.sites, site],
       monitors: [...s.monitors, ...(monitorRows ?? []).map(mapMonitor)],
       blocks,
+    }));
+  },
+
+  saveSiteRedesign: async (siteId, input) => {
+    const sb = requireSupabase();
+    const site = get().sites.find((x) => x.id === siteId);
+    if (!site) throw new Error("Site not found.");
+    const { data, error } = await sb
+      .from("site_redesigns")
+      .upsert(
+        {
+          site_id: siteId,
+          tenant_id: site.clientId,
+          redesign_url: input.redesignUrl.trim(),
+          notes: input.notes.trim(),
+        },
+        { onConflict: "site_id" },
+      )
+      .select("*")
+      .single();
+    fail(error, "Could not save the redesign link.");
+    const mapped = mapSiteRedesign(data);
+    set((s) => ({
+      siteRedesigns: [
+        ...s.siteRedesigns.filter((r) => r.siteId !== siteId),
+        mapped,
+      ],
     }));
   },
 
