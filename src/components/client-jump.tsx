@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import {
   Dialog,
@@ -17,6 +17,7 @@ export function ClientJump({
   items: { to: string; label: string }[];
 }) {
   const navigate = useNavigate();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
@@ -103,7 +104,10 @@ export function ClientJump({
                 <li key={item.to}>
                   <button
                     type="button"
-                    onMouseEnter={() => setActive(i)}
+                    onMouseEnter={() => {
+                      setActive(i);
+                      void router.preloadRoute({ to: item.to });
+                    }}
                     onClick={() => go(item.to)}
                     className={cn(
                       "flex min-h-11 w-full items-center rounded-lg px-3 text-left text-sm",

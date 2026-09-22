@@ -299,7 +299,7 @@ function StorePage() {
                     <div className="flex min-h-14 min-w-0 items-center gap-3 px-3 py-2.5 text-left">
                       <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
                         {p.photo ? (
-                          <img src={p.photo} alt="" className="size-full object-cover" />
+                          <img src={p.photo} alt="" className="size-full object-cover" loading="lazy" decoding="async" />
                         ) : (
                           <Package className="size-4 text-muted-foreground" />
                         )}

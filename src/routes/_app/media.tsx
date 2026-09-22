@@ -64,7 +64,7 @@ function MediaPage() {
             <li key={m.id} className="overflow-hidden border border-border bg-card">
               <div className="flex h-40 items-center justify-center bg-muted">
                 {m.url ? (
-                  <img src={m.url} alt="" className="h-full w-full object-cover" />
+                  <img src={m.url} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
                 ) : (
                   <p className="px-4 text-center text-sm text-muted-foreground">
                     Waiting for a file
