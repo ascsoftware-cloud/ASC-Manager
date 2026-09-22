@@ -19,6 +19,7 @@ import { ClientJump } from "@/components/client-jump";
 import { CookieBanner } from "@/components/cookie-banner";
 import { LoginScreen } from "@/components/login-screen";
 import { AscLockup } from "@/components/logo";
+import { PageSkeleton } from "@/components/page-skeleton";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -32,7 +33,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { initials } from "@/lib/format";
-import { useAscStore, useCurrentUser, useOwnClient, useStoreReady } from "@/lib/store";
+import {
+  useAscStore,
+  useCurrentUser,
+  useHydrating,
+  useOwnClient,
+  useSession,
+  useStoreReady,
+} from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const STAFF_NAV = [
@@ -86,6 +94,7 @@ function StaffNav({
             key={item.to}
             to={item.to}
             onClick={onNavigate}
+            preload="intent"
             className={cn(
               "relative flex min-h-11 items-center px-2.5 text-[11px] uppercase tracking-[0.14em] transition-colors",
               active ? "text-champagne" : "text-muted-foreground hover:text-champagne",
@@ -138,6 +147,7 @@ function ClientNav({
             key={item.to}
             to={item.to}
             onClick={onNavigate}
+            preload="intent"
             className={cn(
               "flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors duration-150",
               active
@@ -234,8 +244,11 @@ function HydrateGate({ children }: { children: ReactNode }) {
 
 function Splash() {
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background text-champagne">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-emerald">Loading</p>
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background text-champagne">
+      <AscLockup size="lg" />
+      <p className="animate-pulse text-[11px] uppercase tracking-[0.22em] text-emerald">
+        Loading
+      </p>
     </div>
   );
 }
@@ -286,13 +299,23 @@ function ClientSidebar({ current, onNavigate }: { current: string; onNavigate?: 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const user = useCurrentUser();
+  const session = useSession();
   const client = useOwnClient();
   const ready = useStoreReady();
+  const hydrating = useHydrating();
   const loadError = useAscStore((s) => s.loadError);
   const [menuOpen, setMenuOpen] = useState(false);
   const isLegal = pathname === "/privacy" || pathname === "/terms";
   const isClient = user?.role === "client";
   const toastTheme = isClient ? "light" : "dark";
+  const page =
+    hydrating && !isLegal ? (
+      <PageSkeleton />
+    ) : loadError && user && !isLegal ? (
+      <p className="text-sm text-destructive">{loadError}</p>
+    ) : (
+      children
+    );
 
   useEffect(() => {
     const root = document.documentElement;
@@ -306,11 +329,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       <TooltipProvider delayDuration={200}>
         {!ready && !isLegal ? (
           <Splash />
-        ) : loadError && !user && !isLegal ? (
+        ) : loadError && !session && !isLegal ? (
           <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-background px-6 text-center">
             <p className="text-sm text-destructive">{loadError}</p>
           </div>
-        ) : !user && !isLegal ? (
+        ) : loadError && session && !user && !hydrating && !isLegal ? (
+          <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-background px-6 text-center">
+            <p className="text-sm text-destructive">{loadError}</p>
+          </div>
+        ) : !session && !isLegal ? (
           <div className="min-h-dvh bg-background">
             <LoginScreen />
             <CookieBanner />
@@ -342,7 +369,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <UserMenu />
                 </div>
               </header>
-              <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">{children}</main>
+              <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">{page}</main>
               <Footer />
             </div>
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
@@ -382,7 +409,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <div className="ml-auto">{user ? <UserMenu /> : null}</div>
               </div>
             </header>
-            <main className="flex-1 px-4 py-8 sm:px-8 sm:py-10">{children}</main>
+            <main className="flex-1 px-4 py-8 sm:px-8 sm:py-10">{page}</main>
             <Footer />
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetContent side="left" className="p-6">

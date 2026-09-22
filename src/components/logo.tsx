@@ -1,66 +1,57 @@
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
+const LOGO_SRC = "/asc-logo.webp";
+
 export function AscMark({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 64 64"
-      className={cn("size-10", className)}
-      aria-hidden="true"
-    >
-      <rect
-        x="10"
-        y="10"
-        width="36"
-        height="36"
-        transform="rotate(12 28 28)"
-        fill="none"
-        className="stroke-emerald/40"
-        strokeWidth="1.4"
-      />
-      <rect
-        x="14"
-        y="14"
-        width="32"
-        height="32"
-        transform="rotate(-8 30 30)"
-        fill="none"
-        className="stroke-emerald/25"
-        strokeWidth="1.2"
-      />
-      <rect
-        x="20"
-        y="20"
-        width="24"
-        height="24"
-        transform="rotate(20 32 32)"
-        className="fill-emerald"
-      />
-    </svg>
+    <img
+      src={LOGO_SRC}
+      alt=""
+      draggable={false}
+      className={cn("h-10 w-auto", className)}
+    />
   );
 }
 
 export function AscLockup({
   to = "/",
   className,
+  size = "sm",
 }: {
   to?: string;
   className?: string;
+  size?: "sm" | "lg";
 }) {
   return (
     <Link
       to={to}
-      className={cn("flex flex-col items-start gap-0.5 text-champagne", className)}
+      aria-label="ASC Manager"
+      className={cn("flex items-center gap-2.5 text-champagne", className)}
     >
-      <span className="flex items-center gap-2">
-        <span className="font-display text-xl tracking-tight">ASC</span>
-        <span className="text-muted-foreground/50">|</span>
-        <span className="text-[10px] uppercase tracking-[0.22em] text-gold">
+      <img
+        src={LOGO_SRC}
+        alt=""
+        draggable={false}
+        className={cn("w-auto", size === "lg" ? "h-14" : "h-8 sm:h-9")}
+      />
+      <span className="flex flex-col leading-none">
+        <span
+          className={cn(
+            "uppercase tracking-[0.2em] text-gold",
+            size === "lg" ? "text-[11px]" : "text-[9px] sm:text-[10px]",
+          )}
+        >
           Software
         </span>
-      </span>
-      <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-        Manager
+        <span
+          className={cn(
+            "mt-0.5 uppercase tracking-[0.2em] text-muted-foreground",
+            size === "lg" ? "text-[11px]" : "text-[9px] sm:text-[10px]",
+          )}
+        >
+          Manager
+        </span>
       </span>
     </Link>
   );
@@ -72,7 +63,7 @@ export function AscWordmark({ compact = false }: { compact?: boolean }) {
       <AscMark />
       {!compact ? (
         <div className="leading-tight">
-          <div className="font-display text-lg text-champagne">ASC</div>
+          <div className="text-[11px] uppercase tracking-[0.16em] text-gold">Software</div>
           <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
             Manager
           </div>

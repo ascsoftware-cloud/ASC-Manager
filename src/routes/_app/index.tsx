@@ -18,12 +18,16 @@ function HomePage() {
 }
 
 function StaffDashboard() {
-  const store = useAscStore();
-  const openIncidents = store.incidents.filter((i) => i.status === "open").length;
-  const openRequests = store.requests.filter((r) => r.status === "open").length;
-  const offline = store.monitors.filter((m) => m.status === "down").length;
-  const degraded = store.monitors.filter((m) => m.status === "down").length;
-  const liveSites = store.sites.length;
+  const clients = useAscStore((s) => s.clients);
+  const sites = useAscStore((s) => s.sites);
+  const monitors = useAscStore((s) => s.monitors);
+  const incidents = useAscStore((s) => s.incidents);
+  const requests = useAscStore((s) => s.requests);
+  const openIncidents = incidents.filter((i) => i.status === "open").length;
+  const openRequests = requests.filter((r) => r.status === "open").length;
+  const offline = monitors.filter((m) => m.status === "down").length;
+  const degraded = monitors.filter((m) => m.status === "down").length;
+  const liveSites = sites.length;
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
@@ -36,13 +40,13 @@ function StaffDashboard() {
       <section className="grid gap-0 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi
           label="Clients"
-          value={String(store.clients.length)}
+          value={String(clients.length)}
           hint={`${liveSites} active sites`}
           accent
         />
         <Kpi
           label="Monitors"
-          value={String(store.monitors.length)}
+          value={String(monitors.length)}
           hint="checked on their own schedules"
         />
         <Kpi
@@ -71,18 +75,23 @@ function StaffDashboard() {
 function ClientOverview() {
   const user = useCurrentUser();
   const own = useOwnClient();
-  const store = useAscStore();
-  const ids = visibleClientIds(store, user);
-  const sites = store.sites.filter((s) => ids.includes(s.clientId));
+  const clients = useAscStore((s) => s.clients);
+  const allSites = useAscStore((s) => s.sites);
+  const allMonitors = useAscStore((s) => s.monitors);
+  const visitors = useAscStore((s) => s.visitors);
+  const allEnquiries = useAscStore((s) => s.enquiries);
+  const invoices = useAscStore((s) => s.invoices);
+  const ids = visibleClientIds({ clients }, user);
+  const sites = allSites.filter((s) => ids.includes(s.clientId));
   const siteIds = sites.map((s) => s.id);
-  const monitors = store.monitors.filter((m) => siteIds.includes(m.siteId));
+  const monitors = allMonitors.filter((m) => siteIds.includes(m.siteId));
   const problems = monitors.filter((m) => m.status === "down").length;
-  const views = store.visitors
+  const views = visitors
     .filter((v) => siteIds.includes(v.siteId))
     .reduce((a, v) => a + v.views, 0);
-  const enquiries = store.enquiries.filter((e) => ids.includes(e.clientId));
+  const enquiries = allEnquiries.filter((e) => ids.includes(e.clientId));
   const fresh = enquiries.filter((e) => e.status === "new");
-  const dueInvoices = store.invoices.filter(
+  const dueInvoices = invoices.filter(
     (i) => ids.includes(i.clientId) && i.status === "due",
   );
 
@@ -183,20 +192,25 @@ function ClientOverview() {
 function NeedsYou() {
   const user = useCurrentUser();
   const own = useOwnClient();
-  const store = useAscStore();
-  const ids = visibleClientIds(store, user);
+  const clients = useAscStore((s) => s.clients);
+  const enquiries = useAscStore((s) => s.enquiries);
+  const invoices = useAscStore((s) => s.invoices);
+  const sections = useAscStore((s) => s.sections);
+  const adverts = useAscStore((s) => s.adverts);
+  const products = useAscStore((s) => s.products);
+  const ids = visibleClientIds({ clients }, user);
   const today = new Date().toISOString().slice(0, 10);
-  const fresh = store.enquiries.filter((e) => ids.includes(e.clientId) && e.status === "new");
-  const dueInvoices = store.invoices.filter(
+  const fresh = enquiries.filter((e) => ids.includes(e.clientId) && e.status === "new");
+  const dueInvoices = invoices.filter(
     (i) => ids.includes(i.clientId) && i.status === "due",
   );
-  const welcome = store.sections.find((s) => ids.includes(s.clientId) && s.key === "welcome");
+  const welcome = sections.find((s) => ids.includes(s.clientId) && s.key === "welcome");
   const welcomeLine = String(welcome?.payload.line ?? "").trim();
-  const adverts = store.adverts.filter((a) => ids.includes(a.clientId));
-  const live = adverts.find((a) => a.status === "live" && a.startsOn <= today && a.endsOn >= today);
-  const expired = adverts.some((a) => a.status === "live" && a.endsOn < today) || (!live && adverts.some((a) => a.status === "expired"));
+  const ownAdverts = adverts.filter((a) => ids.includes(a.clientId));
+  const live = ownAdverts.find((a) => a.status === "live" && a.startsOn <= today && a.endsOn >= today);
+  const expired = ownAdverts.some((a) => a.status === "live" && a.endsOn < today) || (!live && ownAdverts.some((a) => a.status === "expired"));
   const noAdvert = !live;
-  const out = store.products.filter(
+  const out = products.filter(
     (p) => ids.includes(p.clientId) && p.live && p.stock === 0,
   );
   const items: { to: "/enquiries" | "/content" | "/store" | "/billing"; title: string; detail: string }[] = [];
@@ -255,14 +269,16 @@ function NeedsYou() {
 
 function SystemsTable({ clientOnly = false }: { clientOnly?: boolean }) {
   const user = useCurrentUser();
-  const store = useAscStore();
+  const clients = useAscStore((s) => s.clients);
+  const allSites = useAscStore((s) => s.sites);
+  const allMonitors = useAscStore((s) => s.monitors);
   const runChecks = useAscStore((s) => s.runChecks);
-  const ids = visibleClientIds(store, user);
-  const sites = store.sites.filter((s) => ids.includes(s.clientId));
+  const ids = visibleClientIds({ clients }, user);
+  const sites = allSites.filter((s) => ids.includes(s.clientId));
 
   const rows = sites.map((site) => {
-    const client = store.clients.find((c) => c.id === site.clientId);
-    const monitors = store.monitors.filter((m) => m.siteId === site.id);
+    const client = clients.find((c) => c.id === site.clientId);
+    const monitors = allMonitors.filter((m) => m.siteId === site.id);
     const down = monitors.some((m) => m.status === "down");
     const up = monitors.every((m) => m.status === "up");
     const last = monitors
@@ -350,14 +366,15 @@ function SystemsTable({ clientOnly = false }: { clientOnly?: boolean }) {
 
 function RenewalsPanel() {
   const user = useCurrentUser();
-  const store = useAscStore();
-  const ids = visibleClientIds(store, user);
+  const clients = useAscStore((s) => s.clients);
+  const renewals = useAscStore((s) => s.renewals);
+  const ids = visibleClientIds({ clients }, user);
   const rows = useMemo(() => {
-    return store.renewals
+    return renewals
       .filter((r) => ids.includes(r.clientId))
       .slice()
       .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt));
-  }, [store.renewals, ids]);
+  }, [renewals, ids]);
 
   return (
     <Surface>
@@ -384,7 +401,7 @@ function RenewalsPanel() {
         </thead>
         <tbody>
           {rows.map((r) => {
-            const client = store.clients.find((c) => c.id === r.clientId);
+            const client = clients.find((c) => c.id === r.clientId);
             const days = differenceInCalendarDays(parseISO(r.expiresAt), new Date());
             return (
               <tr key={r.id} className="border-b border-border last:border-0">
@@ -408,9 +425,10 @@ function RenewalsPanel() {
 
 function ChangesPanel() {
   const user = useCurrentUser();
-  const store = useAscStore();
-  const ids = visibleClientIds(store, user);
-  const rows = store.log.filter((l) => ids.includes(l.clientId)).slice(0, 8);
+  const clients = useAscStore((s) => s.clients);
+  const log = useAscStore((s) => s.log);
+  const ids = visibleClientIds({ clients }, user);
+  const rows = log.filter((l) => ids.includes(l.clientId)).slice(0, 8);
 
   return (
     <Surface>

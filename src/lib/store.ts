@@ -1,3 +1,4 @@
+import { startTransition } from "react";
 import { create } from "zustand";
 import { inviteUserFn } from "@/lib/invite";
 import { authCallbackUrl } from "@/lib/auth/email-callback";
@@ -40,6 +41,7 @@ import type {
   Product,
   RequestStatus,
   SectionKey,
+  Role,
   Session,
   Site,
   User,
@@ -47,6 +49,15 @@ import type {
 } from "@/lib/types";
 
 const COOKIE_KEY = "asc-cookies-v1";
+const SHELL_KEY = "asc-shell-v1";
+
+type ShellHint = {
+  userId: string;
+  email: string;
+  name: string;
+  role: Role;
+  clientId: string | null;
+};
 
 const DEFAULT_BLOCKS: Array<
   Omit<ContentBlock, "id" | "siteId" | "value" | "updatedAt">
@@ -127,6 +138,71 @@ function readCookies(): boolean | null {
 
 function fail(error: { message: string } | null, fallback: string): void {
   if (error) throw new Error(fallback);
+}
+
+function readShellHint(): ShellHint | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(SHELL_KEY);
+    if (!raw) return null;
+    const v = JSON.parse(raw) as ShellHint;
+    if (!v?.userId || (v.role !== "operator" && v.role !== "client")) return null;
+    return v;
+  } catch {
+    return null;
+  }
+}
+
+function writeShellHint(user: User): void {
+  if (typeof window === "undefined") return;
+  const hint: ShellHint = {
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    clientId: user.clientId,
+  };
+  window.sessionStorage.setItem(SHELL_KEY, JSON.stringify(hint));
+}
+
+function clearShellHint(): void {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.removeItem(SHELL_KEY);
+}
+
+function userFromHint(hint: ShellHint): User {
+  return {
+    id: hint.userId,
+    email: hint.email,
+    name: hint.name,
+    role: hint.role,
+    clientId: hint.clientId,
+  };
+}
+
+function userFromAuth(
+  userId: string,
+  email: string,
+  meta: Record<string, unknown> | undefined,
+): User | null {
+  const role = meta?.role;
+  if (role !== "operator" && role !== "client") return null;
+  const tenant = meta?.tenant_id;
+  return {
+    id: userId,
+    email,
+    name: typeof meta?.name === "string" && meta.name ? meta.name : email,
+    role,
+    clientId: typeof tenant === "string" && tenant ? tenant : null,
+  };
+}
+
+function mergeUser(users: User[], user: User): User[] {
+  return [user, ...users.filter((u) => u.id !== user.id)];
+}
+
+function patchById<T extends { id: string }>(rows: T[], id: string, patch: Partial<T>): T[] {
+  return rows.map((row) => (row.id === id ? { ...row, ...patch } : row));
 }
 
 async function accessToken(): Promise<string> {
@@ -224,8 +300,44 @@ async function loadTables(): Promise<AppTables> {
   };
 }
 
+async function loadUsers(): Promise<User[]> {
+  const sb = requireSupabase();
+  const { data, error } = await sb.from("profiles").select("*");
+  fail(error, "Invite sent, but the user list could not refresh.");
+  return (data ?? []).map(mapUser);
+}
+
+function scopeTablesToTenant(tables: AppTables, tenantId: string): AppTables {
+  const siteIds = new Set(
+    tables.sites.filter((site) => site.clientId === tenantId).map((site) => site.id),
+  );
+
+  return {
+    ...tables,
+    users: tables.users.filter((user) => user.clientId === tenantId),
+    clients: tables.clients.filter((client) => client.id === tenantId),
+    sites: tables.sites.filter((site) => site.clientId === tenantId),
+    monitors: tables.monitors.filter((monitor) => siteIds.has(monitor.siteId)),
+    incidents: tables.incidents.filter((incident) => siteIds.has(incident.siteId)),
+    visitors: tables.visitors.filter((visitor) => siteIds.has(visitor.siteId)),
+    blocks: tables.blocks.filter((block) => siteIds.has(block.siteId)),
+    renewals: tables.renewals.filter((item) => item.clientId === tenantId),
+    requests: tables.requests.filter((request) => request.clientId === tenantId),
+    log: tables.log.filter((entry) => entry.clientId === tenantId),
+    enquiries: tables.enquiries.filter((enquiry) => enquiry.clientId === tenantId),
+    media: tables.media.filter((media) => media.clientId === tenantId),
+    invoices: tables.invoices.filter((invoice) => invoice.clientId === tenantId),
+    products: tables.products.filter((product) => product.clientId === tenantId),
+    events: tables.events.filter((event) => event.clientId === tenantId),
+    bookings: tables.bookings.filter((booking) => booking.clientId === tenantId),
+    sections: tables.sections.filter((section) => section.clientId === tenantId),
+    adverts: tables.adverts.filter((advert) => advert.clientId === tenantId),
+  };
+}
+
 type AscStore = AppTables & {
   ready: boolean;
+  hydrating: boolean;
   loadError: string | null;
   session: Session | null;
   cookiesAccepted: boolean | null;
@@ -302,10 +414,30 @@ type AscStore = AppTables & {
 };
 
 let listening = false;
+let bootstrapped = false;
+let hydrateLock: Promise<void> | null = null;
+let hydrateSeq = 0;
+
+function bumpHydrate(): void {
+  hydrateSeq += 1;
+  hydrateLock = null;
+}
+
+function signedOutState(cookiesAccepted: boolean | null): Partial<AscStore> {
+  return {
+    ...emptyTables(),
+    session: null,
+    ready: true,
+    hydrating: false,
+    loadError: null,
+    cookiesAccepted,
+  };
+}
 
 export const useAscStore = create<AscStore>()((set, get) => ({
   ...emptyTables(),
   ready: false,
+  hydrating: false,
   loadError: null,
   session: null,
   cookiesAccepted: null,
@@ -316,86 +448,136 @@ export const useAscStore = create<AscStore>()((set, get) => ({
     if (sb && !listening) {
       listening = true;
       sb.auth.onAuthStateChange((event) => {
-        if (event === "INITIAL_SESSION") return;
         if (event === "SIGNED_OUT") {
-          set({
-            ...emptyTables(),
-            session: null,
-            ready: true,
-            loadError: null,
-            cookiesAccepted: get().cookiesAccepted,
-          });
+          bumpHydrate();
+          clearShellHint();
+          set(signedOutState(get().cookiesAccepted));
           return;
         }
-        void get().hydrateFromSession();
+        if (event === "SIGNED_IN") {
+          void get().hydrateFromSession();
+        }
       });
     }
+    if (bootstrapped) {
+      if (hydrateLock) await hydrateLock;
+      return;
+    }
+    bootstrapped = true;
     await get().hydrateFromSession();
   },
 
   hydrateFromSession: async () => {
-    if (!isSupabaseConfigured() || !getSupabase()) {
+    if (hydrateLock) return hydrateLock;
+    const run = (async () => {
+      const seq = ++hydrateSeq;
+      const cookiesAccepted = get().cookiesAccepted;
+      if (!isSupabaseConfigured() || !getSupabase()) {
+        set(signedOutState(cookiesAccepted));
+        return;
+      }
+      const sb = requireSupabase();
+      const { data: sessionData } = await sb.auth.getSession();
+      if (seq !== hydrateSeq) return;
+      const session = sessionData.session;
+      if (!session?.user) {
+        clearShellHint();
+        set(signedOutState(cookiesAccepted));
+        return;
+      }
+
+      const hint = readShellHint();
+      const seeded =
+        hint && hint.userId === session.user.id
+          ? userFromHint(hint)
+          : userFromAuth(
+              session.user.id,
+              session.user.email ?? "",
+              session.user.user_metadata as Record<string, unknown> | undefined,
+            );
       set({
-        ...emptyTables(),
+        session: { userId: session.user.id },
         ready: true,
-        session: null,
+        hydrating: true,
         loadError: null,
-        cookiesAccepted: get().cookiesAccepted,
+        cookiesAccepted,
+        users: seeded ? mergeUser(get().users, seeded) : get().users,
       });
-      return;
-    }
-    const sb = requireSupabase();
-    const { data: sessionData } = await sb.auth.getSession();
-    const session = sessionData.session;
-    if (!session?.user) {
+
+      const tablesPromise = loadTables();
+      const { data: profile, error: profileError } = await sb
+        .from("profiles")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      if (seq !== hydrateSeq) return;
+
+      if (profileError) {
+        set({
+          ready: true,
+          hydrating: false,
+          session: { userId: session.user.id },
+          loadError: "Could not load your profile. Check the database grants.",
+          cookiesAccepted,
+        });
+        return;
+      }
+      if (!profile) {
+        set({
+          ready: true,
+          hydrating: false,
+          session: { userId: session.user.id },
+          loadError: "This account has no profile. Ask ASC to invite you.",
+          cookiesAccepted,
+        });
+        return;
+      }
+
+      const mappedProfile = mapUser(profile);
+      writeShellHint(mappedProfile);
       set({
-        ...emptyTables(),
+        users: mergeUser(get().users, mappedProfile),
         ready: true,
-        session: null,
-        loadError: null,
-        cookiesAccepted: get().cookiesAccepted,
-      });
-      return;
-    }
-    const { data: profile, error: profileError } = await sb
-      .from("profiles")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .maybeSingle();
-    if (profileError) {
-      set({
-        ready: true,
-        session: { userId: session.user.id },
-        loadError: "Could not load your profile. Check the database grants.",
-        cookiesAccepted: get().cookiesAccepted,
-      });
-      return;
-    }
-    if (!profile) {
-      set({
-        ready: true,
-        session: { userId: session.user.id },
-        loadError: "This account has no profile. Ask ASC to invite you.",
-        cookiesAccepted: get().cookiesAccepted,
-      });
-      return;
-    }
-    try {
-      const tables = await loadTables();
-      set({
-        ...tables,
-        ready: true,
+        hydrating: true,
         loadError: null,
         session: { userId: session.user.id },
-        cookiesAccepted: get().cookiesAccepted,
+        cookiesAccepted,
       });
-    } catch (e) {
-      set({
-        ready: true,
-        loadError: e instanceof Error ? e.message : "Could not load your workspace.",
-        session: { userId: session.user.id },
-      });
-    }
+
+      try {
+        const tables = await tablesPromise;
+        if (seq !== hydrateSeq) return;
+        const scopedTables =
+          mappedProfile.role === "client" && mappedProfile.clientId
+            ? scopeTablesToTenant(tables, mappedProfile.clientId)
+            : tables;
+        startTransition(() => {
+          if (seq !== hydrateSeq) return;
+          set({
+            ...scopedTables,
+            users: mergeUser(scopedTables.users, mappedProfile),
+            ready: true,
+            hydrating: false,
+            loadError: null,
+            session: { userId: session.user.id },
+            cookiesAccepted: get().cookiesAccepted,
+          });
+        });
+      } catch (e) {
+        if (seq !== hydrateSeq) return;
+        set({
+          ready: true,
+          hydrating: false,
+          loadError: e instanceof Error ? e.message : "Could not load your workspace.",
+          session: { userId: session.user.id },
+        });
+      }
+    })();
+    hydrateLock = run;
+    void run.finally(() => {
+      if (hydrateLock === run) hydrateLock = null;
+    });
+    return run;
   },
 
   signIn: async (email, password) => {
@@ -407,25 +589,33 @@ export const useAscStore = create<AscStore>()((set, get) => ({
       };
     }
     const sb = requireSupabase();
-    const { error } = await sb.auth.signInWithPassword({
+    const { data, error } = await sb.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
-    if (error) return { ok: false, error: "That email or password is wrong." };
-    await get().hydrateFromSession();
+    if (error || !data.user) return { ok: false, error: "That email or password is wrong." };
+    const seeded = userFromAuth(
+      data.user.id,
+      data.user.email ?? email.trim(),
+      data.user.user_metadata as Record<string, unknown> | undefined,
+    );
+    set({
+      session: { userId: data.user.id },
+      ready: true,
+      hydrating: true,
+      loadError: null,
+      ...(seeded ? { users: mergeUser(get().users, seeded) } : {}),
+    });
+    void get().hydrateFromSession();
     return { ok: true };
   },
 
   signOut: async () => {
+    bumpHydrate();
+    clearShellHint();
     const sb = getSupabase();
     if (sb) await sb.auth.signOut();
-    set({
-      ...emptyTables(),
-      session: null,
-      ready: true,
-      loadError: null,
-      cookiesAccepted: get().cookiesAccepted,
-    });
+    set(signedOutState(get().cookiesAccepted));
   },
 
   requestPasswordReset: async (email) => {
@@ -453,20 +643,15 @@ export const useAscStore = create<AscStore>()((set, get) => ({
         tenantId: input.tenantId,
       },
     });
-    const tables = await loadTables();
-    set(tables);
+    set({ users: await loadUsers() });
   },
 
   runChecks: async (siteId) => {
     const sb = requireSupabase();
     const now = new Date().toISOString();
-    const { error } = await sb
-      .from("monitors")
-      .update({ status: "up", last_checked_at: now, uptime30: 100 })
-      .eq("site_id", siteId);
-    fail(error, "Could not write those checks.");
-    set((s) => ({
-      monitors: s.monitors.map((m) =>
+    const prev = get().monitors;
+    set({
+      monitors: prev.map((m) =>
         m.siteId === siteId
           ? {
               ...m,
@@ -476,7 +661,15 @@ export const useAscStore = create<AscStore>()((set, get) => ({
             }
           : m,
       ),
-    }));
+    });
+    const { error } = await sb
+      .from("monitors")
+      .update({ status: "up", last_checked_at: now })
+      .eq("site_id", siteId);
+    if (error) {
+      set({ monitors: prev });
+      throw new Error("Could not write those checks.");
+    }
   },
 
   updateBlock: async (id, value, actor) => {
@@ -587,11 +780,13 @@ export const useAscStore = create<AscStore>()((set, get) => ({
 
   setRequestStatus: async (id, status) => {
     const sb = requireSupabase();
+    const prev = get().requests;
+    set({ requests: patchById(prev, id, { status }) });
     const { error } = await sb.from("requests").update({ status }).eq("id", id);
-    fail(error, "Could not update that request.");
-    set((s) => ({
-      requests: s.requests.map((r) => (r.id === id ? { ...r, status } : r)),
-    }));
+    if (error) {
+      set({ requests: prev });
+      throw new Error("Could not update that request.");
+    }
   },
 
   addClient: async (input) => {
@@ -713,6 +908,17 @@ export const useAscStore = create<AscStore>()((set, get) => ({
 
   updateClient: async (id, patch) => {
     const sb = requireSupabase();
+    const prev = get().clients;
+    const current = prev.find((c) => c.id === id);
+    if (current) {
+      set({
+        clients: prev.map((c) =>
+          c.id === id
+            ? { ...c, ...patch, modules: patch.modules ?? c.modules }
+            : c,
+        ),
+      });
+    }
     const row: Record<string, unknown> = {};
     if (patch.name != null) row.name = patch.name;
     if (patch.city != null) row.city = patch.city;
@@ -735,7 +941,10 @@ export const useAscStore = create<AscStore>()((set, get) => ({
       .eq("id", id)
       .select("*")
       .single();
-    fail(error, "Could not save those details.");
+    if (error) {
+      set({ clients: prev });
+      throw new Error("Could not save those details.");
+    }
     const mapped = mapTenant(data);
     set((s) => ({
       clients: s.clients.map((c) => (c.id === id ? mapped : c)),
@@ -744,11 +953,13 @@ export const useAscStore = create<AscStore>()((set, get) => ({
 
   setEnquiryStatus: async (id, status) => {
     const sb = requireSupabase();
+    const prev = get().enquiries;
+    set({ enquiries: patchById(prev, id, { status }) });
     const { error } = await sb.from("enquiries").update({ status }).eq("id", id);
-    fail(error, "Could not update that enquiry.");
-    set((s) => ({
-      enquiries: s.enquiries.map((e) => (e.id === id ? { ...e, status } : e)),
-    }));
+    if (error) {
+      set({ enquiries: prev });
+      throw new Error("Could not update that enquiry.");
+    }
   },
 
   addMedia: async (input) => {
@@ -782,11 +993,13 @@ export const useAscStore = create<AscStore>()((set, get) => ({
 
   setInvoiceStatus: async (id, status) => {
     const sb = requireSupabase();
+    const prev = get().invoices;
+    set({ invoices: patchById(prev, id, { status }) });
     const { error } = await sb.from("invoices").update({ status }).eq("id", id);
-    fail(error, "Could not update that invoice.");
-    set((s) => ({
-      invoices: s.invoices.map((i) => (i.id === id ? { ...i, status } : i)),
-    }));
+    if (error) {
+      set({ invoices: prev });
+      throw new Error("Could not update that invoice.");
+    }
   },
 
   addProduct: async (input) => {
@@ -909,11 +1122,13 @@ export const useAscStore = create<AscStore>()((set, get) => ({
 
   setBookingStatus: async (id, status) => {
     const sb = requireSupabase();
+    const prev = get().bookings;
+    set({ bookings: patchById(prev, id, { status }) });
     const { error } = await sb.from("bookings").update({ status }).eq("id", id);
-    fail(error, "Could not update that booking.");
-    set((s) => ({
-      bookings: s.bookings.map((b) => (b.id === id ? { ...b, status } : b)),
-    }));
+    if (error) {
+      set({ bookings: prev });
+      throw new Error("Could not update that booking.");
+    }
   },
 
   removeBooking: async (id) => {
@@ -925,18 +1140,21 @@ export const useAscStore = create<AscStore>()((set, get) => ({
 
   reorderProducts: async (clientId, orderedIds) => {
     const sb = requireSupabase();
-    const updates = orderedIds.map((id, i) =>
-      sb.from("products").update({ sort_order: i }).eq("id", id),
-    );
-    const results = await Promise.all(updates);
-    if (results.some((r) => r.error)) throw new Error("Could not save that order.");
-    set((s) => ({
-      products: s.products.map((p) => {
+    const prev = get().products;
+    set({
+      products: prev.map((p) => {
         if (p.clientId !== clientId) return p;
         const i = orderedIds.indexOf(p.id);
         return i < 0 ? p : { ...p, sortOrder: i };
       }),
-    }));
+    });
+    const results = await Promise.all(
+      orderedIds.map((id, i) => sb.from("products").update({ sort_order: i }).eq("id", id)),
+    );
+    if (results.some((r) => r.error)) {
+      set({ products: prev });
+      throw new Error("Could not save that order.");
+    }
   },
 
   ensureSections: async (clientId) => {
@@ -965,6 +1183,10 @@ export const useAscStore = create<AscStore>()((set, get) => ({
 
   updateSection: async (id, patch) => {
     const sb = requireSupabase();
+    const prev = get().sections;
+    set({
+      sections: prev.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+    });
     const row: Record<string, unknown> = {};
     if (patch.visible != null) row.visible = patch.visible;
     if (patch.payload != null) row.payload = patch.payload;
@@ -975,7 +1197,10 @@ export const useAscStore = create<AscStore>()((set, get) => ({
       .eq("id", id)
       .select("*")
       .single();
-    fail(error, "Could not save that section.");
+    if (error) {
+      set({ sections: prev });
+      throw new Error("Could not save that section.");
+    }
     set((s) => ({
       sections: s.sections.map((x) => (x.id === id ? mapSection(data) : x)),
     }));
@@ -983,19 +1208,23 @@ export const useAscStore = create<AscStore>()((set, get) => ({
 
   reorderSections: async (clientId, orderedIds) => {
     const sb = requireSupabase();
+    const prev = get().sections;
+    set({
+      sections: prev.map((x) => {
+        if (x.clientId !== clientId) return x;
+        const i = orderedIds.indexOf(x.id);
+        return i < 0 ? x : { ...x, sortOrder: i };
+      }),
+    });
     const results = await Promise.all(
       orderedIds.map((id, i) =>
         sb.from("content_sections").update({ sort_order: i }).eq("id", id),
       ),
     );
-    if (results.some((r) => r.error)) throw new Error("Could not save that order.");
-    set((s) => ({
-      sections: s.sections.map((x) => {
-        if (x.clientId !== clientId) return x;
-        const i = orderedIds.indexOf(x.id);
-        return i < 0 ? x : { ...x, sortOrder: i };
-      }),
-    }));
+    if (results.some((r) => r.error)) {
+      set({ sections: prev });
+      throw new Error("Could not save that order.");
+    }
   },
 
   saveAdvert: async (input) => {
@@ -1027,7 +1256,14 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   setAdvertStatus: async (id, status) => {
     const current = get().adverts.find((a) => a.id === id);
     if (!current) throw new Error("Picture not found.");
-    await get().saveAdvert({ ...current, status });
+    const prev = get().adverts;
+    set({ adverts: patchById(prev, id, { status }) });
+    try {
+      await get().saveAdvert({ ...current, status });
+    } catch (e) {
+      set({ adverts: prev });
+      throw e;
+    }
   },
 
   removeAdvert: async (id) => {
@@ -1070,7 +1306,7 @@ export function useOwnClient() {
   });
 }
 
-export function visibleClientIds(state: AppTables, user?: User): string[] {
+export function visibleClientIds(state: Pick<AppTables, "clients">, user?: User): string[] {
   if (!user) return [];
   if (user.role === "operator") return state.clients.map((c) => c.id);
   return user.clientId ? [user.clientId] : [];
@@ -1078,4 +1314,14 @@ export function visibleClientIds(state: AppTables, user?: User): string[] {
 
 export function useStoreReady(): boolean {
   return useAscStore((s) => s.ready);
+}
+
+export function useHydrating(): boolean {
+  return useAscStore((s) => s.hydrating);
+}
+
+if (typeof window !== "undefined") {
+  queueMicrotask(() => {
+    void useAscStore.getState().bootstrap();
+  });
 }

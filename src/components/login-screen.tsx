@@ -38,7 +38,7 @@ export function LoginScreen() {
               "radial-gradient(720px 480px at 18% 42%, rgb(62 207 142 / 0.14), transparent 62%)",
           }}
         />
-        <AscLockup to="/" />
+        <AscLockup to="/" size="lg" />
         <div className="relative max-w-lg">
           <p className="text-[11px] uppercase tracking-[0.22em] text-emerald">
             Atlas Scale Collective
@@ -60,7 +60,7 @@ export function LoginScreen() {
 
       <section className="flex min-h-dvh flex-col justify-center px-6 py-12 sm:px-12">
         <div className="mb-10 lg:hidden">
-          <AscLockup />
+          <AscLockup size="lg" />
         </div>
         <div className="mx-auto w-full max-w-sm">
           <p className="text-[11px] uppercase tracking-[0.22em] text-emerald">

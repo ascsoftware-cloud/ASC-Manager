@@ -1,5 +1,5 @@
 import { useMemo, useState, type ChangeEvent, type DragEvent } from "react";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, X } from "lucide-react";
 import { Field } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +32,7 @@ export function MediaPicker({
     [allMedia, clientId],
   );
   const addMedia = useAscStore((s) => s.addMedia);
+  const removeMedia = useAscStore((s) => s.removeMedia);
   const [open, setOpen] = useState(false);
   const [over, setOver] = useState(false);
   const current = media.find((m) => m.path === valuePath);
@@ -78,7 +79,7 @@ export function MediaPicker({
         ) : (
           <ul className="grid max-h-80 grid-cols-3 gap-2 overflow-y-auto">
             {media.map((m) => (
-              <li key={m.id}>
+              <li key={m.id} className="relative">
                 <button
                   type="button"
                   onClick={() => {
@@ -91,8 +92,22 @@ export function MediaPicker({
                   )}
                 >
                   {m.url ? (
-                    <img src={m.url} alt="" className="h-full w-full object-cover" />
+                    <img src={m.url} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
                   ) : null}
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Remove ${m.name}`}
+                  title="Remove photo"
+                  onClick={() => {
+                    void saveAction("Photo removed", async () => {
+                      await removeMedia(m.id);
+                      if (m.path === valuePath) onPick("");
+                    });
+                  }}
+                  className="absolute right-1 top-1 inline-flex size-7 items-center justify-center rounded-full bg-black/70 text-white shadow-sm transition-colors hover:bg-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <X className="size-4" />
                 </button>
               </li>
             ))}
@@ -107,7 +122,7 @@ export function MediaPicker({
       <div className="flex flex-col gap-3">
         {current?.url ? (
           <div className="overflow-hidden rounded-xl border border-border bg-muted">
-            <img src={current.url} alt="" className="max-h-72 w-full object-contain bg-muted" />
+            <img src={current.url} alt="" className="max-h-72 w-full object-contain bg-muted" decoding="async" />
             <div className="flex flex-wrap gap-2 border-t border-border p-3">
               <Button type="button" variant="outline" onClick={() => setOpen(true)}>
                 Change
@@ -172,7 +187,7 @@ export function MediaPicker({
           className="flex size-20 items-center justify-center overflow-hidden border border-border bg-muted"
         >
           {current?.url ? (
-            <img src={current.url} alt="" className="h-full w-full object-cover" />
+            <img src={current.url} alt="" className="h-full w-full object-cover" decoding="async" />
           ) : (
             <span className="px-2 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
               None
