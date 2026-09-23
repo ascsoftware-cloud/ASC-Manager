@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
+import { ConfirmDangerDialog } from "@/components/confirm-danger";
 import { StaffGate } from "@/components/staff-gate";
 import { Field, PageHeader, Surface } from "@/components/page-header";
 import { StatusDot } from "@/components/status-badge";
@@ -15,8 +16,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { DESK_MODULE_TOGGLES, WEBSITE_MODULE_TOGGLES, type ModuleKey } from "@/lib/modules";
 import { saveAction } from "@/lib/mutate";
 import { useAscStore } from "@/lib/store";
+import type { Client } from "@/lib/types";
 
 export const Route = createFileRoute("/_app/clients")({
   component: () => (
@@ -31,19 +34,25 @@ function ClientsPage() {
   const sites = useAscStore((s) => s.sites);
   const users = useAscStore((s) => s.users);
   const addClient = useAscStore((s) => s.addClient);
-  const updateClient = useAscStore((s) => s.updateClient);
+  const removeClient = useAscStore((s) => s.removeClient);
   const inviteUser = useAscStore((s) => s.inviteUser);
   const [open, setOpen] = useState(false);
   const [inviteFor, setInviteFor] = useState<{ id: string; name: string } | null>(
     null,
   );
+  const [removeFor, setRemoveFor] = useState<{
+    id: string;
+    name: string;
+    sites: number;
+    logins: number;
+  } | null>(null);
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+    <div className="mx-auto flex max-w-7xl flex-col gap-8">
       <PageHeader
         eyebrow="Clients"
         title="Clients"
-        description="Modules are what we actually built on their public site. Site media lets them put pictures on the homepage — leave it off unless that site is built to show them."
+        description="Desk modules (store, calendar, bookings, site media) and website extras (SEO, FAQ, testimonials, gallery, services, staff). Turn on only what that public site actually has."
         action={
           <Button className="rounded-full" onClick={() => setOpen(true)}>
             <Plus className="size-4" />
@@ -58,22 +67,24 @@ function ClientsPage() {
             from the old preview are gone on purpose.
           </p>
         ) : (
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[1280px] text-left text-sm">
             <thead>
               <tr className="border-b border-border text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
                 <th className="px-5 py-3 font-medium">Client</th>
                 <th className="px-5 py-3 font-medium">Contact</th>
                 <th className="px-5 py-3 font-medium">Sites</th>
                 <th className="px-5 py-3 font-medium">Logins</th>
-                <th className="px-5 py-3 font-medium">Store</th>
-                <th className="px-5 py-3 font-medium">Calendar</th>
-                <th className="px-5 py-3 font-medium">Bookings</th>
-                <th
-                  className="px-5 py-3 font-medium"
-                  title="Pictures they put on the public site. Only if we built that on their homepage."
-                >
-                  Site media
-                </th>
+                {DESK_MODULE_TOGGLES.map((mod) => (
+                  <th key={mod.key} className="px-5 py-3 font-medium" title={mod.title}>
+                    {mod.label}
+                  </th>
+                ))}
+                {WEBSITE_MODULE_TOGGLES.map((mod) => (
+                  <th key={mod.key} className="px-5 py-3 font-medium" title={mod.title}>
+                    {mod.label}
+                  </th>
+                ))}
                 <th className="px-5 py-3 font-medium">Status</th>
                 <th className="px-5 py-3 font-medium" />
               </tr>
@@ -95,75 +106,51 @@ function ClientsPage() {
                         ? "—"
                         : logins.map((u) => u.email).join(", ")}
                     </td>
-                    <td className="px-5 py-4">
-                      <Switch
-                        checked={c.modules.store}
-                        onCheckedChange={(on) => {
-                          void saveAction(on ? "Store on" : "Store off", () =>
-                            updateClient(c.id, {
-                              modules: { ...c.modules, store: on },
-                            }),
-                          );
-                        }}
-                        aria-label={`Store for ${c.name}`}
-                      />
-                    </td>
-                    <td className="px-5 py-4">
-                      <Switch
-                        checked={c.modules.calendar}
-                        onCheckedChange={(on) => {
-                          void saveAction(on ? "Calendar on" : "Calendar off", () =>
-                            updateClient(c.id, {
-                              modules: { ...c.modules, calendar: on },
-                            }),
-                          );
-                        }}
-                        aria-label={`Calendar for ${c.name}`}
-                      />
-                    </td>
-                    <td className="px-5 py-4">
-                      <Switch
-                        checked={c.modules.bookings}
-                        onCheckedChange={(on) => {
-                          void saveAction(on ? "Bookings on" : "Bookings off", () =>
-                            updateClient(c.id, {
-                              modules: { ...c.modules, bookings: on },
-                            }),
-                          );
-                        }}
-                        aria-label={`Bookings for ${c.name}`}
-                      />
-                    </td>
-                    <td className="px-5 py-4">
-                      <Switch
-                        checked={c.modules.advert}
-                        onCheckedChange={(on) => {
-                          void saveAction(on ? "Site media on" : "Site media off", () =>
-                            updateClient(c.id, {
-                              modules: { ...c.modules, advert: on },
-                            }),
-                          );
-                        }}
-                        aria-label={`Site media for ${c.name}`}
-                      />
-                    </td>
+                    {DESK_MODULE_TOGGLES.map((mod) => (
+                      <td key={mod.key} className="px-5 py-4">
+                        <ModuleSwitch client={c} moduleKey={mod.key} label={mod.label} />
+                      </td>
+                    ))}
+                    {WEBSITE_MODULE_TOGGLES.map((mod) => (
+                      <td key={mod.key} className="px-5 py-4">
+                        <ModuleSwitch client={c} moduleKey={mod.key} label={mod.label} />
+                      </td>
+                    ))}
                     <td className="px-5 py-4">
                       <StatusDot status={c.status} />
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setInviteFor({ id: c.id, name: c.name })}
-                      >
-                        Invite
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setInviteFor({ id: c.id, name: c.name })}
+                        >
+                          Invite
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() =>
+                            setRemoveFor({
+                              id: c.id,
+                              name: c.name,
+                              sites: n,
+                              logins: logins.length,
+                            })
+                          }
+                        >
+                          Remove
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+          </div>
         )}
       </Surface>
 
@@ -197,7 +184,49 @@ function ClientsPage() {
           if (ok) setInviteFor(null);
         }}
       />
+
+      <ConfirmDangerDialog
+        open={Boolean(removeFor)}
+        title={`Remove ${removeFor?.name ?? "this client"}?`}
+        description={`This takes down their public sites (${removeFor?.sites ?? 0}), website content, and logins (${removeFor?.logins ?? 0}). They will not be able to sign in. This cannot be undone.`}
+        confirmLabel="Remove client"
+        onOpenChange={(v) => {
+          if (!v) setRemoveFor(null);
+        }}
+        onConfirm={async () => {
+          if (!removeFor) return;
+          const ok = await saveAction(`${removeFor.name} removed`, () =>
+            removeClient(removeFor.id),
+          );
+          if (ok) setRemoveFor(null);
+        }}
+      />
     </div>
+  );
+}
+
+function ModuleSwitch({
+  client,
+  moduleKey,
+  label,
+}: {
+  client: Client;
+  moduleKey: ModuleKey;
+  label: string;
+}) {
+  const updateClient = useAscStore((s) => s.updateClient);
+  return (
+    <Switch
+      checked={client.modules[moduleKey]}
+      onCheckedChange={(on) => {
+        void saveAction(on ? `${label} on` : `${label} off`, () =>
+          updateClient(client.id, {
+            modules: { ...client.modules, [moduleKey]: on },
+          }),
+        );
+      }}
+      aria-label={`${label} for ${client.name}`}
+    />
   );
 }
 

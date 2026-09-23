@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 export function ClientJump({
   items,
 }: {
-  items: { to: string; label: string }[];
+  items: { to: string; label: string; hash?: string }[];
 }) {
   const navigate = useNavigate();
   const router = useRouter();
@@ -43,10 +43,10 @@ export function ClientJump({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  function go(to: string) {
+  function go(item: { to: string; hash?: string }) {
     setOpen(false);
     setQ("");
-    void navigate({ to });
+    void navigate({ to: item.to, hash: item.hash });
   }
 
   const mod = typeof navigator !== "undefined" && /Mac/i.test(navigator.platform) ? "⌘" : "Ctrl";
@@ -91,7 +91,7 @@ export function ClientJump({
                   setActive((i) => Math.max(i - 1, 0));
                 } else if (e.key === "Enter" && matches[active]) {
                   e.preventDefault();
-                  go(matches[active].to);
+                  go(matches[active]);
                 }
               }}
             />
@@ -101,14 +101,14 @@ export function ClientJump({
               <li className="px-3 py-6 text-center text-sm text-muted-foreground">No match.</li>
             ) : (
               matches.map((item, i) => (
-                <li key={item.to}>
+                <li key={`${item.to}#${item.hash ?? ""}`}>
                   <button
                     type="button"
                     onMouseEnter={() => {
                       setActive(i);
-                      void router.preloadRoute({ to: item.to });
+                      void router.preloadRoute({ to: item.to, hash: item.hash });
                     }}
-                    onClick={() => go(item.to)}
+                    onClick={() => go(item)}
                     className={cn(
                       "flex min-h-11 w-full items-center rounded-lg px-3 text-left text-sm",
                       i === active ? "bg-accent text-foreground" : "text-foreground hover:bg-accent/70",

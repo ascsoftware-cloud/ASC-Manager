@@ -144,52 +144,120 @@ if (!profile) {
   process.exit(1);
 }
 
-const { count, error: countError } = await admin
-  .from("products")
-  .select("id", { count: "exact", head: true })
+const { error: moduleError } = await admin
+  .from("tenants")
+  .update({
+    modules_store: true,
+    modules_calendar: true,
+    modules_bookings: true,
+    modules_advert: true,
+    modules_seo: true,
+    modules_faq: true,
+    modules_testimonials: true,
+    modules_gallery: true,
+    modules_services: true,
+    modules_staff: true,
+  })
+  .eq("id", tenantId);
+if (moduleError) {
+  console.log(`Website modules not updated (${moduleError.message}). Apply supabase/migrations first.`);
+}
+
+const { data: existingSites, error: sitesReadError } = await admin
+  .from("sites")
+  .select("id")
   .eq("tenant_id", tenantId);
-if (countError) {
-  console.error(countError.message);
+if (sitesReadError) {
+  console.error(sitesReadError.message);
   process.exit(1);
 }
-if (!count) {
-  const { error } = await admin.from("products").insert([
+if (!existingSites?.length) {
+  const { error: sitesError } = await admin.from("sites").insert([
     {
       tenant_id: tenantId,
-      name: "House blend coffee",
-      price_zar: 85,
-      stock: 12,
-      live: true,
-      note: "250g bag. Medium roast.",
-      sort_order: 0,
-      featured: true,
+      name: "Demo shop",
+      host: "demo-shop.example.com",
+      url: "https://demo-shop.example.com",
+      kind: "public",
     },
     {
       tenant_id: tenantId,
-      name: "Canvas tote",
-      price_zar: 180,
-      stock: 0,
-      live: true,
-      note: "Natural canvas. Screen print.",
-      sort_order: 1,
-      featured: false,
-    },
-    {
-      tenant_id: tenantId,
-      name: "Enamel mug",
-      price_zar: 65,
-      stock: 8,
-      live: false,
-      note: "Draft — not on the public site yet.",
-      sort_order: 2,
-      featured: false,
+      name: "Demo events",
+      host: "demo-events.example.com",
+      url: "https://demo-events.example.com",
+      kind: "public",
     },
   ]);
-  if (error) {
-    console.error(error.message);
+  if (sitesError) {
+    console.error(sitesError.message);
     process.exit(1);
   }
-  console.log("Added sample products");
+  console.log("Added two public sites so the account can switch");
+}
+
+const { data: shopSites, error: shopSitesError } = await admin
+  .from("sites")
+  .select("id")
+  .eq("tenant_id", tenantId)
+  .eq("kind", "public")
+  .order("created_at")
+  .limit(1);
+if (shopSitesError) {
+  console.error(shopSitesError.message);
+  process.exit(1);
+}
+const shopSiteId = shopSites?.[0]?.id;
+if (shopSiteId) {
+  const { count, error: countError } = await admin
+    .from("products")
+    .select("id", { count: "exact", head: true })
+    .eq("site_id", shopSiteId);
+  if (countError) {
+    console.error(countError.message);
+    process.exit(1);
+  }
+  if (!count) {
+    const { error } = await admin.from("products").insert([
+      {
+        tenant_id: tenantId,
+        site_id: shopSiteId,
+        name: "House blend coffee",
+        price_zar: 85,
+        stock: 12,
+        live: true,
+        note: "250g bag. Medium roast.",
+        sort_order: 0,
+        featured: true,
+      },
+      {
+        tenant_id: tenantId,
+        site_id: shopSiteId,
+        name: "Canvas tote",
+        price_zar: 180,
+        stock: 0,
+        live: true,
+        note: "Natural canvas. Screen print.",
+        sort_order: 1,
+        featured: false,
+      },
+      {
+        tenant_id: tenantId,
+        site_id: shopSiteId,
+        name: "Enamel mug",
+        price_zar: 65,
+        stock: 8,
+        live: false,
+        note: "Draft — not on the public site yet.",
+        sort_order: 2,
+        featured: false,
+      },
+    ]);
+    if (error) {
+      console.error(error.message);
+      process.exit(1);
+    }
+    console.log("Added sample products on the first public site");
+  }
 }
 
 console.log("");

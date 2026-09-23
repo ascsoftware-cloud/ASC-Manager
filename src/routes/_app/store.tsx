@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   ChevronLeft,
@@ -20,9 +20,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Field, NativeSelect } from "@/components/page-header";
 import { formatZar, plainText, reorderIds } from "@/lib/format";
 import { saveAction } from "@/lib/mutate";
-import { useAscStore, useCurrentUser, useOwnClient, visibleClientIds } from "@/lib/store";
+import {
+  useActiveSite,
+  useAscStore,
+  useCurrentUser,
+  useOwnClient,
+  useOwnSites,
+  visibleClientIds,
+} from "@/lib/store";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +45,10 @@ function StorePage() {
   const user = useCurrentUser();
   const own = useOwnClient();
   const clients = useAscStore((s) => s.clients);
+  const allSites = useAscStore((s) => s.sites);
+  const ownSites = useOwnSites();
+  const activeSite = useActiveSite();
+  const setActiveSite = useAscStore((s) => s.setActiveSite);
   const products = useAscStore((s) => s.products);
   const addProduct = useAscStore((s) => s.addProduct);
   const updateProduct = useAscStore((s) => s.updateProduct);
@@ -45,6 +57,16 @@ function StorePage() {
   const ids = visibleClientIds(useAscStore.getState(), user);
   const [picked, setPicked] = useState(own?.id ?? ids[0] ?? "");
   const clientId = own?.id ?? picked;
+  const clientSites =
+    user?.role === "client"
+      ? ownSites
+      : allSites.filter((site) => site.clientId === clientId && site.kind === "public");
+  const [pickedSite, setPickedSite] = useState("");
+  const storedSiteId = user?.role === "client" ? (activeSite?.id ?? "") : pickedSite;
+  const siteId = clientSites.some((site) => site.id === storedSiteId)
+    ? storedSiteId
+    : (clientSites[0]?.id ?? "");
+  const site = clientSites.find((s) => s.id === siteId);
   const allowed = user?.role === "operator" || own?.modules.store;
   const selected = clients.find((c) => c.id === clientId);
   const advertOn = Boolean(selected?.modules.advert);
@@ -53,13 +75,17 @@ function StorePage() {
   const [view, setView] = useState<View>({ mode: "list" });
   const [dragId, setDragId] = useState<string | null>(null);
 
+  useEffect(() => {
+    setView({ mode: "list" });
+  }, [siteId]);
+
   const catalog = useMemo(
     () =>
       products
-        .filter((p) => p.clientId === clientId)
+        .filter((p) => p.siteId === siteId)
         .slice()
         .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)),
-    [products, clientId],
+    [products, siteId],
   );
 
   const counts = useMemo(
@@ -86,21 +112,21 @@ function StorePage() {
   }, [catalog, q, filter]);
 
   async function dropOn(targetId: string) {
-    if (!dragId || !clientId || dragId === targetId) return;
+    if (!dragId || !siteId || dragId === targetId) return;
     const all = catalog.map((p) => p.id);
     const next = reorderIds(all, dragId, targetId);
     setDragId(null);
-    await saveAction("Order saved", () => reorderProducts(clientId, next));
+    await saveAction("Order saved", () => reorderProducts(siteId, next));
   }
 
   function move(id: string, dir: -1 | 1) {
-    if (!clientId) return;
+    if (!siteId) return;
     const all = catalog.map((p) => p.id);
     const i = all.indexOf(id);
     const j = i + dir;
     if (i < 0 || j < 0 || j >= all.length) return;
     const next = reorderIds(all, id, all[j]);
-    void saveAction("Order saved", () => reorderProducts(clientId, next));
+    void saveAction("Order saved", () => reorderProducts(siteId, next));
   }
 
   if (!allowed) {
@@ -117,7 +143,7 @@ function StorePage() {
   const editing = view.mode === "edit" ? products.find((p) => p.id === view.id) : undefined;
   const showEditor = view.mode === "create" || Boolean(editing);
 
-  if (showEditor) {
+  if (showEditor && siteId) {
     return (
       <ShopShell>
         <ProductEditor
@@ -135,6 +161,7 @@ function StorePage() {
             const ok = await saveAction("Product added", () =>
               addProduct({
                 clientId,
+                siteId,
                 name: patch.name ?? "",
                 priceZar: patch.priceZar ?? 0,
                 stock: patch.stock ?? 0,
@@ -167,12 +194,14 @@ function StorePage() {
         <div>
           <h1 className="text-[1.375rem] font-semibold tracking-tight text-foreground">Products</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Add items, set a price, and mark them Active when they should show on the site.
+            {site
+              ? `Items on ${site.name}. Other sites have their own shop.`
+              : "Add a public site first, then add products for that shop."}
           </p>
         </div>
         <Button
           className="min-h-11 shrink-0"
-          disabled={!clientId}
+          disabled={!siteId}
           onClick={() => setView({ mode: "create" })}
         >
           <Plus className="size-4" />
@@ -181,28 +210,54 @@ function StorePage() {
       </div>
 
       {user?.role === "operator" ? (
-        <label className="flex max-w-xs flex-col gap-1.5">
-          <span className="text-sm font-medium text-foreground">Client</span>
-          <select
-            className="flex h-11 w-full rounded-lg bg-card px-3 text-sm text-foreground"
+        <Field label="Client">
+          <NativeSelect
+            className="max-w-xs"
             value={clientId}
-            onChange={(e) => setPicked(e.target.value)}
+            onChange={(e) => {
+              setPicked(e.target.value);
+              setPickedSite("");
+            }}
           >
             {clients.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
             ))}
-          </select>
-        </label>
+          </NativeSelect>
+        </Field>
+      ) : null}
+      {clientSites.length > 1 ? (
+        <Field label="Site">
+          <NativeSelect
+            className="max-w-xs"
+            value={siteId}
+            onChange={(e) => {
+              const next = e.target.value;
+              if (user?.role === "client") setActiveSite(next);
+              else setPickedSite(next);
+            }}
+          >
+            {clientSites.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </NativeSelect>
+        </Field>
       ) : null}
 
-      {catalog.length === 0 && !q ? (
+      {!siteId ? (
         <EmptyShop
-          title="Add your first product"
-          detail="Give it a name, a photo, and a price. Keep it as Draft until you are ready, then set it to Active."
+          title="No public site yet"
+          detail="ASC needs to attach a public site before this shop can have products."
+        />
+      ) : catalog.length === 0 && !q ? (
+        <EmptyShop
+          title={`Add the first product on ${site?.name ?? "this site"}`}
+          detail="Give it a name, a photo, and a price. Keep it as Draft until you are ready, then set it to Active. It will not show on your other sites."
           action={
-            <Button disabled={!clientId} onClick={() => setView({ mode: "create" })}>
+            <Button disabled={!siteId} onClick={() => setView({ mode: "create" })}>
               <Plus className="size-4" />
               Add product
             </Button>

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Field, PageHeader, Surface } from "@/components/page-header";
+import { Field, NativeSelect, PageHeader, Surface } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDay, formatTime } from "@/lib/format";
 import { saveAction } from "@/lib/mutate";
+import { useDeskSite } from "@/lib/desk-site";
 import { useAscStore, useCurrentUser, useOwnClient, visibleClientIds } from "@/lib/store";
 import type { BookingStatus } from "@/lib/types";
 
@@ -29,13 +30,15 @@ function BookingsPage() {
   const setBookingStatus = useAscStore((s) => s.setBookingStatus);
   const removeBooking = useAscStore((s) => s.removeBooking);
   const ids = visibleClientIds(store, user);
+  const [picked, setPicked] = useState(own?.id ?? ids[0] ?? "");
+  const clientId = own?.id ?? picked;
+  const { clientSites, siteId, site, setSite } = useDeskSite(clientId);
   const rows = store.bookings
-    .filter((b) => ids.includes(b.clientId))
+    .filter((b) => b.siteId === siteId)
     .slice()
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const allowed = user?.role === "operator" || own?.modules.bookings;
   const [open, setOpen] = useState(false);
-  const clientId = user?.clientId ?? ids[0];
 
   if (!allowed) {
     return (
@@ -51,17 +54,45 @@ function BookingsPage() {
       <PageHeader
         eyebrow="Bookings"
         title="Bookings"
-        description="Rooms, tables, slots. Saved in Manager — not live on the public site until that form is wired."
+        description={
+          site
+            ? `Rooms, tables, slots on ${site.name}. Other sites keep their own bookings.`
+            : "Add a public site first, then take bookings for that site."
+        }
         action={
-          <Button className="rounded-full" onClick={() => setOpen(true)}>
+          <Button className="rounded-full" disabled={!siteId} onClick={() => setOpen(true)}>
             Add booking
           </Button>
         }
       />
+      {user?.role === "operator" ? (
+        <Field label="Client">
+          <NativeSelect className="max-w-xs" value={clientId} onChange={(e) => setPicked(e.target.value)}>
+            {store.clients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </NativeSelect>
+        </Field>
+      ) : null}
+      {clientSites.length > 1 ? (
+        <Field label="Site">
+          <NativeSelect className="max-w-xs" value={siteId} onChange={(e) => setSite(e.target.value)}>
+            {clientSites.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </NativeSelect>
+        </Field>
+      ) : null}
       <Surface>
         {rows.length === 0 ? (
           <p className="px-5 py-10 text-sm text-muted-foreground">
-            No bookings yet. Add one by hand, or wait for the public form.
+            {!siteId
+              ? "No public site yet. ASC attaches a website first."
+              : "No bookings yet. Add one by hand, or wait for the public form."}
           </p>
         ) : (
           <ul className="divide-y divide-border">
@@ -131,10 +162,11 @@ function BookingsPage() {
         open={open}
         onOpenChange={setOpen}
         onCreate={(input) => {
-          if (!clientId) return;
+          if (!clientId || !siteId) return;
           void saveAction("Saved in Manager", async () => {
             await addBooking({
               clientId,
+              siteId,
               ...input,
               status: "requested" satisfies BookingStatus,
             });

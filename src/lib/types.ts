@@ -24,12 +24,19 @@ export type Client = {
     calendar: boolean;
     bookings: boolean;
     advert: boolean;
+    seo: boolean;
+    faq: boolean;
+    testimonials: boolean;
+    gallery: boolean;
+    services: boolean;
+    staff: boolean;
   };
 };
 
 export type Product = {
   id: string;
   clientId: string;
+  siteId: string;
   name: string;
   priceZar: number;
   stock: number;
@@ -44,6 +51,7 @@ export type Product = {
 export type CalendarEvent = {
   id: string;
   clientId: string;
+  siteId: string;
   title: string;
   startsAt: string;
   endsAt: string;
@@ -56,6 +64,7 @@ export type BookingStatus = "requested" | "confirmed" | "cancelled";
 export type Booking = {
   id: string;
   clientId: string;
+  siteId: string;
   guestName: string;
   email: string;
   phone: string;
@@ -69,6 +78,7 @@ export type EnquiryStatus = "new" | "read" | "done";
 export type Enquiry = {
   id: string;
   clientId: string;
+  siteId: string;
   name: string;
   email: string;
   phone: string;

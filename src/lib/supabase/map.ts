@@ -68,6 +68,12 @@ export function mapTenant(row: Row): Client {
       calendar: bool(row.modules_calendar),
       bookings: bool(row.modules_bookings),
       advert: bool(row.modules_advert),
+      seo: bool(row.modules_seo),
+      faq: bool(row.modules_faq),
+      testimonials: bool(row.modules_testimonials),
+      gallery: bool(row.modules_gallery),
+      services: bool(row.modules_services),
+      staff: bool(row.modules_staff),
     },
   };
 }
@@ -169,6 +175,7 @@ export function mapProduct(row: Row): Product {
   return {
     id: str(row.id),
     clientId: str(row.tenant_id),
+    siteId: str(row.site_id),
     name: str(row.name),
     priceZar: num(row.price_zar),
     stock: num(row.stock),
@@ -249,6 +256,7 @@ export function mapBooking(row: Row): Booking {
   return {
     id: str(row.id),
     clientId: str(row.tenant_id),
+    siteId: str(row.site_id),
     guestName: str(row.guest_name),
     email: str(row.email),
     phone: str(row.phone),
@@ -262,6 +270,7 @@ export function mapEvent(row: Row): CalendarEvent {
   return {
     id: str(row.id),
     clientId: str(row.tenant_id),
+    siteId: str(row.site_id),
     title: str(row.title),
     startsAt: str(row.starts_at),
     endsAt: str(row.ends_at),
@@ -275,6 +284,7 @@ export function mapEnquiry(row: Row): Enquiry {
   return {
     id: str(row.id),
     clientId: str(row.tenant_id),
+    siteId: str(row.site_id),
     name: str(row.name),
     email: str(row.email),
     phone: str(row.phone),

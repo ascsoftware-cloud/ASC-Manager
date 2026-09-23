@@ -1,79 +1,9 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { createClient } from "@supabase/supabase-js";
 import { authCallbackUrl } from "./auth/email-callback";
 import type { InviteInput } from "./invite";
-
-let fileEnv: Record<string, string> | null = null;
-
-function readDotEnv(): Record<string, string> {
-  if (fileEnv) return fileEnv;
-  fileEnv = {};
-  try {
-    const text = readFileSync(resolve(process.cwd(), ".env.local"), "utf8");
-    for (const line of text.split(/\r?\n/)) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith("#")) continue;
-      const eq = trimmed.indexOf("=");
-      if (eq < 1) continue;
-      const key = trimmed.slice(0, eq).trim();
-      let value = trimmed.slice(eq + 1).trim();
-      if (
-        (value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'"))
-      ) {
-        value = value.slice(1, -1);
-      }
-      fileEnv[key] = value;
-    }
-  } catch {
-    // .env.local is optional; Vercel injects process.env
-  }
-  return fileEnv;
-}
-
-function env(key: string): string {
-  return process.env[key]?.trim() || readDotEnv()[key]?.trim() || "";
-}
-
-function appOrigin(): string {
-  let raw = (env("VITE_APP_URL") || "http://localhost:8080").trim().replace(/\/$/, "");
-  if (!/^https?:\/\//i.test(raw)) {
-    raw = raw.includes("localhost") ? `http://${raw}` : `https://${raw}`;
-  }
-  return raw;
-}
+import { appOrigin, requireOperatorAdmin } from "./staff-admin.server";
 
 export async function inviteUser(data: InviteInput): Promise<{ ok: true }> {
-  const url = env("VITE_SUPABASE_URL") || env("SUPABASE_URL");
-  const anon = env("VITE_SUPABASE_ANON_KEY");
-  const service = env("SUPABASE_SERVICE_ROLE_KEY");
-  if (!url || !anon || !service) {
-    throw new Error("Server is missing Supabase credentials.");
-  }
-
-  const userClient = createClient(url, anon, {
-    global: { headers: { Authorization: `Bearer ${data.accessToken}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const { data: userRes, error: userErr } = await userClient.auth.getUser(
-    data.accessToken,
-  );
-  if (userErr || !userRes.user) {
-    throw new Error("Signed out.");
-  }
-
-  const admin = createClient(url, service, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("role")
-    .eq("user_id", userRes.user.id)
-    .maybeSingle();
-  if (profile?.role !== "operator") {
-    throw new Error("Forbidden.");
-  }
+  const { admin } = await requireOperatorAdmin(data.accessToken);
 
   const email = data.email.trim().toLowerCase();
   const name = data.name.trim();

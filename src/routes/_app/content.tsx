@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { EmptyDesk, GripHandle } from "@/components/desk-ui";
 import { MediaPicker } from "@/components/media-picker";
 import { Field, NativeSelect, PageHeader, Surface } from "@/components/page-header";
@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDay, formatZar, plainText, reorderIds } from "@/lib/format";
+import { sectionEnabled } from "@/lib/modules";
 import { saveAction } from "@/lib/mutate";
-import { useAscStore, useCurrentUser, useOwnClient, visibleClientIds } from "@/lib/store";
+import { useActiveSite, useAscStore, useCurrentUser, useOwnClient, visibleClientIds } from "@/lib/store";
 import type { AdvertLinkType, AdvertStatus, ContentSection, SectionKey, WeeklyAdvert } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -31,25 +32,22 @@ const LABELS: Record<SectionKey, string> = {
   staff: "Staff",
 };
 
-function showSection(sec: { key: SectionKey }, advertOn: boolean) {
-  if (sec.key === "this_sunday") return false;
-  if (sec.key === "this_week" && !advertOn) return false;
-  return true;
-}
-
 function WebsitePage() {
   const user = useCurrentUser();
   const own = useOwnClient();
   const clients = useAscStore((s) => s.clients);
   const sites = useAscStore((s) => s.sites);
+  const activeSite = useActiveSite();
+  const setActiveSite = useAscStore((s) => s.setActiveSite);
   const ids = visibleClientIds(useAscStore.getState(), user);
   const [picked, setPicked] = useState(own?.id ?? ids[0] ?? "");
   const clientId = own?.id ?? picked;
   const client = clients.find((c) => c.id === clientId);
   const clientSites = sites.filter((site) => site.clientId === clientId && site.kind === "public");
   const [pickedSite, setPickedSite] = useState("");
-  const siteId = clientSites.some((site) => site.id === pickedSite)
-    ? pickedSite
+  const storedSiteId = user?.role === "client" ? (activeSite?.id ?? "") : pickedSite;
+  const siteId = clientSites.some((site) => site.id === storedSiteId)
+    ? storedSiteId
     : (clientSites[0]?.id ?? "");
   const allSections = useAscStore((s) => s.sections);
   const allAdverts = useAscStore((s) => s.adverts);
@@ -70,34 +68,57 @@ function WebsitePage() {
   const products = useMemo(
     () =>
       allProducts
-        .filter((p) => p.clientId === clientId && p.live)
+        .filter((p) => p.clientId === clientId && p.siteId === siteId && p.live)
         .slice()
         .sort((a, b) => a.sortOrder - b.sortOrder),
-    [allProducts, clientId],
+    [allProducts, clientId, siteId],
   );
   const events = useMemo(
     () =>
       allEvents
-        .filter((e) => e.clientId === clientId)
+        .filter((e) => e.clientId === clientId && e.siteId === siteId)
         .slice()
         .sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
-    [allEvents, clientId],
+    [allEvents, clientId, siteId],
   );
   const ensureSections = useAscStore((s) => s.ensureSections);
   const updateSection = useAscStore((s) => s.updateSection);
   const reorderSections = useAscStore((s) => s.reorderSections);
   const [dragId, setDragId] = useState<string | null>(null);
+  const hash = useRouterState({
+    select: (s) => (s.location.hash || "").replace(/^#/, ""),
+  });
 
   useEffect(() => {
     if (clientId && siteId) void ensureSections(clientId, siteId);
   }, [clientId, siteId, ensureSections]);
+
+  useEffect(() => {
+    if (!hash) return;
+    const timer = window.setTimeout(() => {
+      document.getElementById(`section-${hash}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [hash, siteId, sections.length]);
 
   const welcome = String(
     sections.find((s) => s.key === "welcome")?.payload.line ?? "",
   );
 
   if (!clientId || !siteId) {
-    return <EmptyDesk title="No site yet" detail="ASC will attach a public site to this tenant." />;
+    return (
+      <EmptyDesk
+        title="No site yet"
+        detail={
+          user?.role === "client"
+            ? "ASC still needs to attach a public site to this account. SEO, FAQ, gallery and the rest show here after that."
+            : "Add a public site on Sites, then this client can edit it from Website."
+        }
+      />
+    );
   }
 
   return (
@@ -106,11 +127,7 @@ function WebsitePage() {
         <PageHeader
           eyebrow="Website"
           title="Website"
-          description={
-            client?.modules.advert
-              ? "Welcome, hours, and pictures that show on the public site. Only this site has the pictures slot."
-              : "Welcome, hours, and the rest of the homepage."
-          }
+          description="Welcome, hours, and every extra ASC switched on for this public site — SEO, FAQ, testimonials, gallery, services, staff."
         />
         {user?.role === "operator" ? (
           <NativeSelect className="max-w-xs" value={clientId} onChange={(e) => setPicked(e.target.value)}>
@@ -121,13 +138,23 @@ function WebsitePage() {
             ))}
           </NativeSelect>
         ) : null}
-        <NativeSelect className="max-w-xs" value={siteId} onChange={(e) => setPickedSite(e.target.value)}>
-          {clientSites.map((site) => (
-            <option key={site.id} value={site.id}>
-              {site.name}
-            </option>
-          ))}
-        </NativeSelect>
+        {clientSites.length > 1 ? (
+          <NativeSelect
+            className="max-w-xs"
+            value={siteId}
+            onChange={(e) => {
+              const next = e.target.value;
+              if (user?.role === "client") setActiveSite(next);
+              else setPickedSite(next);
+            }}
+          >
+            {clientSites.map((site) => (
+              <option key={site.id} value={site.id}>
+                {site.name}
+              </option>
+            ))}
+          </NativeSelect>
+        ) : null}
 
         {client?.modules.advert ? (
           <SiteMediaBoard
@@ -142,9 +169,10 @@ function WebsitePage() {
 
         <ul className="flex flex-col gap-3">
           {sections
-            .filter((sec) => showSection(sec, Boolean(client?.modules.advert)))
+            .filter((sec) => sectionEnabled(client, sec.key))
             .map((sec) => (
             <li
+              id={`section-${sec.key}`}
               key={sec.id}
               draggable
               onDragStart={() => setDragId(sec.id)}
@@ -156,7 +184,10 @@ function WebsitePage() {
                 setDragId(null);
                         void saveAction("Order saved", () => reorderSections(siteId, next));
               }}
-              className="overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-lift)]"
+              className={cn(
+                "scroll-mt-20 overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-lift)]",
+                hash === sec.key && "ring-2 ring-emerald",
+              )}
             >
               <div className="flex items-center gap-1 border-b border-border px-1">
                 <GripHandle />
@@ -202,7 +233,7 @@ function WebsitePage() {
             </p>
             {sections
               .filter((s) => s.visible)
-              .filter((s) => showSection(s, Boolean(client?.modules.advert)))
+              .filter((s) => sectionEnabled(client, s.key))
               .map((s) => (
                 <div key={s.id} className="mt-4">
                   {s.key === "welcome" ? (

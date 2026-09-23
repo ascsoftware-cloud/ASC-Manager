@@ -1,6 +1,8 @@
 import { startTransition } from "react";
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import { inviteUserFn } from "@/lib/invite";
+import { removeTenantFn } from "@/lib/remove-tenant";
 import { authCallbackUrl } from "@/lib/auth/email-callback";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { getSupabase, requireSupabase } from "@/lib/supabase/client";
@@ -26,6 +28,15 @@ import {
   mapVisitor,
 } from "@/lib/supabase/map";
 import { removeStoragePath, uploadTenantImage } from "@/lib/supabase/storage";
+import {
+  assertCanAccessTenant,
+  assertOperator,
+  dropClientFromTables,
+  dropSiteFromTables,
+  ownSwitchableSites,
+  resolveActiveSiteId,
+  scopeTablesToTenant,
+} from "@/lib/tenant-scope";
 import type {
   AdvertStatus,
   AppTables,
@@ -57,6 +68,7 @@ type ShellHint = {
   name: string;
   role: Role;
   clientId: string | null;
+  activeSiteId?: string | null;
 };
 
 const DEFAULT_BLOCKS: Array<
@@ -159,7 +171,7 @@ function readShellHint(): ShellHint | null {
   }
 }
 
-function writeShellHint(user: User): void {
+function writeShellHint(user: User, activeSiteId?: string | null): void {
   if (typeof window === "undefined") return;
   const hint: ShellHint = {
     userId: user.id,
@@ -167,6 +179,7 @@ function writeShellHint(user: User): void {
     name: user.name,
     role: user.role,
     clientId: user.clientId,
+    activeSiteId: activeSiteId ?? null,
   };
   window.sessionStorage.setItem(SHELL_KEY, JSON.stringify(hint));
 }
@@ -313,32 +326,40 @@ async function loadUsers(): Promise<User[]> {
   return (data ?? []).map(mapUser);
 }
 
-function scopeTablesToTenant(tables: AppTables, tenantId: string): AppTables {
-  const siteIds = new Set(
-    tables.sites.filter((site) => site.clientId === tenantId).map((site) => site.id),
-  );
+function sessionUser(get: () => AscStore): User {
+  const state = get();
+  const user = state.users.find((row) => row.id === state.session?.userId);
+  if (!user) throw new Error("Signed out.");
+  return user;
+}
 
-  return {
-    ...tables,
-    users: tables.users.filter((user) => user.clientId === tenantId),
-    clients: tables.clients.filter((client) => client.id === tenantId),
-    sites: tables.sites.filter((site) => site.clientId === tenantId),
-    monitors: tables.monitors.filter((monitor) => siteIds.has(monitor.siteId)),
-    incidents: tables.incidents.filter((incident) => siteIds.has(incident.siteId)),
-    visitors: tables.visitors.filter((visitor) => siteIds.has(visitor.siteId)),
-    blocks: tables.blocks.filter((block) => siteIds.has(block.siteId)),
-    renewals: tables.renewals.filter((item) => item.clientId === tenantId),
-    requests: tables.requests.filter((request) => request.clientId === tenantId),
-    log: tables.log.filter((entry) => entry.clientId === tenantId),
-    enquiries: tables.enquiries.filter((enquiry) => enquiry.clientId === tenantId),
-    media: tables.media.filter((media) => media.clientId === tenantId),
-    invoices: tables.invoices.filter((invoice) => invoice.clientId === tenantId),
-    products: tables.products.filter((product) => product.clientId === tenantId),
-    events: tables.events.filter((event) => event.clientId === tenantId),
-    bookings: tables.bookings.filter((booking) => booking.clientId === tenantId),
-    sections: tables.sections.filter((section) => section.clientId === tenantId),
-    adverts: tables.adverts.filter((advert) => advert.clientId === tenantId),
-  };
+function assertTenantWrite(get: () => AscStore, tenantId: string): void {
+  assertCanAccessTenant(sessionUser(get), tenantId);
+}
+
+function assertStaff(get: () => AscStore): void {
+  assertOperator(sessionUser(get));
+}
+
+function pickActiveSiteId(
+  get: () => AscStore,
+  sites: Site[],
+  current: string | null,
+): string | null {
+  const user = get().users.find((row) => row.id === get().session?.userId);
+  if (user?.role === "client") {
+    return resolveActiveSiteId(sites, user.clientId, current);
+  }
+  if (current && sites.some((site) => site.id === current)) return current;
+  return null;
+}
+
+function assertSiteWrite(get: () => AscStore, siteId: string): Site {
+  if (!siteId) throw new Error("Pick a public site first.");
+  const site = get().sites.find((row) => row.id === siteId);
+  if (!site) throw new Error("Site not found.");
+  assertTenantWrite(get, site.clientId);
+  return site;
 }
 
 type AscStore = AppTables & {
@@ -347,6 +368,8 @@ type AscStore = AppTables & {
   loadError: string | null;
   session: Session | null;
   cookiesAccepted: boolean | null;
+  activeSiteId: string | null;
+  setActiveSite: (siteId: string) => void;
   bootstrap: () => Promise<void>;
   hydrateFromSession: () => Promise<void>;
   signIn: (
@@ -383,6 +406,8 @@ type AscStore = AppTables & {
     email: string;
   }) => Promise<void>;
   addSite: (input: Omit<Site, "id">) => Promise<void>;
+  removeSite: (id: string) => Promise<void>;
+  removeClient: (id: string) => Promise<void>;
   saveSiteRedesign: (
     siteId: string,
     input: { redesignUrl: string; notes: string },
@@ -405,7 +430,7 @@ type AscStore = AppTables & {
   addBooking: (input: Omit<Booking, "id">) => Promise<void>;
   setBookingStatus: (id: string, status: BookingStatus) => Promise<void>;
   removeBooking: (id: string) => Promise<void>;
-  reorderProducts: (clientId: string, orderedIds: string[]) => Promise<void>;
+  reorderProducts: (siteId: string, orderedIds: string[]) => Promise<void>;
   ensureSections: (clientId: string, siteId: string) => Promise<void>;
   updateSection: (
     id: string,
@@ -437,6 +462,7 @@ function signedOutState(cookiesAccepted: boolean | null): Partial<AscStore> {
     hydrating: false,
     loadError: null,
     cookiesAccepted,
+    activeSiteId: null,
   };
 }
 
@@ -447,6 +473,21 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   loadError: null,
   session: null,
   cookiesAccepted: null,
+  activeSiteId: null,
+
+  setActiveSite: (siteId) => {
+    const user = get().users.find((row) => row.id === get().session?.userId);
+    if (!user) return;
+    const next =
+      user.role === "client"
+        ? resolveActiveSiteId(get().sites, user.clientId, siteId)
+        : get().sites.some((site) => site.id === siteId)
+          ? siteId
+          : get().activeSiteId;
+    if (!next || next === get().activeSiteId) return;
+    writeShellHint(user, next);
+    set({ activeSiteId: next });
+  },
 
   bootstrap: async () => {
     set({ cookiesAccepted: readCookies() });
@@ -540,7 +581,11 @@ export const useAscStore = create<AscStore>()((set, get) => ({
       }
 
       const mappedProfile = mapUser(profile);
-      writeShellHint(mappedProfile);
+      const preferredSiteId =
+        hint && hint.userId === session.user.id
+          ? (hint.activeSiteId ?? get().activeSiteId)
+          : get().activeSiteId;
+      writeShellHint(mappedProfile, preferredSiteId);
       set({
         users: mergeUser(get().users, mappedProfile),
         ready: true,
@@ -557,6 +602,18 @@ export const useAscStore = create<AscStore>()((set, get) => ({
           mappedProfile.role === "client" && mappedProfile.clientId
             ? scopeTablesToTenant(tables, mappedProfile.clientId)
             : tables;
+        const activeSiteId =
+          mappedProfile.role === "client"
+            ? resolveActiveSiteId(
+                scopedTables.sites,
+                mappedProfile.clientId,
+                preferredSiteId,
+              )
+            : preferredSiteId &&
+                scopedTables.sites.some((site) => site.id === preferredSiteId)
+              ? preferredSiteId
+              : null;
+        writeShellHint(mappedProfile, activeSiteId);
         startTransition(() => {
           if (seq !== hydrateSeq) return;
           set({
@@ -567,6 +624,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
             loadError: null,
             session: { userId: session.user.id },
             cookiesAccepted: get().cookiesAccepted,
+            activeSiteId,
           });
         });
       } catch (e) {
@@ -679,8 +737,9 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   updateBlock: async (id, value, actor) => {
-    const sb = requireSupabase();
     const block = get().blocks.find((b) => b.id === id);
+    if (block) assertSiteWrite(get, block.siteId);
+    const sb = requireSupabase();
     const { data, error } = await sb
       .from("content_blocks")
       .update({ value })
@@ -717,16 +776,14 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   uploadBlockImage: async (id, file, actor) => {
     const block = get().blocks.find((b) => b.id === id);
     if (!block) throw new Error("Block not found.");
-    const site = get().sites.find((x) => x.id === block.siteId);
-    if (!site) throw new Error("Site not found.");
+    const site = assertSiteWrite(get, block.siteId);
     const { path } = await uploadTenantImage(site.clientId, file);
     await get().updateBlock(id, path, actor);
   },
 
   addBlock: async (input, actor) => {
+    const site = assertSiteWrite(get, input.siteId);
     const sb = requireSupabase();
-    const site = get().sites.find((x) => x.id === input.siteId);
-    if (!site) throw new Error("Site not found.");
     const { data, error } = await sb
       .from("content_blocks")
       .insert({
@@ -769,6 +826,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   addRequest: async (input) => {
+    assertTenantWrite(get, input.clientId);
     const sb = requireSupabase();
     const { data, error } = await sb
       .from("requests")
@@ -785,6 +843,8 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   setRequestStatus: async (id, status) => {
+    const current = get().requests.find((row) => row.id === id);
+    assertTenantWrite(get, current?.clientId ?? "");
     const sb = requireSupabase();
     const prev = get().requests;
     set({ requests: patchById(prev, id, { status }) });
@@ -809,6 +869,12 @@ export const useAscStore = create<AscStore>()((set, get) => ({
         modules_calendar: false,
         modules_bookings: false,
         modules_advert: false,
+        modules_seo: false,
+        modules_faq: false,
+        modules_testimonials: false,
+        modules_gallery: false,
+        modules_services: false,
+        modules_staff: false,
       })
       .select("*")
       .single();
@@ -824,6 +890,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   addSite: async (input) => {
+    assertTenantWrite(get, input.clientId);
     const sb = requireSupabase();
     const { data, error } = await sb
       .from("sites")
@@ -838,6 +905,16 @@ export const useAscStore = create<AscStore>()((set, get) => ({
       .single();
     fail(error, "Could not add that site.");
     const site = mapSite(data);
+    const firstPublic =
+      input.kind === "public" &&
+      !get().sites.some(
+        (row) => row.clientId === input.clientId && row.kind === "public",
+      );
+    const user = get().users.find((row) => row.id === get().session?.userId);
+    if (user?.role === "client" && !get().activeSiteId && site.kind === "public") {
+      writeShellHint(user, site.id);
+      set({ activeSiteId: site.id });
+    }
     const { data: monitorRows, error: monitorError } = await sb
       .from("monitors")
       .insert([
@@ -878,11 +955,78 @@ export const useAscStore = create<AscStore>()((set, get) => ({
         .select("*");
       if (!blockError && blockRows) blocks = [...blocks, ...blockRows.map(mapBlock)];
     }
+    let products = get().products;
+    let events = get().events;
+    let bookings = get().bookings;
+    let enquiries = get().enquiries;
+    if (firstPublic) {
+      const moved = await Promise.all([
+        sb.from("products").update({ site_id: site.id }).eq("tenant_id", input.clientId).is("site_id", null).select("*"),
+        sb.from("calendar_events").update({ site_id: site.id }).eq("tenant_id", input.clientId).is("site_id", null).select("*"),
+        sb.from("bookings").update({ site_id: site.id }).eq("tenant_id", input.clientId).is("site_id", null).select("*"),
+        sb.from("enquiries").update({ site_id: site.id }).eq("tenant_id", input.clientId).is("site_id", null).select("*"),
+      ]);
+      if (!moved[0].error && moved[0].data) {
+        const mapped = moved[0].data.map(mapProduct);
+        const ids = new Set(mapped.map((p) => p.id));
+        products = [...products.filter((p) => !ids.has(p.id)), ...mapped];
+      }
+      if (!moved[1].error && moved[1].data) {
+        const mapped = moved[1].data.map(mapEvent);
+        const ids = new Set(mapped.map((p) => p.id));
+        events = [...events.filter((p) => !ids.has(p.id)), ...mapped];
+      }
+      if (!moved[2].error && moved[2].data) {
+        const mapped = moved[2].data.map(mapBooking);
+        const ids = new Set(mapped.map((p) => p.id));
+        bookings = [...bookings.filter((p) => !ids.has(p.id)), ...mapped];
+      }
+      if (!moved[3].error && moved[3].data) {
+        const mapped = moved[3].data.map(mapEnquiry);
+        const ids = new Set(mapped.map((p) => p.id));
+        enquiries = [...enquiries.filter((p) => !ids.has(p.id)), ...mapped];
+      }
+    }
     set((s) => ({
       sites: [...s.sites, site],
       monitors: [...s.monitors, ...(monitorRows ?? []).map(mapMonitor)],
       blocks,
+      products,
+      events,
+      bookings,
+      enquiries,
     }));
+  },
+
+  removeSite: async (id) => {
+    assertStaff(get);
+    const site = get().sites.find((row) => row.id === id);
+    if (!site) throw new Error("Site not found.");
+    const sb = requireSupabase();
+    const { error } = await sb.from("sites").delete().eq("id", id);
+    fail(error, "Could not remove that site.");
+    const tables = dropSiteFromTables(get(), id);
+    const user = get().users.find((row) => row.id === get().session?.userId);
+    const activeSiteId = pickActiveSiteId(get, tables.sites, get().activeSiteId);
+    if (user) writeShellHint(user, activeSiteId);
+    set({ ...tables, activeSiteId });
+  },
+
+  removeClient: async (id) => {
+    assertStaff(get);
+    const client = get().clients.find((row) => row.id === id);
+    if (!client) throw new Error("Client not found.");
+    await removeTenantFn({
+      data: {
+        accessToken: await accessToken(),
+        tenantId: id,
+      },
+    });
+    const tables = dropClientFromTables(get(), id);
+    const user = get().users.find((row) => row.id === get().session?.userId);
+    const activeSiteId = pickActiveSiteId(get, tables.sites, get().activeSiteId);
+    if (user) writeShellHint(user, activeSiteId);
+    set({ ...tables, activeSiteId });
   },
 
   saveSiteRedesign: async (siteId, input) => {
@@ -913,6 +1057,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   updateClient: async (id, patch) => {
+    assertTenantWrite(get, id);
     const sb = requireSupabase();
     const prev = get().clients;
     const current = prev.find((c) => c.id === id);
@@ -940,6 +1085,12 @@ export const useAscStore = create<AscStore>()((set, get) => ({
       row.modules_calendar = patch.modules.calendar;
       row.modules_bookings = patch.modules.bookings;
       row.modules_advert = patch.modules.advert;
+      row.modules_seo = patch.modules.seo;
+      row.modules_faq = patch.modules.faq;
+      row.modules_testimonials = patch.modules.testimonials;
+      row.modules_gallery = patch.modules.gallery;
+      row.modules_services = patch.modules.services;
+      row.modules_staff = patch.modules.staff;
     }
     const { data, error } = await sb
       .from("tenants")
@@ -958,6 +1109,8 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   setEnquiryStatus: async (id, status) => {
+    const current = get().enquiries.find((row) => row.id === id);
+    assertTenantWrite(get, current?.clientId ?? "");
     const sb = requireSupabase();
     const prev = get().enquiries;
     set({ enquiries: patchById(prev, id, { status }) });
@@ -969,6 +1122,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   addMedia: async (input) => {
+    assertTenantWrite(get, input.clientId);
     const { path } = await uploadTenantImage(input.clientId, input.file);
     const sb = requireSupabase();
     const { data, error } = await sb
@@ -990,6 +1144,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
 
   removeMedia: async (id) => {
     const current = get().media.find((m) => m.id === id);
+    assertTenantWrite(get, current?.clientId ?? "");
     const sb = requireSupabase();
     const { error } = await sb.from("media").delete().eq("id", id);
     fail(error, "Could not remove that photo.");
@@ -1009,14 +1164,17 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   addProduct: async (input) => {
+    assertTenantWrite(get, input.clientId);
+    assertSiteWrite(get, input.siteId);
     const sb = requireSupabase();
     const max = get()
-      .products.filter((p) => p.clientId === input.clientId)
+      .products.filter((p) => p.siteId === input.siteId)
       .reduce((n, p) => Math.max(n, p.sortOrder), -1);
     const { data, error } = await sb
       .from("products")
       .insert({
         tenant_id: input.clientId,
+        site_id: input.siteId,
         name: input.name,
         price_zar: input.priceZar,
         stock: input.stock,
@@ -1033,6 +1191,8 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   updateProduct: async (id, patch) => {
+    const current = get().products.find((row) => row.id === id);
+    assertTenantWrite(get, current?.clientId ?? "");
     const sb = requireSupabase();
     const row: Record<string, unknown> = {};
     if (patch.name != null) row.name = patch.name;
@@ -1056,6 +1216,8 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   removeProduct: async (id) => {
+    const current = get().products.find((row) => row.id === id);
+    assertTenantWrite(get, current?.clientId ?? "");
     const sb = requireSupabase();
     const { error } = await sb.from("products").delete().eq("id", id);
     fail(error, "Could not remove that item.");
@@ -1063,11 +1225,14 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   addEvent: async (input) => {
+    assertTenantWrite(get, input.clientId);
+    assertSiteWrite(get, input.siteId);
     const sb = requireSupabase();
     const { data, error } = await sb
       .from("calendar_events")
       .insert({
         tenant_id: input.clientId,
+        site_id: input.siteId,
         title: input.title,
         starts_at: input.startsAt,
         ends_at: input.endsAt,
@@ -1081,6 +1246,8 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   updateEvent: async (id, patch) => {
+    const current = get().events.find((row) => row.id === id);
+    assertTenantWrite(get, current?.clientId ?? "");
     const sb = requireSupabase();
     const row: Record<string, unknown> = {};
     if (patch.title != null) row.title = patch.title;
@@ -1101,6 +1268,8 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   removeEvent: async (id) => {
+    const current = get().events.find((row) => row.id === id);
+    assertTenantWrite(get, current?.clientId ?? "");
     const sb = requireSupabase();
     const { error } = await sb.from("calendar_events").delete().eq("id", id);
     fail(error, "Could not take that date off.");
@@ -1108,11 +1277,14 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   addBooking: async (input) => {
+    assertTenantWrite(get, input.clientId);
+    assertSiteWrite(get, input.siteId);
     const sb = requireSupabase();
     const { data, error } = await sb
       .from("bookings")
       .insert({
         tenant_id: input.clientId,
+        site_id: input.siteId,
         guest_name: input.guestName,
         email: input.email,
         phone: input.phone,
@@ -1127,6 +1299,8 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   setBookingStatus: async (id, status) => {
+    const current = get().bookings.find((row) => row.id === id);
+    assertTenantWrite(get, current?.clientId ?? "");
     const sb = requireSupabase();
     const prev = get().bookings;
     set({ bookings: patchById(prev, id, { status }) });
@@ -1138,18 +1312,21 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   removeBooking: async (id) => {
+    const current = get().bookings.find((row) => row.id === id);
+    assertTenantWrite(get, current?.clientId ?? "");
     const sb = requireSupabase();
     const { error } = await sb.from("bookings").delete().eq("id", id);
     fail(error, "Could not remove that booking.");
     set((s) => ({ bookings: s.bookings.filter((b) => b.id !== id) }));
   },
 
-  reorderProducts: async (clientId, orderedIds) => {
+  reorderProducts: async (siteId, orderedIds) => {
+    assertSiteWrite(get, siteId);
     const sb = requireSupabase();
     const prev = get().products;
     set({
       products: prev.map((p) => {
-        if (p.clientId !== clientId) return p;
+        if (p.siteId !== siteId) return p;
         const i = orderedIds.indexOf(p.id);
         return i < 0 ? p : { ...p, sortOrder: i };
       }),
@@ -1164,6 +1341,8 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   ensureSections: async (clientId, siteId) => {
+    assertTenantWrite(get, clientId);
+    assertSiteWrite(get, siteId);
     const existing = get().sections.filter((s) => s.clientId === clientId && s.siteId === siteId);
     const missing = DEFAULT_SECTION_KEYS.filter((k) => !existing.some((s) => s.key === k));
     if (missing.length === 0) return;
@@ -1189,6 +1368,8 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   updateSection: async (id, patch) => {
+    const current = get().sections.find((row) => row.id === id);
+    assertTenantWrite(get, current?.clientId ?? "");
     const sb = requireSupabase();
     const prev = get().sections;
     set({
@@ -1214,6 +1395,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   reorderSections: async (siteId, orderedIds) => {
+    assertSiteWrite(get, siteId);
     const sb = requireSupabase();
     const prev = get().sections;
     set({
@@ -1235,6 +1417,8 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   saveAdvert: async (input) => {
+    assertTenantWrite(get, input.clientId);
+    assertSiteWrite(get, input.siteId);
     const sb = requireSupabase();
     const row = {
       tenant_id: input.clientId,
@@ -1275,6 +1459,8 @@ export const useAscStore = create<AscStore>()((set, get) => ({
   },
 
   removeAdvert: async (id) => {
+    const current = get().adverts.find((row) => row.id === id);
+    assertTenantWrite(get, current?.clientId ?? "");
     const sb = requireSupabase();
     const { error } = await sb.from("weekly_adverts").delete().eq("id", id);
     fail(error, "Could not remove that picture.");
@@ -1311,6 +1497,28 @@ export function useOwnClient() {
     const u = s.users.find((x) => x.id === s.session?.userId);
     if (!u?.clientId) return undefined;
     return s.clients.find((c) => c.id === u.clientId);
+  });
+}
+
+const NO_SITES: Site[] = [];
+
+export function useOwnSites() {
+  return useAscStore(
+    useShallow((s) => {
+      const u = s.users.find((x) => x.id === s.session?.userId);
+      if (!u?.clientId) return NO_SITES;
+      return ownSwitchableSites(s.sites, u.clientId);
+    }),
+  );
+}
+
+export function useActiveSite() {
+  return useAscStore((s) => {
+    const u = s.users.find((x) => x.id === s.session?.userId);
+    if (!u) return undefined;
+    const tenantId = u.role === "client" ? u.clientId : s.sites.find((site) => site.id === s.activeSiteId)?.clientId ?? null;
+    const id = resolveActiveSiteId(s.sites, tenantId, s.activeSiteId);
+    return s.sites.find((site) => site.id === id);
   });
 }
 

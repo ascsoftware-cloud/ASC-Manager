@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ExternalLink, Pencil, Plus } from "lucide-react";
+import { ConfirmDangerDialog } from "@/components/confirm-danger";
 import { StaffGate } from "@/components/staff-gate";
 import { Field, NativeSelect, PageHeader, Surface } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -31,9 +32,11 @@ function SitesPage() {
   const clients = useAscStore((s) => s.clients);
   const siteRedesigns = useAscStore((s) => s.siteRedesigns);
   const addSite = useAscStore((s) => s.addSite);
+  const removeSite = useAscStore((s) => s.removeSite);
   const saveSiteRedesign = useAscStore((s) => s.saveSiteRedesign);
   const [open, setOpen] = useState(false);
   const [redesignFor, setRedesignFor] = useState<Site | null>(null);
+  const [removeFor, setRemoveFor] = useState<Site | null>(null);
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8">
@@ -49,6 +52,12 @@ function SitesPage() {
         }
       />
       <Surface>
+        {sites.length === 0 ? (
+          <p className="px-5 py-10 text-sm text-muted-foreground">
+            No sites yet. Add a public site to a client so they can edit that
+            website from their desk.
+          </p>
+        ) : (
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-border text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
@@ -98,20 +107,31 @@ function SitesPage() {
                     )}
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setRedesignFor(s)}
-                    >
-                      <Pencil className="size-3.5" />
-                      {redesign?.redesignUrl ? "Edit" : "Add redesign"}
-                    </Button>
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setRedesignFor(s)}
+                      >
+                        <Pencil className="size-3.5" />
+                        {redesign?.redesignUrl ? "Edit" : "Add redesign"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setRemoveFor(s)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
+        )}
       </Surface>
       <NewSiteDialog
         open={open}
@@ -135,6 +155,22 @@ function SitesPage() {
             saveSiteRedesign(redesignFor.id, input),
           );
           if (ok) setRedesignFor(null);
+        }}
+      />
+      <ConfirmDangerDialog
+        open={Boolean(removeFor)}
+        title={`Remove ${removeFor?.name ?? "this site"}?`}
+        description="This takes the public site off this account and deletes its website content. The client stays. This cannot be undone."
+        confirmLabel="Remove site"
+        onOpenChange={(v) => {
+          if (!v) setRemoveFor(null);
+        }}
+        onConfirm={async () => {
+          if (!removeFor) return;
+          const ok = await saveAction(`${removeFor.name} removed`, () =>
+            removeSite(removeFor.id),
+          );
+          if (ok) setRemoveFor(null);
         }}
       />
     </div>

@@ -24,9 +24,9 @@ const { data } = await supabase.rpc("get_public_site", {
 
 Returns:
 
-- `tenant` — name, city, phone, hours, WhatsApp, modules
+- `tenant` — name, city, phone, hours, WhatsApp, modules (`store`, `calendar`, `bookings`, `advert`, `seo`, `faq`, `testimonials`, `gallery`, `services`, `staff`)
 - `site` — host, url
-- `sections` — homepage blocks (`welcome`, `this_week`, `this_sunday`, `featured`, `hours`), `sortOrder`, `visible`, `payload`
+- `sections` — homepage blocks (`welcome`, `this_week`, `featured`, `hours`, plus `seo` / `faq` / `testimonials` / `gallery` / `services` / `staff` when that module is on), `sortOrder`, `visible`, `payload`
 - `advert` — latest live advert covering today, or `null` (compat).
 - `adverts` — **all** live adverts covering today (many at once: nine a day or one a month). Empty if the Advert module is off.
 - `products` — live items only, `sortOrder` is shop order (empty if store module off)
