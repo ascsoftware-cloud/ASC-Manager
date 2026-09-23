@@ -188,6 +188,7 @@ export function mapSection(row: Row): ContentSection {
   return {
     id: str(row.id),
     clientId: str(row.tenant_id),
+    siteId: str(row.site_id),
     key,
     sortOrder: num(row.sort_order),
     visible: row.visible !== false,
@@ -209,6 +210,7 @@ export function mapAdvert(row: Row): WeeklyAdvert {
   return {
     id: str(row.id),
     clientId: str(row.tenant_id),
+    siteId: str(row.site_id),
     startsOn: str(row.starts_on).slice(0, 10),
     endsOn: str(row.ends_on).slice(0, 10),
     status: st,

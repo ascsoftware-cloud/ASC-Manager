@@ -389,12 +389,12 @@ type AscStore = AppTables & {
   setBookingStatus: (id: string, status: BookingStatus) => Promise<void>;
   removeBooking: (id: string) => Promise<void>;
   reorderProducts: (clientId: string, orderedIds: string[]) => Promise<void>;
-  ensureSections: (clientId: string) => Promise<void>;
+  ensureSections: (clientId: string, siteId: string) => Promise<void>;
   updateSection: (
     id: string,
     patch: Partial<Pick<ContentSection, "visible" | "payload" | "sortOrder">>,
   ) => Promise<void>;
-  reorderSections: (clientId: string, orderedIds: string[]) => Promise<void>;
+  reorderSections: (siteId: string, orderedIds: string[]) => Promise<void>;
   saveAdvert: (
     input: Omit<WeeklyAdvert, "id" | "photoUrl" | "updatedAt"> & { id?: string },
   ) => Promise<void>;
@@ -1119,8 +1119,8 @@ export const useAscStore = create<AscStore>()((set, get) => ({
     }
   },
 
-  ensureSections: async (clientId) => {
-    const existing = get().sections.filter((s) => s.clientId === clientId);
+  ensureSections: async (clientId, siteId) => {
+    const existing = get().sections.filter((s) => s.clientId === clientId && s.siteId === siteId);
     const missing = DEFAULT_SECTION_KEYS.filter((k) => !existing.some((s) => s.key === k));
     if (missing.length === 0) return;
     const sb = requireSupabase();
@@ -1130,6 +1130,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
       .insert(
         missing.map((key, i) => ({
           tenant_id: clientId,
+          site_id: siteId,
           key,
           sort_order: start + i,
           visible: true,
@@ -1168,12 +1169,12 @@ export const useAscStore = create<AscStore>()((set, get) => ({
     }));
   },
 
-  reorderSections: async (clientId, orderedIds) => {
+  reorderSections: async (siteId, orderedIds) => {
     const sb = requireSupabase();
     const prev = get().sections;
     set({
       sections: prev.map((x) => {
-        if (x.clientId !== clientId) return x;
+        if (x.siteId !== siteId) return x;
         const i = orderedIds.indexOf(x.id);
         return i < 0 ? x : { ...x, sortOrder: i };
       }),
@@ -1193,6 +1194,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
     const sb = requireSupabase();
     const row = {
       tenant_id: input.clientId,
+      site_id: input.siteId,
       starts_on: input.startsOn,
       ends_on: input.endsOn,
       status: input.status,

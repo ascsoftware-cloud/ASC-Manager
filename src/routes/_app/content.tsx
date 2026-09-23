@@ -35,10 +35,16 @@ function WebsitePage() {
   const user = useCurrentUser();
   const own = useOwnClient();
   const clients = useAscStore((s) => s.clients);
+  const sites = useAscStore((s) => s.sites);
   const ids = visibleClientIds(useAscStore.getState(), user);
   const [picked, setPicked] = useState(own?.id ?? ids[0] ?? "");
   const clientId = own?.id ?? picked;
   const client = clients.find((c) => c.id === clientId);
+  const clientSites = sites.filter((site) => site.clientId === clientId && site.kind === "public");
+  const [pickedSite, setPickedSite] = useState("");
+  const siteId = clientSites.some((site) => site.id === pickedSite)
+    ? pickedSite
+    : (clientSites[0]?.id ?? "");
   const allSections = useAscStore((s) => s.sections);
   const allAdverts = useAscStore((s) => s.adverts);
   const allProducts = useAscStore((s) => s.products);
@@ -46,14 +52,14 @@ function WebsitePage() {
   const sections = useMemo(
     () =>
       allSections
-        .filter((x) => x.clientId === clientId)
+        .filter((x) => x.clientId === clientId && x.siteId === siteId)
         .slice()
         .sort((a, b) => a.sortOrder - b.sortOrder),
-    [allSections, clientId],
+    [allSections, clientId, siteId],
   );
   const adverts = useMemo(
-    () => allAdverts.filter((a) => a.clientId === clientId),
-    [allAdverts, clientId],
+    () => allAdverts.filter((a) => a.clientId === clientId && a.siteId === siteId),
+    [allAdverts, clientId, siteId],
   );
   const products = useMemo(
     () =>
@@ -77,14 +83,14 @@ function WebsitePage() {
   const [dragId, setDragId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (clientId) void ensureSections(clientId);
-  }, [clientId, ensureSections]);
+    if (clientId && siteId) void ensureSections(clientId, siteId);
+  }, [clientId, siteId, ensureSections]);
 
   const welcome = String(
     sections.find((s) => s.key === "welcome")?.payload.line ?? "",
   );
 
-  if (!clientId) {
+  if (!clientId || !siteId) {
     return <EmptyDesk title="No site yet" detail="ASC will attach a public site to this tenant." />;
   }
 
@@ -109,10 +115,18 @@ function WebsitePage() {
             ))}
           </NativeSelect>
         ) : null}
+        <NativeSelect className="max-w-xs" value={siteId} onChange={(e) => setPickedSite(e.target.value)}>
+          {clientSites.map((site) => (
+            <option key={site.id} value={site.id}>
+              {site.name}
+            </option>
+          ))}
+        </NativeSelect>
 
         {client?.modules.advert ? (
           <SiteMediaBoard
             clientId={clientId}
+            siteId={siteId}
             storeOn={Boolean(client?.modules.store)}
             adverts={adverts}
             products={products}
@@ -134,7 +148,7 @@ function WebsitePage() {
                 const ids = sections.map((s) => s.id);
                 const next = reorderIds(ids, dragId, sec.id);
                 setDragId(null);
-                void saveAction("Order saved", () => reorderSections(clientId, next));
+                        void saveAction("Order saved", () => reorderSections(siteId, next));
               }}
               className="overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-lift)]"
             >
@@ -309,12 +323,14 @@ function todayStamp(): string {
 
 function SiteMediaBoard({
   clientId,
+  siteId,
   storeOn,
   adverts,
   products,
   events,
 }: {
   clientId: string;
+  siteId: string;
   storeOn: boolean;
   adverts: WeeklyAdvert[];
   products: { id: string; name: string; photoPath: string; priceZar: number }[];
@@ -359,7 +375,18 @@ function SiteMediaBoard({
     setStatus(advert?.status ?? "draft");
     setLinkType(advert?.linkType ?? "none");
     setLinkId(advert?.linkId ?? "");
-  }, [advert?.id, selectedId]);
+  }, [
+    advert?.body,
+    advert?.endsOn,
+    advert?.headline,
+    advert?.id,
+    advert?.linkId,
+    advert?.linkType,
+    advert?.photoPath,
+    advert?.startsOn,
+    advert?.status,
+    selectedId,
+  ]);
 
   const expired = status === "live" && endsOn < new Date().toISOString().slice(0, 10);
 
@@ -517,6 +544,7 @@ function SiteMediaBoard({
               await saveAdvert({
                 id: selectedId === "new" ? undefined : advert?.id,
                 clientId,
+                siteId,
                 startsOn,
                 endsOn,
                 status,

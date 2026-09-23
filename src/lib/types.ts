@@ -164,6 +164,7 @@ export type SectionKey =
 export type ContentSection = {
   id: string;
   clientId: string;
+  siteId: string;
   key: SectionKey;
   sortOrder: number;
   visible: boolean;
@@ -177,6 +178,7 @@ export type AdvertLinkType = "none" | "product" | "event" | "url";
 export type WeeklyAdvert = {
   id: string;
   clientId: string;
+  siteId: string;
   startsOn: string;
   endsOn: string;
   status: AdvertStatus;
