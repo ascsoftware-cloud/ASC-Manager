@@ -107,6 +107,15 @@ export type Site = {
   kind: "public" | "admin";
 };
 
+export type SiteRedesign = {
+  id: string;
+  siteId: string;
+  clientId: string;
+  redesignUrl: string;
+  notes: string;
+  updatedAt: string;
+};
+
 export type MonitorStatus = "up" | "down" | "unchecked";
 
 export type Monitor = {
@@ -237,4 +246,5 @@ export type AppTables = {
   bookings: Booking[];
   sections: ContentSection[];
   adverts: WeeklyAdvert[];
+  siteRedesigns: SiteRedesign[];
 };
