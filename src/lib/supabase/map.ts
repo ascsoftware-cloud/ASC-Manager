@@ -187,6 +187,12 @@ const SECTION_KEYS: SectionKey[] = [
   "this_sunday",
   "featured",
   "hours",
+  "seo",
+  "faq",
+  "testimonials",
+  "gallery",
+  "services",
+  "staff",
 ];
 
 export function mapSection(row: Row): ContentSection {

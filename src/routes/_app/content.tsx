@@ -23,6 +23,12 @@ const LABELS: Record<SectionKey, string> = {
   this_sunday: "This Sunday",
   featured: "Featured from the shop",
   hours: "Hours & contact",
+  seo: "SEO & social preview",
+  faq: "Frequently asked questions",
+  testimonials: "Testimonials",
+  gallery: "Gallery",
+  services: "Services & pricing",
+  staff: "Staff",
 };
 
 function showSection(sec: { key: SectionKey }, advertOn: boolean) {
@@ -240,6 +246,16 @@ function WebsitePage() {
                       {client?.hours || "Hours from Business"}
                     </p>
                   ) : null}
+                  {s.key === "seo" ? (
+                    <p className="text-xs text-muted-foreground">
+                      {String(s.payload.title ?? "SEO title")}
+                    </p>
+                  ) : null}
+                  {(["faq", "testimonials", "gallery", "services", "staff"] as SectionKey[]).includes(s.key) ? (
+                    <p className="text-xs text-muted-foreground">
+                      {Array.isArray(s.payload.items) ? `${s.payload.items.length} items` : "No items yet"}
+                    </p>
+                  ) : null}
                 </div>
               ))}
           </div>
@@ -308,12 +324,180 @@ function SectionEditor({
       </ul>
     );
   }
+  if (section.key === "seo") {
+    return <SeoEditor section={section} onChange={onChange} />;
+  }
+  if (section.key === "faq") {
+    return (
+      <ListEditor
+        section={section}
+        onChange={onChange}
+        fields={["question", "answer"]}
+        labels={["Question", "Answer"]}
+        title="Questions visitors ask"
+      />
+    );
+  }
+  if (section.key === "testimonials") {
+    return (
+      <ListEditor
+        section={section}
+        onChange={onChange}
+        fields={["quote", "name", "role"]}
+        labels={["Quote", "Name", "Role or company"]}
+        title="Customer quotes"
+      />
+    );
+  }
+  if (section.key === "gallery") {
+    return (
+      <ListEditor
+        section={section}
+        onChange={onChange}
+        fields={["image", "caption", "alt"]}
+        labels={["Image URL", "Caption", "Alt text"]}
+        title="Gallery images"
+      />
+    );
+  }
+  if (section.key === "services") {
+    return (
+      <ListEditor
+        section={section}
+        onChange={onChange}
+        fields={["name", "price", "description"]}
+        labels={["Service", "Price", "Description"]}
+        title="Services or packages"
+      />
+    );
+  }
+  if (section.key === "staff") {
+    return (
+      <ListEditor
+        section={section}
+        onChange={onChange}
+        fields={["name", "role", "bio", "photo"]}
+        labels={["Name", "Role", "Bio", "Photo URL"]}
+        title="People on the team"
+      />
+    );
+  }
   return (
     <p className="text-sm text-muted-foreground whitespace-pre-wrap">
       {client?.hours || "Set hours on Business."}
       {client?.phone ? `\n${client.phone}` : ""}
       {client?.address ? `\n${client.address}` : ""}
     </p>
+  );
+}
+
+function SeoEditor({
+  section,
+  onChange,
+}: {
+  section: ContentSection;
+  onChange: (payload: Record<string, unknown>) => void;
+}) {
+  return (
+    <div className="grid gap-4">
+      <Field label="Page title">
+        <Input
+          defaultValue={String(section.payload.title ?? "")}
+          maxLength={60}
+          onBlur={(e) => onChange({ ...section.payload, title: plainText(e.target.value) })}
+        />
+      </Field>
+      <Field label="Meta description">
+        <Textarea
+          defaultValue={String(section.payload.description ?? "")}
+          maxLength={160}
+          rows={3}
+          onBlur={(e) => onChange({ ...section.payload, description: plainText(e.target.value) })}
+        />
+      </Field>
+      <Field label="Social image URL">
+        <Input
+          defaultValue={String(section.payload.image ?? "")}
+          placeholder="https://"
+          onBlur={(e) => onChange({ ...section.payload, image: e.target.value.trim() })}
+        />
+      </Field>
+    </div>
+  );
+}
+
+function ListEditor({
+  section,
+  onChange,
+  fields,
+  labels,
+  title,
+}: {
+  section: ContentSection;
+  onChange: (payload: Record<string, unknown>) => void;
+  fields: string[];
+  labels: string[];
+  title: string;
+}) {
+  const rawItems = Array.isArray(section.payload.items) ? section.payload.items : [];
+  const initialItems = rawItems.filter(
+    (item): item is Record<string, unknown> => Boolean(item) && typeof item === "object",
+  );
+  const [items, setItems] = useState(initialItems);
+
+  function update(index: number, field: string, value: string, save = false) {
+    const next = items.map((item) => ({ ...item }));
+    next[index][field] = value;
+    setItems(next);
+    if (save) onChange({ ...section.payload, items: next });
+  }
+
+  function add() {
+    onChange({
+      ...section.payload,
+      items: [...items, Object.fromEntries(fields.map((field) => [field, ""]))],
+    });
+    setItems([...items, Object.fromEntries(fields.map((field) => [field, ""]))]);
+  }
+
+  function remove(index: number) {
+    const next = items.filter((_, i) => i !== index);
+    setItems(next);
+    onChange({ ...section.payload, items: next });
+  }
+
+  return (
+    <div className="grid gap-4">
+      <p className="text-sm text-muted-foreground">{title}</p>
+      {items.map((item, index) => (
+        <div key={index} className="grid gap-3 border border-border p-3">
+          {fields.map((field, fieldIndex) => (
+            <Field key={field} label={labels[fieldIndex]}>
+              {field === "answer" || field === "quote" || field === "description" || field === "bio" ? (
+                <Textarea
+                  value={String(item[field] ?? "")}
+                  rows={2}
+                  onChange={(e) => update(index, field, e.target.value)}
+                  onBlur={(e) => update(index, field, plainText(e.target.value), true)}
+                />
+              ) : (
+                <Input
+                  value={String(item[field] ?? "")}
+                  onChange={(e) => update(index, field, e.target.value)}
+                  onBlur={(e) => update(index, field, plainText(e.target.value), true)}
+                />
+              )}
+            </Field>
+          ))}
+          <Button type="button" variant="ghost" onClick={() => remove(index)}>
+            Remove
+          </Button>
+        </div>
+      ))}
+      <Button type="button" variant="outline" onClick={add}>
+        Add item
+      </Button>
+    </div>
   );
 }
 

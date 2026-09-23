@@ -168,7 +168,13 @@ export type SectionKey =
   | "this_week"
   | "this_sunday"
   | "featured"
-  | "hours";
+  | "hours"
+  | "seo"
+  | "faq"
+  | "testimonials"
+  | "gallery"
+  | "services"
+  | "staff";
 
 export type ContentSection = {
   id: string;

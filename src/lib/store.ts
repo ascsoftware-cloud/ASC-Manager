@@ -126,6 +126,12 @@ const DEFAULT_SECTION_KEYS: SectionKey[] = [
   "this_week",
   "featured",
   "hours",
+  "seo",
+  "faq",
+  "testimonials",
+  "gallery",
+  "services",
+  "staff",
 ];
 
 function readCookies(): boolean | null {
