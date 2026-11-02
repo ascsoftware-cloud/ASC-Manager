@@ -100,7 +100,7 @@ export function LoginScreen() {
                 {error}
               </p>
             ) : null}
-            <Button type="submit" disabled={busy} className="h-12 w-full rounded-full text-sm">
+            <Button type="submit" disabled={busy} className="h-12 w-full rounded-full text-base">
               {busy ? "Please wait" : "Sign in"}
             </Button>
           </form>
