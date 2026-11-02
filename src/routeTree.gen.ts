@@ -31,6 +31,7 @@ import { Route as AppSitesRouteImport } from './routes/_app/sites'
 import { Route as AppStoreRouteImport } from './routes/_app/store'
 import { Route as AppTermsRouteImport } from './routes/_app/terms'
 import { Route as AppVisitorsRouteImport } from './routes/_app/visitors'
+import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as ApiPublicSiteRouteImport } from './routes/api/public/site'
 
@@ -143,6 +144,11 @@ const AppVisitorsRoute = AppVisitorsRouteImport.update({
   path: '/visitors',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiVersionRoute = ApiVersionRouteImport.update({
+  id: '/api/version',
+  path: '/api/version',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/store': typeof AppStoreRoute
   '/terms': typeof AppTermsRoute
   '/visitors': typeof AppVisitorsRoute
+  '/api/version': typeof ApiVersionRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/api/public/site': typeof ApiPublicSiteRoute
 }
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/store': typeof AppStoreRoute
   '/terms': typeof AppTermsRoute
   '/visitors': typeof AppVisitorsRoute
+  '/api/version': typeof ApiVersionRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AppIndexRoute
   '/api/public/site': typeof ApiPublicSiteRoute
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/_app/store': typeof AppStoreRoute
   '/_app/terms': typeof AppTermsRoute
   '/_app/visitors': typeof AppVisitorsRoute
+  '/api/version': typeof ApiVersionRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_app/': typeof AppIndexRoute
   '/api/public/site': typeof ApiPublicSiteRoute
@@ -255,6 +264,7 @@ export interface FileRouteTypes {
     | '/store'
     | '/terms'
     | '/visitors'
+    | '/api/version'
     | '/auth/callback'
     | '/api/public/site'
   fileRoutesByTo: FileRoutesByTo
@@ -279,6 +289,7 @@ export interface FileRouteTypes {
     | '/store'
     | '/terms'
     | '/visitors'
+    | '/api/version'
     | '/auth/callback'
     | '/'
     | '/api/public/site'
@@ -305,6 +316,7 @@ export interface FileRouteTypes {
     | '/_app/store'
     | '/_app/terms'
     | '/_app/visitors'
+    | '/api/version'
     | '/auth/callback'
     | '/_app/'
     | '/api/public/site'
@@ -314,6 +326,7 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute
   AppRoute: typeof AppRouteWithChildren
   SetPasswordRoute: typeof SetPasswordRoute
+  ApiVersionRoute: typeof ApiVersionRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   ApiPublicSiteRoute: typeof ApiPublicSiteRoute
 }
@@ -474,6 +487,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppVisitorsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/version': {
+      id: '/api/version'
+      path: '/api/version'
+      fullPath: '/api/version'
+      preLoaderRoute: typeof ApiVersionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -541,6 +561,7 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   AppRoute: AppRouteWithChildren,
   SetPasswordRoute: SetPasswordRoute,
+  ApiVersionRoute: ApiVersionRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   ApiPublicSiteRoute: ApiPublicSiteRoute,
 }

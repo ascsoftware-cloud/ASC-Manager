@@ -142,10 +142,20 @@ function authPopupPlugin(): Plugin {
   };
 }
 
+/**
+ * Identifies this build. The client bundle carries the value it was built with
+ * and `/api/version` reports the one the server is running, so a mismatch means
+ * a newer deployment is live (see `UpdatePrompt`).
+ */
+const BUILD_ID = process.env.VERCEL_GIT_COMMIT_SHA || String(Date.now());
+
 // `0.0.0.0:8080` is the live-preview contract — don't change host/port.
 // The dev server starts once `src/router.tsx` and `src/routes/` exist — see
 // AGENTS.md § "First scaffold".
 export default defineConfig(({ command, isPreview }) => ({
+  define: {
+    __BUILD_ID__: JSON.stringify(command === "build" ? BUILD_ID : "dev"),
+  },
   server: {
     host: "0.0.0.0",
     port: 8080,

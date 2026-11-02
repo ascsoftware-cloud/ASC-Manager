@@ -1,6 +1,7 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { AuthCodeRedirect } from "@/components/auth-code-redirect";
+import { UpdatePrompt } from "@/components/update-prompt";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import appCss from "../styles.css?url";
 
@@ -51,6 +52,7 @@ export const Route = createRootRoute({
         <AuthProvider>
           <Outlet />
         </AuthProvider>
+        <UpdatePrompt />
         <Scripts />
       </body>
     </html>

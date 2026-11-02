@@ -9,3 +9,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/** Set at build time in vite.config.ts; "dev" under the dev server. */
+declare const __BUILD_ID__: string;
