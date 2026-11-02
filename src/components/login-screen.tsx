@@ -48,10 +48,6 @@ export function LoginScreen() {
             <br />
             ASC Software.
           </h1>
-          <p className="mt-6 max-w-sm text-[15px] leading-relaxed text-muted-foreground">
-            The control panel for every site we run. Staff see the full book.
-            Clients sign in and only see their own.
-          </p>
         </div>
         <p className="relative text-[11px] uppercase tracking-[0.18em] text-gold">
           Atlas Scale Collective (Pty) Ltd · Pretoria

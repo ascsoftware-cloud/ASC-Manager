@@ -117,6 +117,19 @@
   select {
     font: inherit;
   }
+
+  /* Browsers paint autofilled fields with a solid pale-blue block that can't be
+     overridden directly. Delay that background indefinitely so the field keeps
+     its own look, and keep the text in our colour. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: currentColor;
+    caret-color: currentColor;
+    transition: background-color 600000s 0s, color 600000s 0s;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
