@@ -44,7 +44,7 @@ export function UpdatePrompt() {
   if (!available) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 p-3 sm:p-5">
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 p-3 sm:p-5">
       <div
         role="status"
         className="pointer-events-auto mx-auto flex max-w-md items-center gap-4 rounded-xl bg-card p-4 shadow-[var(--shadow-border),var(--shadow-lift)]"

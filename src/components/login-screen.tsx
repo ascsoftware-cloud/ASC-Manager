@@ -64,7 +64,7 @@ export function LoginScreen() {
           </p>
           <h2 className="mt-3 font-display text-4xl text-champagne">Sign in</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Invite-only. Use the email ASC gave you.
+            Invite only. Use the email ASC gave you.
           </p>
           <form onSubmit={(e) => void onSubmit(e)} className="mt-10 flex flex-col gap-7">
             <label className="block" htmlFor="login-email">
