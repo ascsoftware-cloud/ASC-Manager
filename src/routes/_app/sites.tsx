@@ -60,7 +60,7 @@ function SitesPage() {
         ) : (
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-border text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+            <tr className="border-b border-border text-[13px] text-muted-foreground">
               <th className="px-5 py-3 font-medium">System</th>
               <th className="px-5 py-3 font-medium">Client</th>
               <th className="px-5 py-3 font-medium">Kind</th>

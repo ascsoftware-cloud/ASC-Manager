@@ -1,3 +1,4 @@
+import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { PageHeader, Surface } from "@/components/page-header";
@@ -8,7 +9,11 @@ import { saveAction } from "@/lib/mutate";
 import { useAscStore, useCurrentUser, visibleClientIds } from "@/lib/store";
 
 export const Route = createFileRoute("/_app/billing")({
-  component: BillingPage,
+  component: () => (
+    <PermissionGate perm="billing">
+      <BillingPage />
+    </PermissionGate>
+  ),
 });
 
 function BillingPage() {

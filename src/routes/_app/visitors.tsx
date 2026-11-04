@@ -1,11 +1,16 @@
 import { useMemo } from "react";
+import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { Kpi, NativeSelect, PageHeader, Surface } from "@/components/page-header";
 import { useActiveSite, useAscStore, useCurrentUser, useOwnSites, visibleClientIds } from "@/lib/store";
 
 export const Route = createFileRoute("/_app/visitors")({
-  component: VisitorsPage,
+  component: () => (
+    <PermissionGate perm="visitors">
+      <VisitorsPage />
+    </PermissionGate>
+  ),
 });
 
 function VisitorsPage() {
@@ -54,7 +59,7 @@ function VisitorsPage() {
           ))}
         </NativeSelect>
       ) : null}
-      <section className="grid gap-0 sm:grid-cols-3">
+      <section className="grid gap-3 sm:grid-cols-3">
         <Kpi label="Page views" value={String(views)} hint="Last 14 days" accent />
         <Kpi label="Bots excluded" value={String(bots)} hint="Not counted in views" />
         <Kpi
@@ -75,15 +80,15 @@ function VisitorsPage() {
               <AreaChart data={chart}>
                 <defs>
                   <linearGradient id="vis" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3ecf8e" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="#3ecf8e" stopOpacity={0} />
+                    <stop offset="0%" stopColor="var(--color-emerald)" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="var(--color-emerald)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="d" tick={{ fill: "#9aada4", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="d" tick={{ fill: "var(--color-muted-foreground)", fontSize: 12 }} axisLine={false} tickLine={false} />
                 <Tooltip
-                  contentStyle={{ background: "#0c1b16", border: "1px solid rgba(239,230,212,0.1)" }}
+                  contentStyle={{ background: "var(--color-card)", color: "var(--color-foreground)", border: "1px solid var(--color-border)", borderRadius: 8 }}
                 />
-                <Area type="monotone" dataKey="v" stroke="#3ecf8e" fill="url(#vis)" />
+                <Area type="monotone" dataKey="v" stroke="var(--color-emerald)" fill="url(#vis)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

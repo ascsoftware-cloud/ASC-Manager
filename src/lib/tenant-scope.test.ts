@@ -18,6 +18,9 @@ const operator: User = {
   name: "Tiaan",
   role: "operator",
   clientId: null,
+  access: "admin",
+  permissions: [],
+  siteIds: [],
 };
 
 const demo: User = {
@@ -26,6 +29,9 @@ const demo: User = {
   name: "Demo shop",
   role: "client",
   clientId: "tenant-demo",
+  access: "admin",
+  permissions: [],
+  siteIds: [],
 };
 
 const other: User = {
@@ -34,6 +40,9 @@ const other: User = {
   name: "Other",
   role: "client",
   clientId: "tenant-other",
+  access: "admin",
+  permissions: [],
+  siteIds: [],
 };
 
 function site(id: string, clientId: string, kind: Site["kind"] = "public"): Site {

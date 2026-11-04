@@ -24,15 +24,15 @@ export function PageHeader({
     >
       <div className="min-w-0 space-y-2">
         {eyebrow && eyebrow !== title ? (
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-emerald">
-            {eyebrow}
-          </p>
+          <p className="text-sm font-medium text-emerald">{eyebrow}</p>
         ) : null}
-        <h1 className="font-display text-4xl font-medium tracking-tight text-champagne sm:text-5xl">
+        <h1 className="font-display text-3xl font-medium tracking-tight text-champagne sm:text-4xl">
           {title}
         </h1>
         {description ? (
-          <p className="max-w-2xl text-sm text-muted-foreground">{description}</p>
+          <p className="max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
+            {description}
+          </p>
         ) : null}
       </div>
       {action ? <div className="flex shrink-0 items-center gap-2">{action}</div> : null}
@@ -51,11 +51,9 @@ export function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-        {label}
-      </span>
+      <span className="text-[13px] font-medium text-muted-foreground">{label}</span>
       {children}
-      {hint ? <span className="text-xs text-muted-foreground/80">{hint}</span> : null}
+      {hint ? <span className="text-xs text-muted-foreground">{hint}</span> : null}
     </label>
   );
 }
@@ -70,10 +68,31 @@ export function Surface({
   return (
     <section
       data-surface
-      className={cn("border border-border bg-card/80", className)}
+      className={cn("rounded-xl border border-border bg-card/80", className)}
     >
       {children}
     </section>
+  );
+}
+
+/** Title row at the top of a Surface, with an optional action on the right. */
+export function SurfaceHeader({
+  title,
+  detail,
+  action,
+}: {
+  title: string;
+  detail?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+      <div className="min-w-0">
+        <h2 className="text-base font-semibold text-champagne">{title}</h2>
+        {detail ? <p className="text-sm text-muted-foreground">{detail}</p> : null}
+      </div>
+      {action}
+    </div>
   );
 }
 
@@ -129,15 +148,13 @@ export function Kpi({
   return (
     <div
       className={cn(
-        "border border-border bg-card px-5 py-4",
+        "rounded-xl border border-border bg-card px-5 py-4",
         accent && "border-l-2 border-l-emerald",
       )}
     >
-      <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-        {label}
-      </p>
+      <p className="text-sm font-medium text-muted-foreground">{label}</p>
       <p className={cn("mt-2 font-display text-4xl", valueClass ?? "text-champagne")}>{value}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{hint}</p>
     </div>
   );
 }

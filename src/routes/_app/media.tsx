@@ -1,3 +1,4 @@
+import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader, Surface } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,11 @@ import { saveAction } from "@/lib/mutate";
 import { useAscStore, useCurrentUser, visibleClientIds } from "@/lib/store";
 
 export const Route = createFileRoute("/_app/media")({
-  component: MediaPage,
+  component: () => (
+    <PermissionGate perm="content">
+      <MediaPage />
+    </PermissionGate>
+  ),
 });
 
 function MediaPage() {

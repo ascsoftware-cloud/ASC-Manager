@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { EmptyDesk, GripHandle } from "@/components/desk-ui";
 import { MediaPicker } from "@/components/media-picker";
@@ -15,7 +16,11 @@ import type { AdvertLinkType, AdvertStatus, ContentSection, SectionKey, WeeklyAd
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/content")({
-  component: WebsitePage,
+  component: () => (
+    <PermissionGate perm="content">
+      <WebsitePage />
+    </PermissionGate>
+  ),
 });
 
 const LABELS: Record<SectionKey, string> = {

@@ -6,6 +6,12 @@ export type User = {
   name: string;
   role: Role;
   clientId: string | null;
+  /** Client logins only. Admins see everything; staff see what they were given. */
+  access: "admin" | "staff";
+  /** Pages a staff login may open (see lib/permissions). Ignored for admins. */
+  permissions: string[];
+  /** Sites a staff login may work on. Empty means every site on the account. */
+  siteIds: string[];
 };
 
 export type Client = {

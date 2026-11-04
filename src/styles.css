@@ -183,32 +183,32 @@
   background-color: var(--color-background);
 }
 
-.client-desk input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
-.client-desk textarea,
-.client-desk select {
+:is(.client-desk, .staff-desk) input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+:is(.client-desk, .staff-desk) textarea,
+:is(.client-desk, .staff-desk) select {
   background-color: #ffffff;
   color: #171c19;
   box-shadow: 0 0 0 1px rgb(23 28 25 / 0.12);
   border-radius: 10px;
 }
 
-.client-desk input::placeholder,
-.client-desk textarea::placeholder {
+:is(.client-desk, .staff-desk) input::placeholder,
+:is(.client-desk, .staff-desk) textarea::placeholder {
   color: #8a938d;
 }
 
-.client-desk input:focus-visible,
-.client-desk textarea:focus-visible,
-.client-desk select:focus-visible {
+:is(.client-desk, .staff-desk) input:focus-visible,
+:is(.client-desk, .staff-desk) textarea:focus-visible,
+:is(.client-desk, .staff-desk) select:focus-visible {
   box-shadow: 0 0 0 2px #166534;
   outline: none;
 }
 
-.client-desk button[role="switch"][data-state="checked"] {
+:is(.client-desk, .staff-desk) button[role="switch"][data-state="checked"] {
   background-color: #166534;
 }
 
-.client-desk button[role="switch"] span {
+:is(.client-desk, .staff-desk) button[role="switch"] span {
   background-color: #ffffff;
 }
 
@@ -237,4 +237,46 @@
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
+}
+
+/* Staff desk: cream canvas, warm white cards, deep green as the accent. */
+.staff-desk {
+  color-scheme: light;
+  --color-background: #f6f1e4;
+  --color-foreground: #1d2a22;
+  --color-card: #fffdf7;
+  --color-card-foreground: #1d2a22;
+  --color-popover: #fffdf7;
+  --color-popover-foreground: #1d2a22;
+  --color-primary: #14532d;
+  --color-primary-foreground: #fffdf7;
+  --color-secondary: #efe8d6;
+  --color-secondary-foreground: #1d2a22;
+  --color-muted: #ece4d1;
+  --color-muted-foreground: #5b665e;
+  --color-accent: #ebe3cf;
+  --color-accent-foreground: #1d2a22;
+  --color-destructive: #b42318;
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgb(29 42 34 / 0.12);
+  --color-input: rgb(29 42 34 / 0.16);
+  --color-ring: #14532d;
+  --color-sidebar: #efe8d6;
+  --color-champagne: #1d2a22;
+  --color-ink: #1d2a22;
+  --color-gold: #8a6f2f;
+  --color-sage: #5b665e;
+  --color-emerald: #166534;
+  --color-success: #166534;
+  --color-warn: #9a6700;
+  --shadow-border: 0 0 0 1px rgb(29 42 34 / 0.12);
+  --shadow-border-hover: 0 0 0 1px rgb(29 42 34 / 0.22);
+  --shadow-lift: 0 1px 2px rgb(29 42 34 / 0.05), 0 12px 28px -18px rgb(29 42 34 / 0.18);
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+}
+
+.staff-desk ::selection {
+  background: rgb(22 101 52 / 0.2);
+  color: var(--color-champagne);
 }

@@ -1,0 +1,51 @@
+<!--
+  Supabase → Authentication → Emails → Templates → "Invite user"
+  Subject: You're invited to ASC Manager
+  Paste everything below this comment into the template body.
+-->
+<!doctype html>
+<html lang="en">
+  <body style="margin:0;padding:0;background:#f6f1e4;font-family:Helvetica,Arial,sans-serif;color:#1d2a22;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f1e4;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fffdf7;border:1px solid #e4dcc8;border-radius:12px;">
+            <tr>
+              <td style="padding:28px 32px 0;">
+                <p style="margin:0;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#166534;font-weight:bold;">ASC Software</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:16px 32px 0;">
+                <h1 style="margin:0;font-size:26px;line-height:1.25;font-weight:600;color:#1d2a22;">You're invited to ASC Manager</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:16px 32px 0;font-size:16px;line-height:1.6;color:#1d2a22;">
+                <p style="margin:0 0 12px;">{{ if .Data.name }}Hi {{ .Data.name }},{{ else }}Hi,{{ end }}</p>
+                <p style="margin:0;">Atlas Scale Collective has set up a login for you on ASC Manager, where you look after your website. Choose a password to get started.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 32px 0;">
+                <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#14532d;color:#fffdf7;text-decoration:none;font-size:16px;font-weight:bold;padding:14px 28px;border-radius:999px;">Accept invitation</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 32px 0;font-size:14px;line-height:1.6;color:#5b665e;">
+                <p style="margin:0;">Or paste this link into your browser:<br><a href="{{ .ConfirmationURL }}" style="color:#166534;word-break:break-all;">{{ .ConfirmationURL }}</a></p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px 32px 28px;">
+                <hr style="border:0;border-top:1px solid #e4dcc8;margin:0 0 16px;">
+                <p style="margin:0;font-size:13px;line-height:1.6;color:#5b665e;">Wasn't expecting this? You can ignore this email and nothing will happen. Need help? Write to <a href="mailto:admin@ascsoftware.co.za" style="color:#166534;">admin@ascsoftware.co.za</a>.</p>
+                <p style="margin:12px 0 0;font-size:12px;color:#8a938d;">Atlas Scale Collective (Pty) Ltd · Pretoria, South Africa</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

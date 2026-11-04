@@ -20,8 +20,8 @@ export function StatusDot({
   };
   const item = map[status] ?? map.unchecked;
   return (
-    <span className="inline-flex items-center gap-2 text-sm text-champagne">
-      <span className={cn("size-2 rounded-full", item.className)} />
+    <span className="inline-flex items-center gap-2 text-sm font-medium text-champagne">
+      <span className={cn("size-2.5 rounded-full", item.className)} />
       {item.label}
     </span>
   );

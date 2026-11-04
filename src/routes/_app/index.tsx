@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { EmptyDesk } from "@/components/desk-ui";
-import { Kpi, NativeSelect, PageHeader, Surface } from "@/components/page-header";
+import { Kpi, NativeSelect, PageHeader, Surface, SurfaceHeader } from "@/components/page-header";
 import { StatusDot } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { formatDay, formatRelative } from "@/lib/format";
@@ -10,6 +10,7 @@ import {
   WEBSITE_MODULE_TOGGLES,
   type WebsiteModuleKey,
 } from "@/lib/modules";
+import { canUse } from "@/lib/permissions";
 import {
   useActiveSite,
   useAscStore,
@@ -39,19 +40,62 @@ function StaffDashboard() {
   const openRequests = requests.filter((r) => r.status === "open").length;
   const offline = monitors.filter((m) => m.status === "down").length;
   const publicSites = sites.filter((s) => s.kind === "public");
+  const renewals = useAscStore((s) => s.renewals);
   const missingSite = clients.filter(
     (c) => !publicSites.some((s) => s.clientId === c.id),
   );
+  const dueSoon = renewals.filter(
+    (r) => differenceInCalendarDays(parseISO(r.expiresAt), new Date()) <= 30,
+  ).length;
+
+  const attention: {
+    to: "/monitors" | "/incidents" | "/requests" | "/renewals" | "/sites";
+    tone: "bad" | "warn";
+    title: string;
+    detail: string;
+  }[] = [];
+  if (offline > 0) {
+    attention.push({
+      to: "/monitors",
+      tone: "bad",
+      title: `${offline} ${offline === 1 ? "monitor is" : "monitors are"} offline`,
+      detail: "A site or certificate check is failing right now.",
+    });
+  }
+  if (openIncidents > 0) {
+    attention.push({
+      to: "/incidents",
+      tone: "bad",
+      title: `${openIncidents} open ${openIncidents === 1 ? "incident" : "incidents"}`,
+      detail: "Outages that have not been resolved yet.",
+    });
+  }
+  if (openRequests > 0) {
+    attention.push({
+      to: "/requests",
+      tone: "warn",
+      title: `${openRequests} client ${openRequests === 1 ? "request" : "requests"} waiting`,
+      detail: "Work clients asked ASC to do.",
+    });
+  }
+  if (dueSoon > 0) {
+    attention.push({
+      to: "/renewals",
+      tone: "warn",
+      title: `${dueSoon} ${dueSoon === 1 ? "renewal" : "renewals"} due within 30 days`,
+      detail: "Domains, hosting or certificates expiring soon.",
+    });
+  }
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
       <PageHeader
-        eyebrow="Dashboard"
+        eyebrow="Staff console"
         title="Dashboard"
-        description="Clients, the public sites on each login, and the modules we switched on. A client with two or more sites switches among them in their account menu."
+        description="Everything across the client book at a glance. Start with what needs attention, then drill into a client or site."
       />
 
-      <section className="grid gap-0 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi
           label="Clients"
           value={String(clients.length)}
@@ -76,21 +120,58 @@ function StaffDashboard() {
         />
       </section>
 
+      <Surface>
+        <SurfaceHeader
+          title="Needs attention"
+          detail={attention.length === 0 ? undefined : "Most urgent first."}
+        />
+        {attention.length === 0 ? (
+          <p className="px-5 py-6 text-[15px] text-muted-foreground">
+            All clear. No offline monitors, open incidents, waiting requests or renewals due
+            within 30 days.
+          </p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {attention.map((item) => (
+              <li key={item.to}>
+                <Link
+                  to={item.to}
+                  className="flex min-h-14 items-center gap-4 px-5 py-3.5 hover:bg-accent/40"
+                >
+                  <span
+                    className={
+                      item.tone === "bad"
+                        ? "size-2.5 shrink-0 rounded-full bg-destructive"
+                        : "size-2.5 shrink-0 rounded-full bg-warn"
+                    }
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-champagne">{item.title}</p>
+                    <p className="text-sm text-muted-foreground">{item.detail}</p>
+                  </div>
+                  <span className="text-sm font-medium text-emerald">Open</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Surface>
+
       {missingSite.length > 0 ? (
         <Surface>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              No public site yet
-            </p>
-            <Button asChild size="sm" className="rounded-full">
-              <Link to="/sites">Add a site</Link>
-            </Button>
-          </div>
+          <SurfaceHeader
+            title="No public site yet"
+            action={
+              <Button asChild size="sm" className="rounded-full">
+                <Link to="/sites">Add a site</Link>
+              </Button>
+            }
+          />
           <ul className="divide-y divide-border">
             {missingSite.map((c) => (
               <li key={c.id} className="flex items-center justify-between gap-3 px-5 py-4">
                 <div>
-                  <p className="text-champagne">{c.name}</p>
+                  <p className="font-medium text-champagne">{c.name}</p>
                   <p className="text-sm text-muted-foreground">
                     Their login cannot edit a website until you attach one.
                   </p>
@@ -142,7 +223,7 @@ function DeskCard({
       hash={hash}
       className="border border-border bg-card px-5 py-4 hover:border-emerald/40"
     >
-      <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-emerald">{kicker}</p>
+      <p className="text-sm font-medium text-emerald">{kicker}</p>
       <p className="mt-2 font-display text-xl text-champagne">{title}</p>
       <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
     </Link>
@@ -150,6 +231,8 @@ function DeskCard({
 }
 
 function ClientOverview() {
+  const user = useCurrentUser();
+  const can = (key: Parameters<typeof canUse>[1]) => canUse(user, key);
   const own = useOwnClient();
   const sites = useOwnSites();
   const activeSite = useActiveSite();
@@ -166,7 +249,9 @@ function ClientOverview() {
     .reduce((a, v) => a + v.views, 0);
   const fresh = allEnquiries.filter((e) => e.clientId === own?.id && e.status === "new");
   const dueInvoices = invoices.filter((i) => i.clientId === own?.id && i.status === "due");
-  const extras = WEBSITE_MODULE_TOGGLES.filter((mod) => own?.modules[mod.key]);
+  const extras = can("content")
+    ? WEBSITE_MODULE_TOGGLES.filter((mod) => own?.modules[mod.key])
+    : [];
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
@@ -206,13 +291,15 @@ function ClientOverview() {
         />
       ) : null}
 
-      <section className="grid gap-0 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi
-          label="New enquiries"
-          value={String(fresh.length)}
-          hint="From the form on your sites"
-          accent
-        />
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {can("enquiries") ? (
+          <Kpi
+            label="New enquiries"
+            value={String(fresh.length)}
+            hint="From the form on your sites"
+            accent
+          />
+        ) : null}
         <Kpi
           label="Problems now"
           value={siteId ? String(problems) : "—"}
@@ -225,31 +312,37 @@ function ClientOverview() {
           }
           valueClass={!siteId || problems === 0 ? "text-emerald" : "text-destructive"}
         />
-        <Kpi
-          label="Visitors, 14 days"
-          value={siteId ? String(views) : "—"}
-          hint={siteId ? `On ${activeSite?.name}, bots excluded` : "No public site yet"}
-        />
-        <Kpi
-          label="Invoices due"
-          value={String(dueInvoices.length)}
-          hint={dueInvoices[0] ? dueInvoices[0].item : "Nothing outstanding"}
-        />
+        {can("visitors") ? (
+          <Kpi
+            label="Visitors, 14 days"
+            value={siteId ? String(views) : "—"}
+            hint={siteId ? `On ${activeSite?.name}, bots excluded` : "No public site yet"}
+          />
+        ) : null}
+        {can("billing") ? (
+          <Kpi
+            label="Invoices due"
+            value={String(dueInvoices.length)}
+            hint={dueInvoices[0] ? dueInvoices[0].item : "Nothing outstanding"}
+          />
+        ) : null}
       </section>
 
       <NeedsYou />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <DeskCard
-          to="/content"
-          kicker="Website"
-          title={activeSite ? `Edit ${activeSite.name}` : "Change a page"}
-          detail={
-            sites.length > 1
-              ? "Welcome, hours, and extras for the site you are on."
-              : "Welcome, hours, and the rest of the homepage."
-          }
-        />
+        {can("content") ? (
+          <DeskCard
+            to="/content"
+            kicker="Website"
+            title={activeSite ? `Edit ${activeSite.name}` : "Change a page"}
+            detail={
+              sites.length > 1
+                ? "Welcome, hours, and extras for the site you are on."
+                : "Welcome, hours, and the rest of the homepage."
+            }
+          />
+        ) : null}
         {extras.map((mod) => (
           <DeskCard
             key={mod.key}
@@ -260,7 +353,7 @@ function ClientOverview() {
             detail={EXTRA_CARDS[mod.key].detail}
           />
         ))}
-        {own?.modules.store ? (
+        {own?.modules.store && can("store") ? (
           <DeskCard
             to="/store"
             kicker="Store"
@@ -272,7 +365,7 @@ function ClientOverview() {
             }
           />
         ) : null}
-        {own?.modules.calendar ? (
+        {own?.modules.calendar && can("calendar") ? (
           <DeskCard
             to="/calendar"
             kicker="Calendar"
@@ -284,7 +377,7 @@ function ClientOverview() {
             }
           />
         ) : null}
-        {own?.modules.bookings ? (
+        {own?.modules.bookings && can("bookings") ? (
           <DeskCard
             to="/bookings"
             kicker="Bookings"
@@ -296,12 +389,14 @@ function ClientOverview() {
             }
           />
         ) : null}
-        <DeskCard
-          to="/business"
-          kicker="Business"
-          title="Hours and phone"
-          detail="Company details. Shared on every site for this account."
-        />
+        {can("business") ? (
+          <DeskCard
+            to="/business"
+            kicker="Business"
+            title="Hours and phone"
+            detail="Company details. Shared on every site for this account."
+          />
+        ) : null}
       </div>
 
       <SystemsTable clientOnly />
@@ -315,6 +410,8 @@ function ClientOverview() {
 }
 
 function NeedsYou() {
+  const user = useCurrentUser();
+  const can = (key: Parameters<typeof canUse>[1]) => canUse(user, key);
   const own = useOwnClient();
   const activeSite = useActiveSite();
   const enquiries = useAscStore((s) => s.enquiries);
@@ -349,27 +446,27 @@ function NeedsYou() {
     title: string;
     detail: string;
   }[] = [];
-  for (const e of fresh) {
+  for (const e of can("enquiries") ? fresh : []) {
     items.push({ to: "/enquiries", title: `${e.name} wrote in`, detail: e.message });
   }
-  if (siteId && own?.modules.advert && (!live || expired)) {
+  if (can("content") && siteId && own?.modules.advert && (!live || expired)) {
     items.push({
       to: "/content",
       title: expired ? `A picture on ${activeSite?.name} has run out` : `No pictures on ${activeSite?.name}`,
       detail: "Add a picture on Website and mark it Live. Other sites are unchanged.",
     });
   }
-  for (const p of out) {
+  for (const p of can("store") ? out : []) {
     items.push({ to: "/store", title: `${p.name} is live with 0 left`, detail: "Hide it or restock." });
   }
-  if (siteId && !welcomeLine) {
+  if (can("content") && siteId && !welcomeLine) {
     items.push({
       to: "/content",
       title: `No welcome line on ${activeSite?.name}`,
       detail: "The hero on this homepage is empty.",
     });
   }
-  if (siteId && own?.modules.seo && !seoTitle) {
+  if (can("content") && siteId && own?.modules.seo && !seoTitle) {
     items.push({
       to: "/content",
       hash: "seo",
@@ -377,14 +474,14 @@ function NeedsYou() {
       detail: "Add the page title Google and social apps should show.",
     });
   }
-  for (const inv of dueInvoices) {
+  for (const inv of can("billing") ? dueInvoices : []) {
     items.push({ to: "/billing", title: `${inv.item} is due`, detail: inv.ref });
   }
 
   return (
     <Surface>
       <div className="border-b border-border px-5 py-3">
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+        <p className="font-mono text-sm font-semibold text-champagne">
           Needs you
         </p>
       </div>
@@ -441,7 +538,7 @@ function SystemsTable({ clientOnly = false }: { clientOnly?: boolean }) {
   return (
     <Surface>
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+        <p className="text-sm font-semibold text-champagne">
           {clientOnly ? "Your sites" : "All sites"}
         </p>
         {!clientOnly ? (
@@ -453,7 +550,7 @@ function SystemsTable({ clientOnly = false }: { clientOnly?: boolean }) {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
-            <tr className="border-b border-border text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+            <tr className="border-b border-border text-[13px] text-muted-foreground">
               <th className="px-5 py-3 font-medium">Status</th>
               {!clientOnly ? <th className="px-5 py-3 font-medium">Client</th> : null}
               <th className="px-5 py-3 font-medium">System</th>
@@ -544,7 +641,7 @@ function RenewalsPanel() {
   return (
     <Surface>
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+        <p className="text-sm font-semibold text-champagne">
           Renewals due
         </p>
         <Button asChild size="sm" variant="outline" className="rounded-full">
@@ -555,7 +652,7 @@ function RenewalsPanel() {
       </div>
       <table className="w-full text-left text-sm">
         <thead>
-          <tr className="border-b border-border text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+          <tr className="border-b border-border text-[13px] text-muted-foreground">
             {user?.role === "operator" ? (
               <th className="px-5 py-3 font-medium">Client</th>
             ) : null}
@@ -598,7 +695,7 @@ function ChangesPanel() {
   return (
     <Surface>
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+        <p className="text-sm font-semibold text-champagne">
           Recent changes
         </p>
         <Button size="sm" variant="outline" className="rounded-full" disabled>

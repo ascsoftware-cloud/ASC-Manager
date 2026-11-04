@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
 import { Field, NativeSelect, PageHeader, Surface } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,11 @@ import { useAscStore, useCurrentUser, useOwnClient, visibleClientIds } from "@/l
 import type { BookingStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/_app/bookings")({
-  component: BookingsPage,
+  component: () => (
+    <PermissionGate perm="bookings">
+      <BookingsPage />
+    </PermissionGate>
+  ),
 });
 
 function BookingsPage() {

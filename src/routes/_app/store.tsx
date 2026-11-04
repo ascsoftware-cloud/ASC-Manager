@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   ChevronLeft,
@@ -35,7 +36,11 @@ import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/store")({
-  component: StorePage,
+  component: () => (
+    <PermissionGate perm="store">
+      <StorePage />
+    </PermissionGate>
+  ),
 });
 
 type Filter = "all" | "live" | "hidden" | "out";

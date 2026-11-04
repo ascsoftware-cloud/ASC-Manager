@@ -51,7 +51,7 @@ function AdminPage() {
       />
       <Surface>
         <div className="border-b border-border px-5 py-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+          <p className="text-sm font-semibold text-champagne">
             ASC staff
           </p>
         </div>
@@ -74,7 +74,7 @@ function AdminPage() {
 
       <Surface>
         <div className="border-b border-border px-5 py-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+          <p className="text-sm font-semibold text-champagne">
             Client logins
           </p>
         </div>

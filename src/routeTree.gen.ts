@@ -29,6 +29,7 @@ import { Route as AppRenewalsRouteImport } from './routes/_app/renewals'
 import { Route as AppRequestsRouteImport } from './routes/_app/requests'
 import { Route as AppSitesRouteImport } from './routes/_app/sites'
 import { Route as AppStoreRouteImport } from './routes/_app/store'
+import { Route as AppTeamRouteImport } from './routes/_app/team'
 import { Route as AppTermsRouteImport } from './routes/_app/terms'
 import { Route as AppVisitorsRouteImport } from './routes/_app/visitors'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
@@ -134,6 +135,11 @@ const AppStoreRoute = AppStoreRouteImport.update({
   path: '/store',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTeamRoute = AppTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppTermsRoute = AppTermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/requests': typeof AppRequestsRoute
   '/sites': typeof AppSitesRoute
   '/store': typeof AppStoreRoute
+  '/team': typeof AppTeamRoute
   '/terms': typeof AppTermsRoute
   '/visitors': typeof AppVisitorsRoute
   '/api/version': typeof ApiVersionRoute
@@ -205,6 +212,7 @@ export interface FileRoutesByTo {
   '/requests': typeof AppRequestsRoute
   '/sites': typeof AppSitesRoute
   '/store': typeof AppStoreRoute
+  '/team': typeof AppTeamRoute
   '/terms': typeof AppTermsRoute
   '/visitors': typeof AppVisitorsRoute
   '/api/version': typeof ApiVersionRoute
@@ -233,6 +241,7 @@ export interface FileRoutesById {
   '/_app/requests': typeof AppRequestsRoute
   '/_app/sites': typeof AppSitesRoute
   '/_app/store': typeof AppStoreRoute
+  '/_app/team': typeof AppTeamRoute
   '/_app/terms': typeof AppTermsRoute
   '/_app/visitors': typeof AppVisitorsRoute
   '/api/version': typeof ApiVersionRoute
@@ -262,6 +271,7 @@ export interface FileRouteTypes {
     | '/requests'
     | '/sites'
     | '/store'
+    | '/team'
     | '/terms'
     | '/visitors'
     | '/api/version'
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
     | '/requests'
     | '/sites'
     | '/store'
+    | '/team'
     | '/terms'
     | '/visitors'
     | '/api/version'
@@ -314,6 +325,7 @@ export interface FileRouteTypes {
     | '/_app/requests'
     | '/_app/sites'
     | '/_app/store'
+    | '/_app/team'
     | '/_app/terms'
     | '/_app/visitors'
     | '/api/version'
@@ -473,6 +485,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppStoreRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/team': {
+      id: '/_app/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AppTeamRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/terms': {
       id: '/_app/terms'
       path: '/terms'
@@ -528,6 +547,7 @@ interface AppRouteChildren {
   AppRequestsRoute: typeof AppRequestsRoute
   AppSitesRoute: typeof AppSitesRoute
   AppStoreRoute: typeof AppStoreRoute
+  AppTeamRoute: typeof AppTeamRoute
   AppTermsRoute: typeof AppTermsRoute
   AppVisitorsRoute: typeof AppVisitorsRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -550,6 +570,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRequestsRoute: AppRequestsRoute,
   AppSitesRoute: AppSitesRoute,
   AppStoreRoute: AppStoreRoute,
+  AppTeamRoute: AppTeamRoute,
   AppTermsRoute: AppTermsRoute,
   AppVisitorsRoute: AppVisitorsRoute,
   AppIndexRoute: AppIndexRoute,

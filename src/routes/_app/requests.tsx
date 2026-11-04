@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
 import { Field, PageHeader, Surface } from "@/components/page-header";
 import { StatusDot } from "@/components/status-badge";
@@ -18,7 +19,11 @@ import { saveAction } from "@/lib/mutate";
 import { useAscStore, useCurrentUser, visibleClientIds } from "@/lib/store";
 
 export const Route = createFileRoute("/_app/requests")({
-  component: RequestsPage,
+  component: () => (
+    <PermissionGate perm="requests">
+      <RequestsPage />
+    </PermissionGate>
+  ),
 });
 
 function RequestsPage() {

@@ -1,14 +1,17 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
+  Activity,
   Building2,
   CalendarCheck,
+  CalendarClock,
   CalendarDays,
   Check,
   ChevronDown,
   CircleHelp,
   ExternalLink,
   FileText,
+  Globe,
   Images,
   Inbox,
   LayoutDashboard,
@@ -16,8 +19,10 @@ import {
   Menu,
   Quote,
   Search,
+  ShieldCheck,
   ShoppingBag,
   Tags,
+  TriangleAlert,
   Users,
   UsersRound,
   Wallet,
@@ -41,6 +46,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { initials } from "@/lib/format";
 import { WEBSITE_MODULE_TOGGLES, type ModuleKey } from "@/lib/modules";
+import { canManageTeam, canUse, type PermissionKey } from "@/lib/permissions";
 import {
   useActiveSite,
   useAscStore,
@@ -53,16 +59,47 @@ import {
 } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-const STAFF_NAV = [
-  { to: "/", label: "Dashboard" },
-  { to: "/clients", label: "Clients" },
-  { to: "/sites", label: "Sites" },
-  { to: "/monitors", label: "Monitors" },
-  { to: "/incidents", label: "Incidents" },
-  { to: "/renewals", label: "Renewals" },
-  { to: "/visitors", label: "Visitors" },
-  { to: "/requests", label: "Requests" },
-] as const;
+type StaffNavItem = {
+  to:
+    | "/"
+    | "/clients"
+    | "/sites"
+    | "/monitors"
+    | "/incidents"
+    | "/renewals"
+    | "/visitors"
+    | "/requests"
+    | "/admin";
+  label: string;
+  icon: typeof LayoutDashboard;
+  badge?: "incidents" | "requests";
+};
+
+const STAFF_GROUPS: { label: string | null; items: StaffNavItem[] }[] = [
+  { label: null, items: [{ to: "/", label: "Dashboard", icon: LayoutDashboard }] },
+  {
+    label: "Book",
+    items: [
+      { to: "/clients", label: "Clients", icon: Building2 },
+      { to: "/sites", label: "Sites", icon: Globe },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { to: "/monitors", label: "Monitors", icon: Activity },
+      { to: "/incidents", label: "Incidents", icon: TriangleAlert, badge: "incidents" },
+      { to: "/renewals", label: "Renewals", icon: CalendarClock },
+      { to: "/requests", label: "Requests", icon: LifeBuoy, badge: "requests" },
+      { to: "/visitors", label: "Visitors", icon: Users },
+    ],
+  },
+  { label: "Team", items: [{ to: "/admin", label: "Admin", icon: ShieldCheck }] },
+];
+
+const STAFF_JUMP_ITEMS = STAFF_GROUPS.flatMap((g) =>
+  g.items.map(({ to, label }) => ({ to, label })),
+);
 
 const WEBSITE_NAV_ICONS = {
   seo: Search,
@@ -90,9 +127,13 @@ const CLIENT_NAV: {
   badge?: "enquiries";
   module?: ModuleKey;
   group?: NavGroup;
+  /** The page a staff login needs ticked. Account admins always have it. */
+  perm?: PermissionKey;
+  /** Shown to account admins only. */
+  adminOnly?: boolean;
 }[] = [
   { to: "/", label: "Overview", icon: LayoutDashboard },
-  { to: "/content", label: "Website", icon: FileText, group: "site" },
+  { to: "/content", label: "Website", icon: FileText, group: "site", perm: "content" },
   ...WEBSITE_MODULE_TOGGLES.map((mod) => ({
     to: "/content",
     hash: mod.key,
@@ -100,15 +141,17 @@ const CLIENT_NAV: {
     icon: WEBSITE_NAV_ICONS[mod.key],
     module: mod.key,
     group: "site" as const,
+    perm: "content" as const,
   })),
-  { to: "/store", label: "Store", icon: ShoppingBag, module: "store", group: "shop" },
-  { to: "/calendar", label: "Calendar", icon: CalendarDays, module: "calendar", group: "shop" },
-  { to: "/bookings", label: "Bookings", icon: CalendarCheck, module: "bookings", group: "shop" },
-  { to: "/enquiries", label: "Enquiries", icon: Inbox, badge: "enquiries", group: "inbox" },
-  { to: "/visitors", label: "Visitors", icon: Users, group: "inbox" },
-  { to: "/business", label: "Business", icon: Building2, group: "account" },
-  { to: "/billing", label: "Billing", icon: Wallet, group: "account" },
-  { to: "/requests", label: "Ask ASC", icon: LifeBuoy, group: "account" },
+  { to: "/store", label: "Store", icon: ShoppingBag, module: "store", group: "shop", perm: "store" },
+  { to: "/calendar", label: "Calendar", icon: CalendarDays, module: "calendar", group: "shop", perm: "calendar" },
+  { to: "/bookings", label: "Bookings", icon: CalendarCheck, module: "bookings", group: "shop", perm: "bookings" },
+  { to: "/enquiries", label: "Enquiries", icon: Inbox, badge: "enquiries", group: "inbox", perm: "enquiries" },
+  { to: "/visitors", label: "Visitors", icon: Users, group: "inbox", perm: "visitors" },
+  { to: "/business", label: "Business", icon: Building2, group: "account", perm: "business" },
+  { to: "/billing", label: "Billing", icon: Wallet, group: "account", perm: "billing" },
+  { to: "/team", label: "Team", icon: ShieldCheck, group: "account", adminOnly: true },
+  { to: "/requests", label: "Ask ASC", icon: LifeBuoy, group: "account", perm: "requests" },
 ];
 
 function clientNavActive(
@@ -126,46 +169,101 @@ function clientNavActive(
   return pathname === item.to || pathname.startsWith(`${item.to}/`);
 }
 
-function StaffNav({
+function StaffSidebar({
   current,
   onNavigate,
-  stacked,
 }: {
   current: string;
   onNavigate?: () => void;
-  stacked?: boolean;
 }) {
+  const openIncidents = useAscStore((s) => s.incidents.filter((i) => i.status === "open").length);
+  const openRequests = useAscStore((s) => s.requests.filter((r) => r.status === "open").length);
+  const counts = { incidents: openIncidents, requests: openRequests };
+  const signOut = useAscStore((s) => s.signOut);
+  const navigate = useNavigate();
+
   return (
-    <nav className={cn("flex gap-0", stacked ? "flex-col gap-1" : "flex-row items-center")}>
-      {STAFF_NAV.map((item) => {
-        const active =
-          item.to === "/"
-            ? current === "/"
-            : current === item.to || current.startsWith(`${item.to}/`);
-        return (
-          <Link
-            key={item.to}
-            to={item.to}
-            onClick={onNavigate}
-            preload="intent"
-            className={cn(
-              "relative flex min-h-11 items-center px-2.5 text-[11px] uppercase tracking-[0.14em] transition-colors",
-              active ? "text-champagne" : "text-muted-foreground hover:text-champagne",
-            )}
-          >
-            {item.label}
-            {active && !stacked ? (
-              <span className="absolute inset-x-3 -bottom-px hidden h-px bg-emerald lg:block" />
+    <div className="flex h-full min-h-0 flex-col gap-5 p-4">
+      <div className="shrink-0 space-y-1">
+        <AscLockup />
+        <p className="px-0.5 text-xs font-medium text-muted-foreground">Staff console</p>
+      </div>
+      <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+        {STAFF_GROUPS.map((group, gi) => (
+          <div key={group.label ?? gi} className={gi === 0 ? "" : "mt-5"}>
+            {group.label ? (
+              <p className="px-3 pb-1.5 text-xs font-medium text-muted-foreground">
+                {group.label}
+              </p>
             ) : null}
-          </Link>
-        );
-      })}
-    </nav>
+            <div className="flex flex-col gap-0.5">
+              {group.items.map((item) => {
+                const active =
+                  item.to === "/"
+                    ? current === "/"
+                    : current === item.to || current.startsWith(`${item.to}/`);
+                const Icon = item.icon;
+                const badge = item.badge ? counts[item.badge] : 0;
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={onNavigate}
+                    preload="intent"
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-[15px] font-medium transition-colors duration-150",
+                      active
+                        ? "bg-accent text-champagne"
+                        : "text-muted-foreground hover:bg-accent/60 hover:text-champagne",
+                    )}
+                  >
+                    {active ? (
+                      <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-emerald" />
+                    ) : null}
+                    <Icon className={cn("size-[18px]", active && "text-emerald")} />
+                    <span className="flex-1">{item.label}</span>
+                    {badge > 0 ? (
+                      <span
+                        className={cn(
+                          "min-w-5 rounded-full px-1.5 py-0.5 text-center text-xs font-semibold",
+                          item.badge === "incidents"
+                            ? "bg-destructive text-destructive-foreground"
+                            : "bg-warn text-primary-foreground",
+                        )}
+                      >
+                        {badge}
+                      </span>
+                    ) : null}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+      <div className="shrink-0 border-t border-border pt-3">
+        <button
+          type="button"
+          className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-[15px] text-muted-foreground hover:bg-accent/60 hover:text-champagne"
+          onClick={() => {
+            void signOut().then(() => navigate({ to: "/" }));
+          }}
+        >
+          Sign out
+        </button>
+      </div>
+    </div>
   );
 }
 
-function visibleClientNav(client: ReturnType<typeof useOwnClient>) {
+function visibleClientNav(
+  client: ReturnType<typeof useOwnClient>,
+  user: ReturnType<typeof useCurrentUser>,
+) {
   return CLIENT_NAV.filter((item) => {
+    if (item.adminOnly && !canManageTeam(user)) return false;
+    if (item.perm && !canUse(user, item.perm)) return false;
     if (!item.module) return true;
     if (!client) return false;
     return client.modules[item.module];
@@ -186,7 +284,7 @@ function ClientNav({
   const newEnquiries = useAscStore(
     (s) => s.enquiries.filter((e) => e.clientId === user?.clientId && e.status === "new").length,
   );
-  const items = visibleClientNav(client);
+  const items = visibleClientNav(client, user);
 
   return (
     <nav className="flex flex-col gap-0.5">
@@ -198,7 +296,7 @@ function ClientNav({
         return (
           <div key={`${item.to}#${item.hash ?? ""}`}>
             {showGroup && item.group ? (
-              <p className="px-3 pb-1 pt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground first:pt-1">
+              <p className="px-3 pb-1 pt-4 text-xs font-medium text-muted-foreground first:pt-1">
                 {NAV_GROUPS[item.group]}
               </p>
             ) : null}
@@ -244,18 +342,11 @@ function UserMenu() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={cn(
-            "inline-flex min-h-11 items-center gap-2 text-champagne",
-            user.role === "client"
-              ? "text-sm font-medium"
-              : "text-[11px] uppercase tracking-[0.16em]",
-          )}
+          className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-champagne"
         >
-          {user.role === "client" ? (
-            <span className="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-              {initials(activeSite?.name || user.name) || "•"}
-            </span>
-          ) : null}
+          <span className="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+            {initials(activeSite?.name || user.name) || "•"}
+          </span>
           <span className="hidden sm:inline">{activeSite?.name || user.name}</span>
           <ChevronDown className="size-3.5 text-muted-foreground" />
         </button>
@@ -282,9 +373,18 @@ function UserMenu() {
             Admin
           </DropdownMenuItem>
         ) : (
-          <DropdownMenuItem onClick={() => void navigate({ to: "/business" })}>
-            Business
-          </DropdownMenuItem>
+          <>
+            {canUse(user, "business") ? (
+              <DropdownMenuItem onClick={() => void navigate({ to: "/business" })}>
+                Business
+              </DropdownMenuItem>
+            ) : null}
+            {canManageTeam(user) ? (
+              <DropdownMenuItem onClick={() => void navigate({ to: "/team" })}>
+                Team
+              </DropdownMenuItem>
+            ) : null}
+          </>
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -304,7 +404,7 @@ function Footer({ padded }: { padded?: boolean }) {
   return (
     <footer
       className={cn(
-        "mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-3 text-[11px] text-muted-foreground sm:px-8",
+        "mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-3 text-xs text-muted-foreground sm:px-8",
         padded && "lg:pl-8",
       )}
     >
@@ -424,7 +524,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const isLegal = pathname === "/privacy" || pathname === "/terms";
   const isClient = user?.role === "client";
-  const toastTheme = isClient ? "light" : "dark";
+  const isStaff = Boolean(user) && !isClient;
+  const toastTheme = user ? "light" : "dark";
   const page =
     hydrating && !isLegal ? (
       <PageSkeleton />
@@ -436,10 +537,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    if (isClient) root.classList.add("client-desk");
-    else root.classList.remove("client-desk");
-    return () => root.classList.remove("client-desk");
-  }, [isClient]);
+    root.classList.toggle("client-desk", isClient);
+    root.classList.toggle("staff-desk", isStaff);
+    return () => root.classList.remove("client-desk", "staff-desk");
+  }, [isClient, isStaff]);
 
   return (
     <HydrateGate>
@@ -481,7 +582,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </p>
                 <div className="hidden min-w-0 flex-1 sm:flex">
                   <ClientJump
-                    items={visibleClientNav(client).map(({ to, label, hash: itemHash }) => ({
+                    items={visibleClientNav(client, user).map(({ to, label, hash: itemHash }) => ({
                       to,
                       label,
                       hash: itemHash,
@@ -511,9 +612,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Toaster theme={toastTheme} />
           </div>
         ) : (
-          <div className="flex min-h-dvh flex-col bg-background text-foreground">
-            <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-sm">
-              <div className="flex h-14 items-center gap-3 px-3 sm:px-6">
+          <div className={cn("min-h-dvh bg-background text-foreground", isStaff && "staff-desk")}>
+            {user ? (
+              <aside className="fixed inset-y-0 left-0 hidden h-dvh w-64 overflow-hidden border-r border-border bg-sidebar lg:block">
+                <StaffSidebar current={pathname} />
+              </aside>
+            ) : null}
+            <div className={cn("flex min-h-dvh flex-col", user && "lg:pl-64")}>
+              <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/90 px-3 backdrop-blur-md sm:px-6">
                 {user ? (
                   <Button
                     variant="ghost"
@@ -524,33 +630,25 @@ export function AppShell({ children }: { children: ReactNode }) {
                   >
                     <Menu className="size-5" />
                   </Button>
-                ) : null}
-                <AscLockup />
-                {user ? (
-                  <div className="ml-4 hidden min-w-0 flex-1 overflow-x-auto lg:block">
-                    <StaffNav current={pathname} />
-                  </div>
                 ) : (
-                  <div className="flex-1" />
+                  <AscLockup />
                 )}
+                {user ? (
+                  <div className="hidden min-w-0 flex-1 sm:flex">
+                    <ClientJump items={STAFF_JUMP_ITEMS} />
+                  </div>
+                ) : null}
                 <div className="ml-auto">{user ? <UserMenu /> : null}</div>
-              </div>
-            </header>
-            <main className="flex-1 px-4 py-8 sm:px-8 sm:py-10">{page}</main>
-            <Footer />
+              </header>
+              <main className="flex-1 px-4 py-8 sm:px-8 sm:py-10">{page}</main>
+              <Footer />
+            </div>
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-              <SheetContent side="left" className="p-6">
-                <SheetHeader>
-                  <SheetTitle className="sr-only">Menu</SheetTitle>
+              <SheetContent side="left" className="h-dvh w-64 overflow-hidden p-0">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Menu</SheetTitle>
                 </SheetHeader>
-                <AscLockup />
-                <div className="mt-8">
-                  <StaffNav
-                    current={pathname}
-                    stacked
-                    onNavigate={() => setMenuOpen(false)}
-                  />
-                </div>
+                <StaffSidebar current={pathname} onNavigate={() => setMenuOpen(false)} />
               </SheetContent>
             </Sheet>
             <CookieBanner />

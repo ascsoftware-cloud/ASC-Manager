@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
 import { addDays, format, isSameDay, parseISO, startOfWeek } from "date-fns";
 import { EmptyDesk } from "@/components/desk-ui";
@@ -20,7 +21,11 @@ import { useDeskSite } from "@/lib/desk-site";
 import { useAscStore, useCurrentUser, useOwnClient, visibleClientIds } from "@/lib/store";
 
 export const Route = createFileRoute("/_app/calendar")({
-  component: CalendarPage,
+  component: () => (
+    <PermissionGate perm="calendar">
+      <CalendarPage />
+    </PermissionGate>
+  ),
 });
 
 function CalendarPage() {

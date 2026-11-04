@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
 import { Field, NativeSelect, PageHeader, Surface } from "@/components/page-header";
 import { StatusDot } from "@/components/status-badge";
@@ -9,7 +10,11 @@ import { useDeskSite } from "@/lib/desk-site";
 import { useAscStore, useCurrentUser, useOwnClient, useOwnSites, visibleClientIds } from "@/lib/store";
 
 export const Route = createFileRoute("/_app/enquiries")({
-  component: EnquiriesPage,
+  component: () => (
+    <PermissionGate perm="enquiries">
+      <EnquiriesPage />
+    </PermissionGate>
+  ),
 });
 
 function EnquiriesPage() {

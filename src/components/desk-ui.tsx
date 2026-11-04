@@ -19,7 +19,7 @@ export function GripHandle({ className }: { className?: string }) {
 export function LivePill({ live, stock }: { live: boolean; stock?: number }) {
   if (live && stock === 0) {
     return (
-      <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-warn">
+      <span className="text-xs font-medium text-warn">
         0 left
       </span>
     );
@@ -27,7 +27,7 @@ export function LivePill({ live, stock }: { live: boolean; stock?: number }) {
   return (
     <span
       className={cn(
-        "font-mono text-[10px] uppercase tracking-[0.14em]",
+        "text-xs font-medium",
         live ? "text-emerald" : "text-muted-foreground",
       )}
     >

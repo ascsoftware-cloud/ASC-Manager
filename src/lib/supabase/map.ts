@@ -37,6 +37,10 @@ function num(v: unknown, fallback = 0): number {
   return fallback;
 }
 
+function strList(v: unknown): string[] {
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+}
+
 function bool(v: unknown): boolean {
   return v === true;
 }
@@ -48,6 +52,9 @@ export function mapUser(row: Row): User {
     name: str(row.name),
     role: row.role === "operator" ? "operator" : "client",
     clientId: row.tenant_id ? str(row.tenant_id) : null,
+    access: row.access === "staff" ? "staff" : "admin",
+    permissions: strList(row.permissions),
+    siteIds: strList(row.site_ids),
   };
 }
 

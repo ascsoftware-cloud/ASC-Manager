@@ -96,12 +96,24 @@ export function ownSwitchableSites(sites: Site[], tenantId: string | null): Site
   return pub.length > 0 ? pub : own;
 }
 
+/**
+ * The sites this login may work on. Account admins get every switchable site;
+ * a staff login with a site list is held to it (an empty list means all).
+ */
+export function sitesForUser(sites: Site[], user: User | undefined): Site[] {
+  if (!user?.clientId) return [];
+  const base = ownSwitchableSites(sites, user.clientId);
+  if (user.access !== "staff" || user.siteIds.length === 0) return base;
+  return base.filter((site) => user.siteIds.includes(site.id));
+}
+
 export function resolveActiveSiteId(
   sites: Site[],
   tenantId: string | null,
   preferred: string | null | undefined,
+  user?: User,
 ): string | null {
-  const own = ownSwitchableSites(sites, tenantId);
+  const own = user ? sitesForUser(sites, user) : ownSwitchableSites(sites, tenantId);
   if (preferred && own.some((site) => site.id === preferred)) return preferred;
   return own[0]?.id ?? null;
 }

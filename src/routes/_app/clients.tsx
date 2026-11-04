@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Plus, UsersRound } from "lucide-react";
 import { ConfirmDangerDialog } from "@/components/confirm-danger";
 import { StaffGate } from "@/components/staff-gate";
+import { TeamManager } from "@/components/team-manager";
 import { Field, PageHeader, Surface } from "@/components/page-header";
 import { StatusDot } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ function ClientsPage() {
   const [inviteFor, setInviteFor] = useState<{ id: string; name: string } | null>(
     null,
   );
+  const [teamFor, setTeamFor] = useState<{ id: string; name: string } | null>(null);
   const [removeFor, setRemoveFor] = useState<{
     id: string;
     name: string;
@@ -70,7 +72,7 @@ function ClientsPage() {
           <div className="overflow-x-auto">
           <table className="w-full min-w-[1280px] text-left text-sm">
             <thead>
-              <tr className="border-b border-border text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+              <tr className="border-b border-border text-[13px] text-muted-foreground">
                 <th className="px-5 py-3 font-medium">Client</th>
                 <th className="px-5 py-3 font-medium">Contact</th>
                 <th className="px-5 py-3 font-medium">Sites</th>
@@ -86,7 +88,7 @@ function ClientsPage() {
                   </th>
                 ))}
                 <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3 font-medium" />
+                <th className="sticky right-0 bg-card px-5 py-3 font-medium" />
               </tr>
             </thead>
             <tbody>
@@ -119,8 +121,16 @@ function ClientsPage() {
                     <td className="px-5 py-4">
                       <StatusDot status={c.status} />
                     </td>
-                    <td className="px-5 py-4 text-right">
+                    <td className="sticky right-0 bg-card px-5 py-4 text-right shadow-[-10px_0_10px_-10px_rgb(29_42_34/0.18)]">
                       <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setTeamFor({ id: c.id, name: c.name })}
+                        >
+                          <UsersRound className="size-3.5" />
+                          Team
+                        </Button>
                         <Button
                           size="sm"
                           variant="ghost"
@@ -131,7 +141,7 @@ function ClientsPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="text-destructive hover:text-destructive"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                           onClick={() =>
                             setRemoveFor({
                               id: c.id,
@@ -184,6 +194,23 @@ function ClientsPage() {
           if (ok) setInviteFor(null);
         }}
       />
+
+      <Dialog
+        open={Boolean(teamFor)}
+        onOpenChange={(v) => {
+          if (!v) setTeamFor(null);
+        }}
+      >
+        <DialogContent className="max-h-[90dvh] overflow-y-auto p-0 sm:max-w-3xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Team for {teamFor?.name}</DialogTitle>
+            <DialogDescription>
+              Add, edit and remove logins, and send password resets.
+            </DialogDescription>
+          </DialogHeader>
+          {teamFor ? <TeamManager clientId={teamFor.id} /> : null}
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDangerDialog
         open={Boolean(removeFor)}

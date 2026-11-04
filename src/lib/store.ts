@@ -3,6 +3,13 @@ import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { inviteUserFn } from "@/lib/invite";
 import { removeTenantFn } from "@/lib/remove-tenant";
+import {
+  addTeamMemberFn,
+  removeTeamMemberFn,
+  resetTeamPasswordFn,
+  updateTeamMemberFn,
+  type TeamMemberInput,
+} from "@/lib/team";
 import { authCallbackUrl } from "@/lib/auth/email-callback";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { getSupabase, requireSupabase } from "@/lib/supabase/client";
@@ -33,9 +40,9 @@ import {
   assertOperator,
   dropClientFromTables,
   dropSiteFromTables,
-  ownSwitchableSites,
   resolveActiveSiteId,
   scopeTablesToTenant,
+  sitesForUser,
 } from "@/lib/tenant-scope";
 import type {
   AdvertStatus,
@@ -68,6 +75,9 @@ type ShellHint = {
   name: string;
   role: Role;
   clientId: string | null;
+  access?: "admin" | "staff";
+  permissions?: string[];
+  siteIds?: string[];
   activeSiteId?: string | null;
 };
 
@@ -179,6 +189,9 @@ function writeShellHint(user: User, activeSiteId?: string | null): void {
     name: user.name,
     role: user.role,
     clientId: user.clientId,
+    access: user.access,
+    permissions: user.permissions,
+    siteIds: user.siteIds,
     activeSiteId: activeSiteId ?? null,
   };
   window.sessionStorage.setItem(SHELL_KEY, JSON.stringify(hint));
@@ -196,6 +209,9 @@ function userFromHint(hint: ShellHint): User {
     name: hint.name,
     role: hint.role,
     clientId: hint.clientId,
+    access: hint.access === "staff" ? "staff" : "admin",
+    permissions: hint.permissions ?? [],
+    siteIds: hint.siteIds ?? [],
   };
 }
 
@@ -213,6 +229,13 @@ function userFromAuth(
     name: typeof meta?.name === "string" && meta.name ? meta.name : email,
     role,
     clientId: typeof tenant === "string" && tenant ? tenant : null,
+    access: meta?.access === "staff" ? "staff" : "admin",
+    permissions: Array.isArray(meta?.permissions)
+      ? meta.permissions.filter((x): x is string => typeof x === "string")
+      : [],
+    siteIds: Array.isArray(meta?.site_ids)
+      ? meta.site_ids.filter((x): x is string => typeof x === "string")
+      : [],
   };
 }
 
@@ -348,7 +371,7 @@ function pickActiveSiteId(
 ): string | null {
   const user = get().users.find((row) => row.id === get().session?.userId);
   if (user?.role === "client") {
-    return resolveActiveSiteId(sites, user.clientId, current);
+    return resolveActiveSiteId(sites, user.clientId, current, user);
   }
   if (current && sites.some((site) => site.id === current)) return current;
   return null;
@@ -385,6 +408,18 @@ type AscStore = AppTables & {
     role: "operator" | "client";
     tenantId: string | null;
   }) => Promise<void>;
+  /** Team management. ASC staff pass `tenantId`; client admins act on their own account. */
+  addTeamMember: (
+    input: TeamMemberInput & { email: string },
+    tenantId?: string,
+  ) => Promise<void>;
+  updateTeamMember: (
+    userId: string,
+    input: TeamMemberInput,
+    tenantId?: string,
+  ) => Promise<void>;
+  removeTeamMember: (userId: string, tenantId?: string) => Promise<void>;
+  resetTeamPassword: (userId: string, tenantId?: string) => Promise<void>;
   runChecks: (siteId: string) => Promise<void>;
   updateBlock: (id: string, value: string, actor: string) => Promise<void>;
   uploadBlockImage: (id: string, file: File, actor: string) => Promise<void>;
@@ -480,7 +515,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
     if (!user) return;
     const next =
       user.role === "client"
-        ? resolveActiveSiteId(get().sites, user.clientId, siteId)
+        ? resolveActiveSiteId(get().sites, user.clientId, siteId, user)
         : get().sites.some((site) => site.id === siteId)
           ? siteId
           : get().activeSiteId;
@@ -608,6 +643,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
                 scopedTables.sites,
                 mappedProfile.clientId,
                 preferredSiteId,
+                mappedProfile,
               )
             : preferredSiteId &&
                 scopedTables.sites.some((site) => site.id === preferredSiteId)
@@ -708,6 +744,33 @@ export const useAscStore = create<AscStore>()((set, get) => ({
       },
     });
     set({ users: await loadUsers() });
+  },
+
+  addTeamMember: async (input, tenantId) => {
+    await addTeamMemberFn({
+      data: { ...input, accessToken: await accessToken(), tenantId },
+    });
+    set({ users: await loadUsers() });
+  },
+
+  updateTeamMember: async (userId, input, tenantId) => {
+    await updateTeamMemberFn({
+      data: { ...input, userId, accessToken: await accessToken(), tenantId },
+    });
+    set({ users: await loadUsers() });
+  },
+
+  removeTeamMember: async (userId, tenantId) => {
+    await removeTeamMemberFn({
+      data: { userId, accessToken: await accessToken(), tenantId },
+    });
+    set({ users: await loadUsers() });
+  },
+
+  resetTeamPassword: async (userId, tenantId) => {
+    await resetTeamPasswordFn({
+      data: { userId, accessToken: await accessToken(), tenantId },
+    });
   },
 
   runChecks: async (siteId) => {
@@ -1507,7 +1570,7 @@ export function useOwnSites() {
     useShallow((s) => {
       const u = s.users.find((x) => x.id === s.session?.userId);
       if (!u?.clientId) return NO_SITES;
-      return ownSwitchableSites(s.sites, u.clientId);
+      return sitesForUser(s.sites, u);
     }),
   );
 }
@@ -1517,7 +1580,7 @@ export function useActiveSite() {
     const u = s.users.find((x) => x.id === s.session?.userId);
     if (!u) return undefined;
     const tenantId = u.role === "client" ? u.clientId : s.sites.find((site) => site.id === s.activeSiteId)?.clientId ?? null;
-    const id = resolveActiveSiteId(s.sites, tenantId, s.activeSiteId);
+    const id = resolveActiveSiteId(s.sites, tenantId, s.activeSiteId, u.role === "client" ? u : undefined);
     return s.sites.find((site) => site.id === id);
   });
 }

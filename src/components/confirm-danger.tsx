@@ -14,6 +14,7 @@ export function ConfirmDangerDialog({
   title,
   description,
   confirmLabel,
+  tone = "danger",
   onOpenChange,
   onConfirm,
 }: {
@@ -21,6 +22,8 @@ export function ConfirmDangerDialog({
   title: string;
   description: ReactNode;
   confirmLabel: string;
+  /** "neutral" for actions that are safe to repeat, like sending a reset email. */
+  tone?: "danger" | "neutral";
   onOpenChange: (open: boolean) => void;
   onConfirm: () => Promise<void>;
 }) {
@@ -44,11 +47,11 @@ export function ConfirmDangerDialog({
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Keep
+            {tone === "danger" ? "Keep" : "Cancel"}
           </Button>
           <Button
             type="button"
-            variant="destructive"
+            variant={tone === "danger" ? "destructive" : "default"}
             disabled={busy}
             onClick={() => void confirm()}
           >
