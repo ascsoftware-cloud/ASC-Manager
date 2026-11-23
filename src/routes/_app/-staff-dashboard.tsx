@@ -3,11 +3,12 @@ import { Link } from "@tanstack/react-router";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { CircleCheck } from "lucide-react";
 import { SectionHeader } from "@/components/section-header";
+import { useBilling } from "@/lib/billing-data";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/ui/stat-tile";
 import { Surface } from "@/components/ui/surface";
-import { formatDay, formatRelative } from "@/lib/format";
+import { formatDay, formatRelative, formatZar } from "@/lib/format";
 import { useAscStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +45,15 @@ export function StaffDashboard() {
     .sort((a, b) => a.days - b.days);
   const missingSite = clients.filter((c) => !publicSites.some((s) => s.clientId === c.id));
   const activeClients = clients.filter((c) => c.status === "active").length;
+  const billing = useBilling();
+  const weekAgo = Date.now() - 7 * 86_400_000;
+  // Failed payments first, then plans nobody has paid for after a week.
+  const toChase = billing.plans
+    .filter(
+      (p) =>
+        p.status === "failed" || (p.status === "awaiting" && Date.parse(p.createdAt) < weekAgo),
+    )
+    .sort((a, b) => Number(b.status === "failed") - Number(a.status === "failed"));
 
   return (
     <div className="flex flex-col gap-6">
@@ -67,7 +77,9 @@ export function StaffDashboard() {
                 ? "None yet"
                 : `${respondingSites} of ${publicSites.length} responding`
             }
-            tone={publicSites.length > 0 && respondingSites < publicSites.length ? "bad" : "default"}
+            tone={
+              publicSites.length > 0 && respondingSites < publicSites.length ? "bad" : "default"
+            }
           />
         </TileLink>
         <TileLink to="/incidents">
@@ -140,7 +152,11 @@ export function StaffDashboard() {
               to="/requests"
               title={r.title}
               sub={`${clientName(r.clientId)} · ${r.authorName}`}
-              end={<span className="type-small text-muted-foreground">{formatRelative(r.createdAt)}</span>}
+              end={
+                <span className="type-small text-muted-foreground">
+                  {formatRelative(r.createdAt)}
+                </span>
+              }
             />
           ))}
         />
@@ -170,6 +186,48 @@ export function StaffDashboard() {
         />
       </div>
 
+      {!billing.unavailable && billing.loaded ? (
+        <Surface>
+          <SectionHeader
+            inset
+            title="Payments to chase"
+            detail="Failed payments, and plans nobody has paid for after a week."
+          />
+          {toChase.length === 0 ? (
+            <p className="type-body flex items-center gap-2 px-5 py-6 text-muted-foreground">
+              <CircleCheck className="size-5 shrink-0 text-primary" aria-hidden="true" />
+              Nothing to chase right now.
+            </p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {toChase.map((p) => (
+                <li key={p.id}>
+                  <Link
+                    to="/clients/$clientId"
+                    params={{ clientId: p.clientId }}
+                    search={{ tab: "billing" }}
+                    className="flex min-h-14 items-center justify-between gap-4 px-5 py-3 hover:bg-accent/50"
+                  >
+                    <span className="min-w-0">
+                      <span className="type-body block truncate font-medium">
+                        {clientName(p.clientId)}
+                      </span>
+                      <span className="type-small block text-muted-foreground">
+                        {formatZar(p.amountZar)} a month
+                      </span>
+                    </span>
+                    <StatusBadge
+                      tone={p.status === "failed" ? "bad" : "warn"}
+                      label={p.status === "failed" ? "Payment failed" : "Not set up"}
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Surface>
+      ) : null}
+
       {missingSite.length > 0 ? (
         <Surface>
           <SectionHeader
@@ -184,7 +242,10 @@ export function StaffDashboard() {
           />
           <ul className="divide-y divide-border">
             {missingSite.map((c) => (
-              <li key={c.id} className="type-body flex items-center justify-between gap-3 px-5 py-3">
+              <li
+                key={c.id}
+                className="type-body flex items-center justify-between gap-3 px-5 py-3"
+              >
                 <span className="font-medium">{c.name}</span>
                 <span className="type-small text-muted-foreground">{c.city}</span>
               </li>
@@ -272,7 +333,9 @@ function Row({
     <li>
       <Link
         to={to}
-        className={cn("flex min-h-14 items-center justify-between gap-4 px-5 py-3 hover:bg-accent/50")}
+        className={cn(
+          "flex min-h-14 items-center justify-between gap-4 px-5 py-3 hover:bg-accent/50",
+        )}
       >
         <span className="min-w-0">
           <span className="type-body block truncate font-medium">{title}</span>

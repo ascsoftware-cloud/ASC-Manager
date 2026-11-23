@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Field, PageHeader } from "@/components/page-header";
 import { SectionHeader } from "@/components/section-header";
 import { StatusBadge } from "@/components/status-badge";
+import { StaffPlanCard } from "@/components/billing/staff-plan";
 import { TeamManager } from "@/components/team-manager";
 import { Button } from "@/components/ui/button";
 import {
@@ -174,7 +175,9 @@ function OverviewTab({
 }) {
   const requests = useAscStore((s) => s.requests);
   const log = useAscStore((s) => s.log);
-  const openRequests = requests.filter((r) => r.clientId === client.id && r.status === "open").length;
+  const openRequests = requests.filter(
+    (r) => r.clientId === client.id && r.status === "open",
+  ).length;
   const lastChange = log
     .filter((l) => l.clientId === client.id)
     .map((l) => l.at)
@@ -334,50 +337,53 @@ function BillingTab({ clientId }: { clientId: string }) {
     .filter((r) => r.clientId === clientId)
     .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt));
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <Surface>
-        <SectionHeader inset title="Invoices" />
-        {invoices.length === 0 ? (
-          <EmptyState title="No invoices yet" />
-        ) : (
-          <ul className="divide-y divide-border">
-            {invoices.map((i) => (
-              <li key={i.id} className="flex items-center justify-between gap-4 px-5 py-3">
-                <div className="min-w-0">
-                  <p className="type-body font-medium">{i.item}</p>
-                  <p className="type-small text-muted-foreground">
-                    {i.ref} · due {formatDay(i.dueAt)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="type-body">{formatZar(i.amountZar)}</span>
-                  <StatusBadge status={i.status} />
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Surface>
-      <Surface>
-        <SectionHeader inset title="Renewals" />
-        {renewals.length === 0 ? (
-          <EmptyState title="No renewals yet" />
-        ) : (
-          <ul className="divide-y divide-border">
-            {renewals.map((r) => (
-              <li key={r.id} className="flex items-center justify-between gap-4 px-5 py-3">
-                <div className="min-w-0">
-                  <p className="type-body font-medium">{r.item}</p>
-                  <p className="type-small capitalize text-muted-foreground">
-                    {r.type === "ssl" ? "certificate" : r.type}
-                  </p>
-                </div>
-                <span className="type-body">{formatDay(r.expiresAt)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Surface>
+    <div className="flex flex-col gap-4">
+      <StaffPlanCard clientId={clientId} />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Surface>
+          <SectionHeader inset title="Invoices" />
+          {invoices.length === 0 ? (
+            <EmptyState title="No invoices yet" />
+          ) : (
+            <ul className="divide-y divide-border">
+              {invoices.map((i) => (
+                <li key={i.id} className="flex items-center justify-between gap-4 px-5 py-3">
+                  <div className="min-w-0">
+                    <p className="type-body font-medium">{i.item}</p>
+                    <p className="type-small text-muted-foreground">
+                      {i.ref} · due {formatDay(i.dueAt)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="type-body">{formatZar(i.amountZar)}</span>
+                    <StatusBadge status={i.status} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Surface>
+        <Surface>
+          <SectionHeader inset title="Renewals" />
+          {renewals.length === 0 ? (
+            <EmptyState title="No renewals yet" />
+          ) : (
+            <ul className="divide-y divide-border">
+              {renewals.map((r) => (
+                <li key={r.id} className="flex items-center justify-between gap-4 px-5 py-3">
+                  <div className="min-w-0">
+                    <p className="type-body font-medium">{r.item}</p>
+                    <p className="type-small capitalize text-muted-foreground">
+                      {r.type === "ssl" ? "certificate" : r.type}
+                    </p>
+                  </div>
+                  <span className="type-body">{formatDay(r.expiresAt)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Surface>
+      </div>
     </div>
   );
 }
@@ -418,12 +424,7 @@ function InviteDialog({
             <Input value={name} onChange={(e) => setName(e.target.value)} required />
           </Field>
           <Field label="Email">
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </Field>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

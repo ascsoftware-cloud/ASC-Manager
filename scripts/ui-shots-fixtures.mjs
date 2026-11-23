@@ -126,6 +126,18 @@ const sections = [
   { id: "c1", tenant_id: ID.t2, site_id: ID.s1, key: "welcome", sort_order: 0, visible: true, payload: { line: "Quiet rooms with a view of the dam" }, updated_at: iso(-1) },
 ];
 
+const subscriptions = [
+  { id: "s-b2", tenant_id: ID.t2, package: "starter", has_database: true, amount_zar: 509, item: "Starter package: hosting and maintenance, plus database", status: "awaiting", payfast_token: null, next_billing_on: null, last_paid_at: null, failed_at: null, created_at: iso(-10) },
+  { id: "s-b1", tenant_id: ID.t1, package: "single", has_database: false, amount_zar: 210, item: "Single page package: hosting and maintenance", status: "failed", payfast_token: "tok", next_billing_on: day(5), last_paid_at: iso(-30), failed_at: iso(-1), created_at: iso(-60) },
+  { id: "s-b3", tenant_id: ID.t3, package: "standard", has_database: false, amount_zar: 420, item: "Standard package: hosting and maintenance", status: "active", payfast_token: "tok3", next_billing_on: day(12), last_paid_at: iso(-18), failed_at: null, created_at: iso(-90) },
+];
+
+const payments = [
+  { id: "pay1", tenant_id: ID.t3, subscription_id: "s-b3", pf_payment_id: "1001", amount_zar: 420, status: "complete", paid_at: iso(-18) },
+  { id: "pay2", tenant_id: ID.t3, subscription_id: "s-b3", pf_payment_id: "1000", amount_zar: 420, status: "complete", paid_at: iso(-48) },
+  { id: "pay3", tenant_id: ID.t1, subscription_id: "s-b1", pf_payment_id: "1002", amount_zar: 210, status: "failed", paid_at: iso(-1) },
+];
+
 const empty = [];
 
 export const tables = {
@@ -148,6 +160,8 @@ export const tables = {
   media: empty,
   invoices,
   change_log: log,
+  subscriptions,
+  payments,
 };
 
 /** Which of the fake people each persona signs in as, and which tenant rows they can see. */
@@ -184,6 +198,8 @@ export function tablesFor(persona) {
     enquiries: own(tables.enquiries),
     invoices: own(tables.invoices),
     change_log: own(tables.change_log),
+    subscriptions: own(tables.subscriptions),
+    payments: own(tables.payments),
     content_sections: own(tables.content_sections),
   };
 }

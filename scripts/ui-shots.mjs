@@ -43,7 +43,7 @@ const SIZES = [
 ];
 
 const ROUTES = {
-  staff: ["/", "/clients", "/sites", "/monitors", "/incidents", "/renewals", "/requests", "/visitors", "/admin", "/clients/00000000-0000-4000-8000-0000000000b2", "/clients/00000000-0000-4000-8000-0000000000b2?tab=modules", "/clients/00000000-0000-4000-8000-0000000000b2?tab=logins", "/privacy", "/terms"],
+  staff: ["/", "/clients", "/sites", "/monitors", "/incidents", "/renewals", "/requests", "/visitors", "/admin", "/clients/00000000-0000-4000-8000-0000000000b2", "/clients/00000000-0000-4000-8000-0000000000b2?tab=modules", "/clients/00000000-0000-4000-8000-0000000000b2?tab=logins", "/clients/00000000-0000-4000-8000-0000000000b2?tab=billing", "/clients/00000000-0000-4000-8000-0000000000b1?tab=billing", "/privacy", "/terms"],
   client: ["/", "/content", "/store", "/calendar", "/bookings", "/enquiries", "/visitors", "/business", "/billing", "/team", "/requests", "/renewals", "/media"],
   "client-new": ["/"],
 };
@@ -124,6 +124,21 @@ async function installFakeBackend(context, persona) {
         body: JSON.stringify(toCrossJSON({ result: staffAccounts, context: {} }, { refs: new Map(), plugins: [] })),
       });
     }
+    if (name.includes("resolvePaymentLinkFn")) {
+      const view = {
+        state: "ready",
+        clientName: "Kloof View Guest House",
+        amountZar: 509,
+        item: "Starter package: hosting and maintenance, plus database",
+        action: "https://sandbox.payfast.co.za/eng/process",
+        fields: [],
+      };
+      return route.fulfill({
+        status: 200,
+        headers: { "content-type": "application/json", "x-tss-serialized": "true" },
+        body: JSON.stringify(toCrossJSON({ result: view, context: {} }, { refs: new Map(), plugins: [] })),
+      });
+    }
     return route.continue();
   });
 }
@@ -148,7 +163,7 @@ async function seedSession(context, persona) {
 }
 
 const slug = (route) =>
-  route === "/" ? "home" : route.replace(/^\//, "").replace(/00000000-0000-4000-8000-0000000000b2/, "detail").replace(/[/?=]/g, "-");
+  route === "/" ? "home" : route.replace(/^\//, "").replace(/00000000-0000-4000-8000-0000000000b[12]/, (m) => (m.endsWith("b1") ? "detail-b1" : "detail")).replace(/[/?=]/g, "-");
 
 async function shoot(browser, persona, size, report) {
   const context = await browser.newContext({
@@ -224,6 +239,12 @@ async function shootLogin(browser, report) {
     const file = `login-${size.name}.png`;
     await page.screenshot({ path: join(OUT, file), fullPage: true });
     report.push({ persona: "signed-out", route: "/", size: size.name, file });
+    await installFakeBackend(context, "staff");
+    await page.goto(`${BASE}/pay/abcdefghijklmnopqrstuvwxyz0123456789`, { waitUntil: "networkidle" }).catch(() => {});
+    await page.waitForTimeout(500);
+    const payFile = `pay-link-${size.name}.png`;
+    await page.screenshot({ path: join(OUT, payFile), fullPage: true });
+    report.push({ persona: "signed-out", route: "/pay/:token", size: size.name, file: payFile });
     await context.close();
   }
 }
