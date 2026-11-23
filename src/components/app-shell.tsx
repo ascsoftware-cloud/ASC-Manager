@@ -10,6 +10,7 @@ import {
   Check,
   ChevronDown,
   ExternalLink,
+  FilePen,
   Globe,
   Inbox,
   LayoutDashboard,
@@ -139,6 +140,7 @@ const CLIENT_NAV: ClientNavItem[] = [
  */
 const CLIENT_TOOLS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "https://ledgerly.ascsoftware.co.za/", label: "Business Manager", icon: Briefcase },
+  { href: "https://pdfedit.ascsoftware.co.za/", label: "PDF Editor", icon: FilePen },
 ];
 
 const SECTION_LABEL: Partial<Record<ClientSection, string>> = {
