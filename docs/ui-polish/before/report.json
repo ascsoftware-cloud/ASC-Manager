@@ -1,0 +1,536 @@
+[
+  {
+    "persona": "signed-out",
+    "route": "/",
+    "size": "desktop",
+    "file": "login-desktop.png"
+  },
+  {
+    "persona": "signed-out",
+    "route": "/",
+    "size": "mobile",
+    "file": "login-mobile.png"
+  },
+  {
+    "persona": "staff",
+    "route": "/",
+    "size": "desktop",
+    "file": "staff-home-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Dashboard",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/clients",
+    "size": "desktop",
+    "file": "staff-clients-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Clients",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/sites",
+    "size": "desktop",
+    "file": "staff-sites-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Sites",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/monitors",
+    "size": "desktop",
+    "file": "staff-monitors-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Monitors",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/incidents",
+    "size": "desktop",
+    "file": "staff-incidents-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Incidents",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/renewals",
+    "size": "desktop",
+    "file": "staff-renewals-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Renewals",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/requests",
+    "size": "desktop",
+    "file": "staff-requests-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Requests",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/visitors",
+    "size": "desktop",
+    "file": "staff-visitors-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Visitors",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/admin",
+    "size": "desktop",
+    "file": "staff-admin-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Admin",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/privacy",
+    "size": "desktop",
+    "file": "staff-privacy-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Privacy policy",
+    "errors": [
+      "Error: Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\nhttps://react.dev/link/hydration-mismatch\n\n  ...\n    <CatchBoundary getResetKey={function getResetKey} errorComponent={function AppErrorComponent} ...>\n      <SafeFragment fallback={function fallback}>\n        <MatchInnerImpl match={{id:\"/_app/\", ...}}>\n          <Lazy>\n            <AppLayout>\n              <AppShell>\n                <HydrateGate>\n                  <TooltipProvider delayDuration={200}>\n                    <TooltipProviderProvider scope={undefined} isOpenDelayedRef={{current:true}} delayDuration={200} ...>\n                      <div className=\"min-h-dvh ...\">\n                        <div className=\"flex min-h...\">\n                          <header>\n                          <main>\n                          <Footer>\n                            <footer className=\"mt-auto fl...\">\n                              <p>\n                              <p>\n+                               9.2\n-                               7.3\n                                ...\n                        ...\n"
+    ]
+  },
+  {
+    "persona": "staff",
+    "route": "/terms",
+    "size": "desktop",
+    "file": "staff-terms-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Terms and conditions",
+    "errors": [
+      "Error: Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\nhttps://react.dev/link/hydration-mismatch\n\n  ...\n    <CatchBoundary getResetKey={function getResetKey} errorComponent={function AppErrorComponent} ...>\n      <SafeFragment fallback={function fallback}>\n        <MatchInnerImpl match={{id:\"/_app/\", ...}}>\n          <Lazy>\n            <AppLayout>\n              <AppShell>\n                <HydrateGate>\n                  <TooltipProvider delayDuration={200}>\n                    <TooltipProviderProvider scope={undefined} isOpenDelayedRef={{current:true}} delayDuration={200} ...>\n                      <div className=\"min-h-dvh ...\">\n                        <div className=\"flex min-h...\">\n                          <header>\n                          <main>\n                          <Footer>\n                            <footer className=\"mt-auto fl...\">\n                              <p>\n                              <p>\n+                               7.2\n-                               9.8\n                                ...\n                        ...\n"
+    ]
+  },
+  {
+    "persona": "staff",
+    "route": "/",
+    "size": "mobile",
+    "file": "staff-home-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Dashboard",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/clients",
+    "size": "mobile",
+    "file": "staff-clients-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Clients",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/sites",
+    "size": "mobile",
+    "file": "staff-sites-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Sites",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/monitors",
+    "size": "mobile",
+    "file": "staff-monitors-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Monitors",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/incidents",
+    "size": "mobile",
+    "file": "staff-incidents-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Incidents",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/renewals",
+    "size": "mobile",
+    "file": "staff-renewals-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Renewals",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/requests",
+    "size": "mobile",
+    "file": "staff-requests-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Requests",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/visitors",
+    "size": "mobile",
+    "file": "staff-visitors-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Visitors",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/admin",
+    "size": "mobile",
+    "file": "staff-admin-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Admin",
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/privacy",
+    "size": "mobile",
+    "file": "staff-privacy-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Privacy policy",
+    "errors": [
+      "Error: Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\nhttps://react.dev/link/hydration-mismatch\n\n  ...\n    <CatchBoundary getResetKey={function getResetKey} errorComponent={function AppErrorComponent} ...>\n      <SafeFragment fallback={function fallback}>\n        <MatchInnerImpl match={{id:\"/_app/\", ...}}>\n          <Lazy>\n            <AppLayout>\n              <AppShell>\n                <HydrateGate>\n                  <TooltipProvider delayDuration={200}>\n                    <TooltipProviderProvider scope={undefined} isOpenDelayedRef={{current:true}} delayDuration={200} ...>\n                      <div className=\"min-h-dvh ...\">\n                        <div className=\"flex min-h...\">\n                          <header>\n                          <main>\n                          <Footer>\n                            <footer className=\"mt-auto fl...\">\n                              <p>\n                              <p>\n+                               9.4\n-                               7.3\n                                ...\n                        ...\n"
+    ]
+  },
+  {
+    "persona": "staff",
+    "route": "/terms",
+    "size": "mobile",
+    "file": "staff-terms-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Terms and conditions",
+    "errors": [
+      "Error: Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\nhttps://react.dev/link/hydration-mismatch\n\n  ...\n    <CatchBoundary getResetKey={function getResetKey} errorComponent={function AppErrorComponent} ...>\n      <SafeFragment fallback={function fallback}>\n        <MatchInnerImpl match={{id:\"/_app/\", ...}}>\n          <Lazy>\n            <AppLayout>\n              <AppShell>\n                <HydrateGate>\n                  <TooltipProvider delayDuration={200}>\n                    <TooltipProviderProvider scope={undefined} isOpenDelayedRef={{current:true}} delayDuration={200} ...>\n                      <div className=\"min-h-dvh ...\">\n                        <div className=\"flex min-h...\">\n                          <header>\n                          <main>\n                          <Footer>\n                            <footer className=\"mt-auto fl...\">\n                              <p>\n                              <p>\n+                               7.9\n-                               9.0\n                                ...\n                        ...\n"
+    ]
+  },
+  {
+    "persona": "client",
+    "route": "/",
+    "size": "desktop",
+    "file": "client-home-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": true,
+    "title": "Today",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/content",
+    "size": "desktop",
+    "file": "client-content-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": true,
+    "title": "Website",
+    "errors": [
+      "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1",
+      "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1",
+      "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1",
+      "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1",
+      "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1",
+      "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1"
+    ]
+  },
+  {
+    "persona": "client",
+    "route": "/store",
+    "size": "desktop",
+    "file": "client-store-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": true,
+    "title": "Products",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/calendar",
+    "size": "desktop",
+    "file": "client-calendar-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": true,
+    "title": "Calendar",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/bookings",
+    "size": "desktop",
+    "file": "client-bookings-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": true,
+    "title": "Bookings",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/enquiries",
+    "size": "desktop",
+    "file": "client-enquiries-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": true,
+    "title": "Enquiries",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/visitors",
+    "size": "desktop",
+    "file": "client-visitors-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": true,
+    "title": "Visitors",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/business",
+    "size": "desktop",
+    "file": "client-business-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": true,
+    "title": "Business",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/billing",
+    "size": "desktop",
+    "file": "client-billing-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": true,
+    "title": "Billing",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/team",
+    "size": "desktop",
+    "file": "client-team-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": true,
+    "title": "Team",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/requests",
+    "size": "desktop",
+    "file": "client-requests-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": true,
+    "title": "Requests",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/renewals",
+    "size": "desktop",
+    "file": "client-renewals-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": true,
+    "title": "Renewals",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/media",
+    "size": "desktop",
+    "file": "client-media-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": true,
+    "title": "Photos",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/",
+    "size": "mobile",
+    "file": "client-home-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Today",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/content",
+    "size": "mobile",
+    "file": "client-content-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Website",
+    "errors": [
+      "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1",
+      "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1",
+      "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1",
+      "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1",
+      "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1",
+      "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1"
+    ]
+  },
+  {
+    "persona": "client",
+    "route": "/store",
+    "size": "mobile",
+    "file": "client-store-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Products",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/calendar",
+    "size": "mobile",
+    "file": "client-calendar-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Calendar",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/bookings",
+    "size": "mobile",
+    "file": "client-bookings-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Bookings",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/enquiries",
+    "size": "mobile",
+    "file": "client-enquiries-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Enquiries",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/visitors",
+    "size": "mobile",
+    "file": "client-visitors-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Visitors",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/business",
+    "size": "mobile",
+    "file": "client-business-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Business",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/billing",
+    "size": "mobile",
+    "file": "client-billing-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Billing",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/team",
+    "size": "mobile",
+    "file": "client-team-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Team",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/requests",
+    "size": "mobile",
+    "file": "client-requests-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Requests",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/renewals",
+    "size": "mobile",
+    "file": "client-renewals-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Renewals",
+    "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "/media",
+    "size": "mobile",
+    "file": "client-media-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Photos",
+    "errors": []
+  },
+  {
+    "persona": "client-new",
+    "route": "/",
+    "size": "desktop",
+    "file": "client-new-home-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Today",
+    "errors": []
+  },
+  {
+    "persona": "client-new",
+    "route": "/",
+    "size": "mobile",
+    "file": "client-new-home-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Today",
+    "errors": []
+  }
+]

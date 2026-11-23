@@ -1,0 +1,202 @@
+#!/usr/bin/env node
+/**
+ * Screenshot every route as a client and as staff, offline.
+ *
+ * The app signs in through Supabase, and nobody should hand a script a real
+ * login. So this answers the browser's Supabase requests itself with the fake
+ * workspace in ui-shots-fixtures.mjs: no real session, no network call to the
+ * real project. It needs the dev server running (`npm run dev`).
+ *
+ *   node scripts/ui-shots.mjs --out docs/ui-polish/before
+ *   node scripts/ui-shots.mjs --out docs/ui-polish/after --only staff
+ */
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { chromium } from "playwright";
+import { loadLocalEnv } from "./load-local-env.mjs";
+import { personas, staffAccounts, tablesFor } from "./ui-shots-fixtures.mjs";
+
+loadLocalEnv();
+
+const args = process.argv.slice(2);
+const flag = (name, fallback) => {
+  const i = args.indexOf(`--${name}`);
+  return i >= 0 ? args[i + 1] : fallback;
+};
+
+const BASE = flag("base", "http://127.0.0.1:8080");
+const OUT = flag("out", "docs/ui-polish/after");
+const ONLY = flag("only", "");
+const SUPABASE_URL = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "").replace(/\/$/, "");
+if (!SUPABASE_URL) {
+  console.error("Need VITE_SUPABASE_URL in .env.local so the cookie name matches.");
+  process.exit(1);
+}
+const PROJECT_REF = new URL(SUPABASE_URL).hostname.split(".")[0];
+
+const SIZES = [
+  { name: "desktop", width: 1440, height: 900 },
+  { name: "mobile", width: 390, height: 844 },
+];
+
+const ROUTES = {
+  staff: ["/", "/clients", "/sites", "/monitors", "/incidents", "/renewals", "/requests", "/visitors", "/admin", "/privacy", "/terms"],
+  client: ["/", "/content", "/store", "/calendar", "/bookings", "/enquiries", "/visitors", "/business", "/billing", "/team", "/requests", "/renewals", "/media"],
+  "client-new": ["/"],
+};
+
+const b64url = (value) => Buffer.from(value).toString("base64url");
+
+function fakeSession(persona, table) {
+  const p = personas[persona];
+  const profile = table.profiles.find((r) => r.user_id === p.userId);
+  const exp = Math.floor(Date.now() / 1000) + 60 * 60 * 6;
+  const jwt = [
+    b64url(JSON.stringify({ alg: "HS256", typ: "JWT" })),
+    b64url(JSON.stringify({ sub: p.userId, role: "authenticated", exp })),
+    b64url("fake-signature"),
+  ].join(".");
+  return {
+    access_token: jwt,
+    token_type: "bearer",
+    expires_in: 60 * 60 * 6,
+    expires_at: exp,
+    refresh_token: "fake-refresh",
+    user: {
+      id: p.userId,
+      aud: "authenticated",
+      role: "authenticated",
+      email: profile.email,
+      app_metadata: {},
+      user_metadata: {
+        role: profile.role,
+        name: profile.name,
+        tenant_id: profile.tenant_id,
+      },
+      created_at: new Date().toISOString(),
+    },
+  };
+}
+
+const CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "*",
+  "access-control-allow-methods": "GET,POST,PATCH,DELETE,OPTIONS",
+};
+
+async function installFakeBackend(context, persona) {
+  const table = tablesFor(persona);
+  await context.route(`${SUPABASE_URL}/**`, async (route) => {
+    const req = route.request();
+    if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers: CORS });
+    const url = new URL(req.url());
+    const rest = url.pathname.match(/^\/rest\/v1\/([a-z_]+)/);
+    if (rest) {
+      let rows = table[rest[1]] ?? [];
+      const filter = url.searchParams.get("user_id");
+      if (filter?.startsWith("eq.")) rows = rows.filter((r) => r.user_id === filter.slice(3));
+      return route.fulfill({
+        status: 200,
+        headers: { ...CORS, "content-type": "application/json" },
+        body: JSON.stringify(rows),
+      });
+    }
+    return route.fulfill({ status: 404, headers: CORS, body: "{}" });
+  });
+  // Server functions for the staff list (added in the admin rebuild).
+  await context.route("**/_serverFn/**", async (route) => {
+    const body = route.request().postData() ?? "";
+    if (/listStaff/i.test(route.request().url()) || /listStaff/i.test(body)) {
+      return route.fulfill({
+        status: 200,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ result: staffAccounts, context: {} }),
+      });
+    }
+    return route.continue();
+  });
+}
+
+async function seedSession(context, persona) {
+  const table = tablesFor(persona);
+  const session = fakeSession(persona, table);
+  await context.addCookies([
+    {
+      name: `sb-${PROJECT_REF}-auth-token`,
+      value: `base64-${b64url(JSON.stringify(session))}`,
+      url: BASE,
+    },
+  ]);
+  await context.addInitScript(() => {
+    try {
+      window.localStorage.setItem("asc-cookies-v1", "1");
+    } catch {
+      /* storage unavailable */
+    }
+  });
+}
+
+const slug = (route) => (route === "/" ? "home" : route.replace(/^\//, "").replace(/\//g, "-"));
+
+async function shoot(browser, persona, size, report) {
+  const context = await browser.newContext({
+    viewport: { width: size.width, height: size.height },
+    deviceScaleFactor: 1,
+    isMobile: size.name === "mobile",
+    hasTouch: size.name === "mobile",
+  });
+  await seedSession(context, persona);
+  await installFakeBackend(context, persona);
+  const page = await context.newPage();
+  const errors = [];
+  page.on("console", (m) => {
+    if (m.type() === "error") errors.push(m.text());
+  });
+  page.on("pageerror", (e) => errors.push(String(e)));
+
+  for (const route of ROUTES[persona]) {
+    errors.length = 0;
+    await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" }).catch(() => {});
+    await page.waitForTimeout(700);
+    const file = `${persona}-${slug(route)}-${size.name}.png`;
+    await page.screenshot({ path: join(OUT, file), fullPage: true });
+    const metrics = await page.evaluate(() => {
+      const nav = document.querySelector("aside nav");
+      const scroller = nav?.closest("[class*='overflow-y']") ?? nav;
+      return {
+        overflowX: document.documentElement.scrollWidth > window.innerWidth + 1,
+        sidebarScrolls: scroller ? scroller.scrollHeight > scroller.clientHeight + 1 : false,
+        title: document.querySelector("h1")?.textContent ?? "",
+      };
+    });
+    report.push({ persona, route, size: size.name, file, ...metrics, errors: [...errors] });
+    console.log(`${persona} ${route} ${size.name}`);
+  }
+  await context.close();
+}
+
+async function shootLogin(browser, report) {
+  for (const size of SIZES) {
+    const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const page = await context.newPage();
+    await page.goto(`${BASE}/`, { waitUntil: "networkidle" }).catch(() => {});
+    await page.waitForTimeout(500);
+    const file = `login-${size.name}.png`;
+    await page.screenshot({ path: join(OUT, file), fullPage: true });
+    report.push({ persona: "signed-out", route: "/", size: size.name, file });
+    await context.close();
+  }
+}
+
+mkdirSync(OUT, { recursive: true });
+const browser = await chromium.launch({ channel: flag("channel", "msedge") });
+const report = [];
+if (!ONLY || ONLY === "login") await shootLogin(browser, report);
+for (const persona of Object.keys(ROUTES)) {
+  if (ONLY && ONLY !== persona) continue;
+  for (const size of SIZES) await shoot(browser, persona, size, report);
+}
+await browser.close();
+writeFileSync(join(OUT, "report.json"), JSON.stringify(report, null, 2));
+const bad = report.filter((r) => r.overflowX || (r.errors && r.errors.length));
+console.log(`\n${report.length} shots, ${bad.length} with horizontal scroll or console errors. See ${OUT}/report.json`);
