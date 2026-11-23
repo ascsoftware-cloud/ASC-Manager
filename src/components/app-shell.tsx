@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Activity,
+  Briefcase,
   Building2,
   CalendarCheck,
   CalendarClock,
@@ -131,6 +132,15 @@ const CLIENT_NAV: ClientNavItem[] = [
   { to: "/requests", label: "Ask ASC", icon: LifeBuoy, section: "account", perm: "requests" },
 ];
 
+/**
+ * Links that leave ASC Manager and open in a new tab. They are not pages, so
+ * they are never the active route, and they sit outside the module toggles
+ * and permissions: every client sees them.
+ */
+const CLIENT_TOOLS: { href: string; label: string; icon: LucideIcon }[] = [
+  { href: "https://ledgerly.ascsoftware.co.za/", label: "Business Manager", icon: Briefcase },
+];
+
 const SECTION_LABEL: Partial<Record<ClientSection, string>> = {
   shop: "Shop",
   inbox: "Inbox",
@@ -181,6 +191,7 @@ function NavItem({
   active,
   count,
   tone = "primary",
+  external = false,
   onNavigate,
 }: {
   to: string;
@@ -189,20 +200,37 @@ function NavItem({
   active: boolean;
   count?: number;
   tone?: "primary" | "bad" | "warn";
+  /** `to` is a full URL that opens in a new tab. It is never the active page. */
+  external?: boolean;
   onNavigate?: () => void;
 }) {
+  const className = cn(
+    "type-body relative flex min-h-9 items-center gap-3 rounded-lg px-3 font-medium transition-colors duration-150 max-lg:min-h-11",
+    active
+      ? "bg-accent text-foreground"
+      : "text-muted-foreground hover:bg-accent/70 hover:text-foreground",
+  );
+
+  if (external) {
+    return (
+      <a href={to} target="_blank" rel="noopener" onClick={onNavigate} className={className}>
+        <Icon className="size-4 shrink-0" aria-hidden="true" />
+        <span className="flex-1 truncate">
+          {label}
+          <span className="sr-only"> (opens in a new tab)</span>
+        </span>
+        <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
+      </a>
+    );
+  }
+
   return (
     <Link
       to={to}
       onClick={onNavigate}
       preload="intent"
       aria-current={active ? "page" : undefined}
-      className={cn(
-        "type-body relative flex min-h-9 items-center gap-3 rounded-lg px-3 font-medium transition-colors duration-150 max-lg:min-h-11",
-        active
-          ? "bg-accent text-foreground"
-          : "text-muted-foreground hover:bg-accent/70 hover:text-foreground",
-      )}
+      className={className}
     >
       {active ? (
         <span aria-hidden="true" className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-gold" />
@@ -226,9 +254,12 @@ function NavItem({
   );
 }
 
-function NavLabel({ children }: { children: ReactNode }) {
-  return <p className="type-label px-3 pb-1 pt-4">{children}</p>;
+function NavLabel({ children, className }: { children: ReactNode; className?: string }) {
+  return <p className={cn("type-label px-3 pb-1 pt-4", className)}>{children}</p>;
 }
+
+/** The client menu has one more group than a phone screen has room for, so its headings sit closer on small screens. */
+const CLIENT_LABEL = "max-lg:pt-2";
 
 function SignOutButton() {
   const signOut = useAscStore((s) => s.signOut);
@@ -315,22 +346,40 @@ function ClientSidebar({ current, onNavigate }: { current: string; onNavigate?: 
   const account = items.filter((i) => i.section === "account");
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2 p-4">
+    <div className="flex h-full min-h-0 flex-col gap-2 p-4 max-lg:gap-1">
       <AscLockup className="shrink-0 pb-2" />
       <nav aria-label="Main" className={SIDEBAR_BODY}>
         {middle.map((section) => (
           <div key={section}>
-            {SECTION_LABEL[section] ? <NavLabel>{SECTION_LABEL[section]}</NavLabel> : null}
+            {SECTION_LABEL[section] ? (
+              <NavLabel className={CLIENT_LABEL}>{SECTION_LABEL[section]}</NavLabel>
+            ) : null}
             <div className="flex flex-col gap-0.5">
               {items.filter((i) => i.section === section).map(renderItem)}
             </div>
           </div>
         ))}
+        <div>
+          <NavLabel className={CLIENT_LABEL}>Tools</NavLabel>
+          <div className="flex flex-col gap-0.5">
+            {CLIENT_TOOLS.map((tool) => (
+              <NavItem
+                key={tool.href}
+                to={tool.href}
+                label={tool.label}
+                icon={tool.icon}
+                active={false}
+                external
+                onNavigate={onNavigate}
+              />
+            ))}
+          </div>
+        </div>
       </nav>
       <div className="shrink-0 border-t border-border pt-1">
         {account.length > 0 ? (
           <nav aria-label="Account">
-            <NavLabel>Account</NavLabel>
+            <NavLabel className={CLIENT_LABEL}>Account</NavLabel>
             <div className="flex flex-col gap-0.5">{account.map(renderItem)}</div>
           </nav>
         ) : null}
