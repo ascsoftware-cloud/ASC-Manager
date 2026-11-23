@@ -2,7 +2,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Surface } from "@/components/ui/surface";
 import { useEffect, useMemo, useState } from "react";
 import { PermissionGate } from "@/components/permission-gate";
-import { createFileRoute, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import { GripHandle } from "@/components/desk-ui";
 import { MediaPicker } from "@/components/media-picker";
 import { Field, NativeSelect, PageHeader } from "@/components/page-header";
@@ -163,6 +163,33 @@ function WebsitePage() {
           </NativeSelect>
         ) : null}
 
+        <nav
+          aria-label="Website sections"
+          className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1"
+        >
+          {sections
+            .filter((sec) => sectionEnabled(client, sec.key))
+            .map((sec) => {
+              const current = hash === sec.key;
+              return (
+                <Link
+                  key={sec.id}
+                  to="/content"
+                  hash={sec.key}
+                  aria-current={current ? "true" : undefined}
+                  className={cn(
+                    "type-body -mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 px-3 font-medium transition-colors",
+                    current
+                      ? "border-primary text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {LABELS[sec.key]}
+                </Link>
+              );
+            })}
+        </nav>
+
         {client?.modules.advert ? (
           <SiteMediaBoard
             clientId={clientId}
@@ -192,7 +219,7 @@ function WebsitePage() {
                         void saveAction("Order saved", () => reorderSections(siteId, next));
               }}
               className={cn(
-                "scroll-mt-20 overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-lift)]",
+                "scroll-mt-20 overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-surface)]",
                 hash === sec.key && "ring-2 ring-emerald",
               )}
             >

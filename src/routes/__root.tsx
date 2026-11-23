@@ -20,7 +20,7 @@ export const Route = createRootRoute({
         content:
           "ASC Manager — every site Atlas Scale Collective runs, on one page. Uptime, renewals, and the parts of a site a client may change.",
       },
-      { name: "theme-color", content: "#081410" },
+      { name: "theme-color", content: "#f3f5f4" },
     ],
     links: [
       { rel: "icon", href: "/favicon.ico", sizes: "48x48" },

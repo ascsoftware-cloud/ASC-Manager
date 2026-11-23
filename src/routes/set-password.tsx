@@ -1,7 +1,9 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AscLockup } from "@/components/logo";
+import { Field } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { getSupabase } from "@/lib/supabase/client";
 import { useAscStore } from "@/lib/store";
 
@@ -67,41 +69,37 @@ function SetPasswordPage() {
     <main className="flex min-h-dvh flex-col items-center justify-center bg-background px-6">
       <div className="w-full max-w-sm">
         <AscLockup />
-        <h1 className="mt-10 font-display text-4xl text-foreground">Set password</h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Choose a password for this account. Do not share it.
+        <h1 className="type-title mt-10">Set your password</h1>
+        <p className="type-body mt-2 text-muted-foreground">
+          Choose a password for your account. Keep it to yourself.
         </p>
-        {error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null}
+        {error ? (
+          <p role="alert" className="type-small mt-4 text-destructive">
+            {error}
+          </p>
+        ) : null}
         {ready ? (
-          <form onSubmit={(e) => void onSubmit(e)} className="mt-8 flex flex-col gap-8">
-            <label className="block">
-              <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                New password
-              </span>
-              <input
+          <form onSubmit={(e) => void onSubmit(e)} className="mt-8 flex flex-col gap-5">
+            <Field label="New password">
+              <Input
                 type="password"
                 autoComplete="new-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-3 h-11 w-full border-0 border-b border-emerald bg-transparent text-sm text-foreground focus-visible:outline-none"
               />
-            </label>
-            <label className="block">
-              <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                Confirm
-              </span>
-              <input
+            </Field>
+            <Field label="Confirm password">
+              <Input
                 type="password"
                 autoComplete="new-password"
                 required
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                className="mt-3 h-11 w-full border-0 border-b border-emerald bg-transparent text-sm text-foreground focus-visible:outline-none"
               />
-            </label>
-            <Button type="submit" disabled={busy} className="h-12 w-full rounded-full">
-              {busy ? "Saving" : "Save password"}
+            </Field>
+            <Button type="submit" size="lg" disabled={busy} className="w-full">
+              {busy ? "Saving…" : "Save password"}
             </Button>
           </form>
         ) : null}

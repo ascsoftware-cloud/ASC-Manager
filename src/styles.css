@@ -9,59 +9,15 @@
  * - Emerald is the action and active colour. Champagne/gold is a thin accent
  *   (active-nav indicator, dividers, premium badge fill). Never champagne text
  *   on a light background.
- * - The signed-out screens use the dark base theme below. Both desks (client,
- *   staff) share the light tokens and differ only in their canvas colour.
+ * - Login, the client desk and the staff desk all use these tokens. The staff
+ *   desk differs only in its canvas colour.
  */
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "Fraunces", "Times New Roman", serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  --color-background: #081410;
-  --color-foreground: #efe6d4;
-  --color-card: #0c1b16;
-  --color-card-foreground: #efe6d4;
-  --color-popover: #10221b;
-  --color-popover-foreground: #efe6d4;
-  --color-primary: #3ecf8e;
-  --color-primary-foreground: #071310;
-  --color-secondary: #13261f;
-  --color-secondary-foreground: #efe6d4;
-  --color-muted: #0f1e19;
-  --color-muted-foreground: #9aada4;
-  --color-accent: #163028;
-  --color-accent-foreground: #efe6d4;
-  --color-destructive: #e0705d;
-  --color-destructive-foreground: #071310;
-  --color-border: rgb(239 230 212 / 0.12);
-  --color-input: rgb(239 230 212 / 0.34);
-  --color-ring: #3ecf8e;
-  --color-sidebar: #071310;
-  --color-ink: #081410;
-  --color-gold: #d4bc8c;
-  --color-gold-soft: rgb(212 188 140 / 0.14);
-  --color-emerald: #3ecf8e;
-  --color-success: #3ecf8e;
-  --color-warn: #d9b25a;
-
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 12px;
-
-  --shadow-border: 0 0 0 1px var(--color-border);
-  --shadow-border-hover: 0 0 0 1px var(--color-input);
-  --shadow-surface: 0 1px 2px rgb(0 0 0 / 0.3);
-  --shadow-lift: 0 18px 40px -24px rgb(0 0 0 / 0.55);
-
-  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-/* Shared desk tokens (client and staff). Only the canvas differs, further down. */
-:is(.client-desk, .staff-desk) {
-  color-scheme: light;
+  --color-background: #f3f5f4;
   --color-foreground: #14201a;
   --color-card: #ffffff;
   --color-card-foreground: #14201a;
@@ -87,23 +43,26 @@
   --color-emerald: #166534;
   --color-success: #166534;
   --color-warn: #8a5300;
+  /* Brand moments only (login panel, logo disc). */
+  --color-brand: #0b3d2e;
+  --color-brand-foreground: #f4ecd6;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+
   --shadow-border: 0 0 0 1px var(--color-border);
   --shadow-border-hover: 0 0 0 1px var(--color-input);
   --shadow-surface: 0 1px 2px rgb(20 32 26 / 0.06);
   --shadow-lift: 0 1px 2px rgb(20 32 26 / 0.05), 0 12px 28px -16px rgb(20 32 26 / 0.16);
-  font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--color-foreground);
-  background-color: var(--color-background);
+
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/* Client desk: cool off-white canvas. */
-.client-desk {
-  --color-background: #f3f5f4;
-}
-
-/* Staff desk: cream canvas. */
+/* Staff desk: the same tokens on a cream canvas. Nothing else differs. */
 .staff-desk {
   --color-background: #f6f1e4;
 }
@@ -122,6 +81,19 @@
   @media (min-width: 640px) {
     font-size: 2rem;
     line-height: 2.5rem;
+  }
+}
+
+/* Brand moments only: the login panel and empty-state heroes. */
+@utility type-hero {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  @media (min-width: 1280px) {
+    font-size: 2.75rem;
+    line-height: 3rem;
   }
 }
 
@@ -181,6 +153,7 @@
   body {
     margin: 0;
     font-family: var(--font-sans);
+    font-size: 0.9375rem;
     background-color: var(--color-background);
     color: var(--color-foreground);
     line-height: 1.5;
@@ -223,12 +196,8 @@
   }
 
   ::selection {
-    background: rgb(62 207 142 / 0.28);
-    color: var(--color-foreground);
-  }
-
-  :is(.client-desk, .staff-desk) ::selection {
     background: rgb(22 101 52 / 0.18);
+    color: var(--color-foreground);
   }
 
   input,
