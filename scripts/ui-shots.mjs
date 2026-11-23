@@ -13,6 +13,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { chromium } from "playwright";
+import { toCrossJSON } from "seroval";
 import { loadLocalEnv } from "./load-local-env.mjs";
 import { personas, staffAccounts, tablesFor } from "./ui-shots-fixtures.mjs";
 
@@ -27,6 +28,8 @@ const flag = (name, fallback) => {
 const BASE = flag("base", "http://127.0.0.1:8080");
 const OUT = flag("out", "docs/ui-polish/after");
 const ONLY = flag("only", "");
+const ROUTE = flag("route", "");
+const DEBUG = args.includes("--debug");
 const SUPABASE_URL = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "").replace(/\/$/, "");
 if (!SUPABASE_URL) {
   console.error("Need VITE_SUPABASE_URL in .env.local so the cookie name matches.");
@@ -40,7 +43,7 @@ const SIZES = [
 ];
 
 const ROUTES = {
-  staff: ["/", "/clients", "/sites", "/monitors", "/incidents", "/renewals", "/requests", "/visitors", "/admin", "/privacy", "/terms"],
+  staff: ["/", "/clients", "/sites", "/monitors", "/incidents", "/renewals", "/requests", "/visitors", "/admin", "/clients/00000000-0000-4000-8000-0000000000b2", "/clients/00000000-0000-4000-8000-0000000000b2?tab=modules", "/clients/00000000-0000-4000-8000-0000000000b2?tab=logins", "/privacy", "/terms"],
   client: ["/", "/content", "/store", "/calendar", "/bookings", "/enquiries", "/visitors", "/business", "/billing", "/team", "/requests", "/renewals", "/media"],
   "client-new": ["/"],
 };
@@ -103,14 +106,22 @@ async function installFakeBackend(context, persona) {
     }
     return route.fulfill({ status: 404, headers: CORS, body: "{}" });
   });
-  // Server functions for the staff list (added in the admin rebuild).
+  // Server functions. The URL is base64 of {file, export}; answer the staff list.
   await context.route("**/_serverFn/**", async (route) => {
     const body = route.request().postData() ?? "";
-    if (/listStaff/i.test(route.request().url()) || /listStaff/i.test(body)) {
+    if (DEBUG) console.log("serverFn", route.request().url().slice(-80), body.slice(0, 120));
+    const id = route.request().url().split("/_serverFn/")[1] ?? "";
+    let name = "";
+    try {
+      name = Buffer.from(id.split("?")[0], "base64url").toString();
+    } catch {
+      /* not base64 */
+    }
+    if (name.includes("listStaffFn")) {
       return route.fulfill({
         status: 200,
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ result: staffAccounts, context: {} }),
+        headers: { "content-type": "application/json", "x-tss-serialized": "true" },
+        body: JSON.stringify(toCrossJSON({ result: staffAccounts, context: {} }, { refs: new Map(), plugins: [] })),
       });
     }
     return route.continue();
@@ -136,7 +147,8 @@ async function seedSession(context, persona) {
   });
 }
 
-const slug = (route) => (route === "/" ? "home" : route.replace(/^\//, "").replace(/\//g, "-"));
+const slug = (route) =>
+  route === "/" ? "home" : route.replace(/^\//, "").replace(/00000000-0000-4000-8000-0000000000b2/, "detail").replace(/[/?=]/g, "-");
 
 async function shoot(browser, persona, size, report) {
   const context = await browser.newContext({
@@ -155,6 +167,7 @@ async function shoot(browser, persona, size, report) {
   page.on("pageerror", (e) => errors.push(String(e)));
 
   for (const route of ROUTES[persona]) {
+    if (ROUTE && route.replace(/^[/]/, "") !== ROUTE.replace(/^[/]/, "")) continue;
     errors.length = 0;
     await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" }).catch(() => {});
     await page.waitForTimeout(700);

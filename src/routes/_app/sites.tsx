@@ -1,7 +1,8 @@
-import { Surface } from "@/components/ui/surface";
 import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ExternalLink, Pencil, Plus } from "lucide-react";
+import { ExternalLink, Globe, Pencil, Plus } from "lucide-react";
+import { DataTable } from "@/components/data-table";
+import { Badge } from "@/components/ui/badge";
 import { ConfirmDangerDialog } from "@/components/confirm-danger";
 import { StaffGate } from "@/components/staff-gate";
 import { Field, NativeSelect, PageHeader } from "@/components/page-header";
@@ -35,6 +36,7 @@ function SitesPage() {
   const addSite = useAscStore((s) => s.addSite);
   const removeSite = useAscStore((s) => s.removeSite);
   const saveSiteRedesign = useAscStore((s) => s.saveSiteRedesign);
+  const clientOf = (s: Site) => clients.find((c) => c.id === s.clientId)?.name ?? "";
   const [open, setOpen] = useState(false);
   const [redesignFor, setRedesignFor] = useState<Site | null>(null);
   const [removeFor, setRemoveFor] = useState<Site | null>(null);
@@ -42,9 +44,8 @@ function SitesPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Sites"
         title="Sites"
-        description="Public sites and admin systems we host or watch. Live site and redesign links are staff-only — clients never see this page."
+        description="Public sites and admin systems we host or watch."
         action={
           <Button onClick={() => setOpen(true)}>
             <Plus className="size-4" />
@@ -52,88 +53,125 @@ function SitesPage() {
           </Button>
         }
       />
-      <Surface>
-        {sites.length === 0 ? (
-          <p className="px-5 py-10 text-sm text-muted-foreground">
-            No sites yet. Add a public site to a client so they can edit that
-            website from their desk.
-          </p>
-        ) : (
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-border type-small text-muted-foreground">
-              <th className="px-5 py-3 font-medium">System</th>
-              <th className="px-5 py-3 font-medium">Client</th>
-              <th className="px-5 py-3 font-medium">Kind</th>
-              <th className="px-5 py-3 font-medium">Live site</th>
-              <th className="px-5 py-3 font-medium">Our redesign</th>
-              <th className="px-5 py-3 font-medium" />
-            </tr>
-          </thead>
-          <tbody>
-            {sites.map((s) => {
-              const client = clients.find((c) => c.id === s.clientId);
-              const redesign = siteRedesigns.find((r) => r.siteId === s.id);
-              return (
-                <tr key={s.id} className="border-b border-border last:border-0">
-                  <td className="px-5 py-4 text-foreground">{s.name}</td>
-                  <td className="px-5 py-4 text-muted-foreground">{client?.name}</td>
-                  <td className="px-5 py-4 capitalize text-muted-foreground">{s.kind}</td>
-                  <td className="px-5 py-4">
-                    {s.url ? (
-                      <Button asChild size="sm" variant="outline">
-                        <a href={s.url} target="_blank" rel="noopener noreferrer">
-                          View live
-                          <ExternalLink className="size-3.5" />
-                        </a>
-                      </Button>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-4">
-                    {redesign?.redesignUrl ? (
-                      <Button asChild size="sm" variant="outline">
-                        <a
-                          href={redesign.redesignUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          View redesign
-                          <ExternalLink className="size-3.5" />
-                        </a>
-                      </Button>
-                    ) : (
-                      <span className="text-muted-foreground">Not added yet</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setRedesignFor(s)}
-                      >
-                        <Pencil className="size-3.5" />
-                        {redesign?.redesignUrl ? "Edit" : "Add redesign"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => setRemoveFor(s)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
+      <DataTable
+        label="Sites"
+        rows={sites}
+        getRowId={(s) => s.id}
+        searchText={(s) =>
+          `${s.name} ${s.host} ${clients.find((c) => c.id === s.clientId)?.name ?? ""}`
+        }
+        searchPlaceholder="Search sites or clients"
+        filters={[
+          {
+            id: "kind",
+            label: "All kinds",
+            options: [
+              { value: "public", label: "Public" },
+              { value: "admin", label: "Admin" },
+            ],
+            match: (s, v) => s.kind === v,
+          },
+        ]}
+        initialSort={{ id: "site", dir: "asc" }}
+        empty={{
+          icon: Globe,
+          title: "No sites yet",
+          detail: "Add a public site to a client so they can edit it from their desk.",
+          action: (
+            <Button onClick={() => setOpen(true)}>
+              <Plus className="size-4" />
+              New site
+            </Button>
+          ),
+        }}
+        columns={[
+          {
+            id: "site",
+            header: "Site",
+            sort: (a, b) => a.name.localeCompare(b.name),
+            cell: (s) => (
+              <>
+                <p className="font-medium">{s.name}</p>
+                <p className="type-small text-muted-foreground">{s.host}</p>
+              </>
+            ),
+          },
+          {
+            id: "client",
+            header: "Client",
+            hideBelow: "sm",
+            sort: (a, b) => clientOf(a).localeCompare(clientOf(b)),
+            cell: (s) => clientOf(s),
+          },
+          {
+            id: "kind",
+            header: "Kind",
+            hideBelow: "md",
+            cell: (s) => <Badge variant="muted">{s.kind === "public" ? "Public" : "Admin"}</Badge>,
+          },
+          {
+            id: "live",
+            header: "Live site",
+            hideBelow: "lg",
+            cell: (s) =>
+              s.url ? (
+                <a
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                >
+                  View live
+                  <ExternalLink className="size-3.5" aria-hidden="true" />
+                </a>
+              ) : (
+                <span className="text-muted-foreground">None</span>
+              ),
+          },
+          {
+            id: "redesign",
+            header: "Our redesign",
+            hideBelow: "lg",
+            cell: (s) => {
+              const r = siteRedesigns.find((x) => x.siteId === s.id);
+              return r?.redesignUrl ? (
+                <a
+                  href={r.redesignUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                >
+                  View redesign
+                  <ExternalLink className="size-3.5" aria-hidden="true" />
+                </a>
+              ) : (
+                <span className="text-muted-foreground">Not added yet</span>
               );
-            })}
-          </tbody>
-        </table>
-        )}
-      </Surface>
+            },
+          },
+          {
+            id: "actions",
+            header: "Actions",
+            align: "right",
+            cell: (s) => (
+              <div className="flex justify-end gap-1">
+                <Button size="sm" variant="ghost" onClick={() => setRedesignFor(s)}>
+                  <Pencil className="size-3.5" />
+                  Redesign
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => setRemoveFor(s)}
+                >
+                  Remove
+                </Button>
+              </div>
+            ),
+          },
+        ]}
+      />
       <NewSiteDialog
         open={open}
         onOpenChange={setOpen}

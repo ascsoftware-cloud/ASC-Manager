@@ -55,6 +55,8 @@ export function supabaseAdmin(): SupabaseClient {
 
 export async function requireOperatorAdmin(accessToken: string): Promise<{
   admin: SupabaseClient;
+  /** The signed-in staff member's own user id. */
+  userId: string;
 }> {
   const url = staffEnv("VITE_SUPABASE_URL") || staffEnv("SUPABASE_URL");
   const anon = staffEnv("VITE_SUPABASE_ANON_KEY");
@@ -81,5 +83,5 @@ export async function requireOperatorAdmin(accessToken: string): Promise<{
   if (profile?.role !== "operator") {
     throw new Error("Forbidden.");
   }
-  return { admin };
+  return { admin, userId: userRes.user.id };
 }
