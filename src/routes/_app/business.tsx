@@ -1,7 +1,8 @@
+import { Surface } from "@/components/ui/surface";
 import { useState, type FormEvent } from "react";
 import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
-import { Field, NativeSelect, PageHeader, Surface } from "@/components/page-header";
+import { Field, NativeSelect, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,7 +34,7 @@ function BusinessPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Business"
         title="Business"
@@ -95,7 +96,7 @@ function BusinessForm({ clientId }: { clientId: string }) {
         <Field label="Hours">
           <Textarea value={hours} onChange={(e) => setHours(e.target.value)} rows={2} />
         </Field>
-        <Button type="submit" className="w-fit rounded-full">
+        <Button type="submit" className="w-fit">
           Save on my site
         </Button>
       </form>

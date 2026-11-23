@@ -1,7 +1,8 @@
+import { Surface } from "@/components/ui/surface";
 import { useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { StaffGate } from "@/components/staff-gate";
-import { Field, PageHeader, Surface } from "@/components/page-header";
+import { Field, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { saveAction } from "@/lib/mutate";
@@ -43,7 +44,7 @@ function AdminPage() {
   const clientsUsers = users.filter((u) => u.role === "client");
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Admin"
         title="Admin"
@@ -51,7 +52,7 @@ function AdminPage() {
       />
       <Surface>
         <div className="border-b border-border px-5 py-3">
-          <p className="text-sm font-semibold text-champagne">
+          <p className="text-sm font-semibold text-foreground">
             ASC staff
           </p>
         </div>
@@ -64,7 +65,7 @@ function AdminPage() {
           <ul className="divide-y divide-border">
             {operators.map((u) => (
               <li key={u.id} className="px-5 py-4">
-                <p className="text-champagne">{u.name}</p>
+                <p className="text-foreground">{u.name}</p>
                 <p className="text-sm text-muted-foreground">{u.email}</p>
               </li>
             ))}
@@ -74,7 +75,7 @@ function AdminPage() {
 
       <Surface>
         <div className="border-b border-border px-5 py-3">
-          <p className="text-sm font-semibold text-champagne">
+          <p className="text-sm font-semibold text-foreground">
             Client logins
           </p>
         </div>
@@ -88,7 +89,7 @@ function AdminPage() {
               const client = clients.find((c) => c.id === u.clientId);
               return (
                 <li key={u.id} className="px-5 py-4">
-                  <p className="text-champagne">{u.name}</p>
+                  <p className="text-foreground">{u.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {u.email}
                     {client ? ` · ${client.name}` : ""}
@@ -101,7 +102,7 @@ function AdminPage() {
       </Surface>
 
       <Surface className="p-5">
-        <h2 className="font-display text-xl text-champagne">Invite staff</h2>
+        <h2 className="font-display text-xl text-foreground">Invite staff</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           They set their own password from the email. Do not invent logins in
           the repo.
@@ -118,7 +119,7 @@ function AdminPage() {
               required
             />
           </Field>
-          <Button type="submit" disabled={busy} className="w-fit rounded-full">
+          <Button type="submit" disabled={busy} className="w-fit">
             Send invite
           </Button>
         </form>

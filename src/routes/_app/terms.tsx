@@ -45,7 +45,7 @@ function TermsPage() {
         </p>
         <p>
           Where we and a client sign a services agreement,{" "}
-          <strong className="text-champagne">
+          <strong className="text-foreground">
             that agreement governs the work and prevails over these terms and
             over anything published on this site
           </strong>
@@ -131,7 +131,7 @@ function TermsPage() {
           methods, including any of them built into what we deliver.
         </p>
         <p>
-          <strong className="text-champagne">
+          <strong className="text-foreground">
             On payment in full of the accepted quote, ownership of the
             intellectual property in the deliverables described in that quote
             transfers to you

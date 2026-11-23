@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function PageSkeleton() {
   return (
     <div
-      className="mx-auto flex max-w-6xl flex-col gap-6"
+      className="flex flex-col gap-6"
       aria-busy="true"
       aria-label="Loading"
     >

@@ -1,7 +1,8 @@
+import { Surface } from "@/components/ui/surface";
 import { useState, type FormEvent } from "react";
 import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
-import { Field, NativeSelect, PageHeader, Surface } from "@/components/page-header";
+import { Field, NativeSelect, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -55,7 +56,7 @@ function BookingsPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Bookings"
         title="Bookings"
@@ -65,7 +66,7 @@ function BookingsPage() {
             : "Add a public site first, then take bookings for that site."
         }
         action={
-          <Button className="rounded-full" disabled={!siteId} onClick={() => setOpen(true)}>
+          <Button disabled={!siteId} onClick={() => setOpen(true)}>
             Add booking
           </Button>
         }
@@ -107,10 +108,10 @@ function BookingsPage() {
                 className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-start sm:justify-between"
               >
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-emerald">
+                  <p className="type-label text-emerald">
                     {formatDay(b.startsAt)} · {formatTime(b.startsAt)}
                   </p>
-                  <p className="mt-1 text-champagne">{b.guestName}</p>
+                  <p className="mt-1 text-foreground">{b.guestName}</p>
                   <p className="text-sm text-muted-foreground">
                     {[b.email, b.phone].filter(Boolean).join(" · ") || "No contact"}
                   </p>
@@ -119,7 +120,7 @@ function BookingsPage() {
                   ) : null}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                  <span className="type-label text-muted-foreground">
                     {b.status}
                   </span>
                   {b.status === "requested" ? (

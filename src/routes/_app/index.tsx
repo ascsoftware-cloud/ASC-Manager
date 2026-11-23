@@ -1,9 +1,13 @@
+import { EmptyState } from "@/components/ui/empty-state";
+import { SectionHeader } from "@/components/section-header";
+import { StatTile } from "@/components/ui/stat-tile";
+import { Surface } from "@/components/ui/surface";
 import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { differenceInCalendarDays, parseISO } from "date-fns";
-import { EmptyDesk } from "@/components/desk-ui";
-import { Kpi, NativeSelect, PageHeader, Surface, SurfaceHeader } from "@/components/page-header";
-import { StatusDot } from "@/components/status-badge";
+
+import { NativeSelect, PageHeader } from "@/components/page-header";
+import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { formatDay, formatRelative } from "@/lib/format";
 import {
@@ -88,7 +92,7 @@ function StaffDashboard() {
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Staff console"
         title="Dashboard"
@@ -96,24 +100,23 @@ function StaffDashboard() {
       />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi
+        <StatTile
           label="Clients"
           value={String(clients.length)}
           hint={`${publicSites.length} public sites · ${sites.length} total`}
-          accent
         />
-        <Kpi
+        <StatTile
           label="Monitors"
           value={String(monitors.length)}
           hint="checked on their own schedules"
         />
-        <Kpi
+        <StatTile
           label="Offline now"
           value={String(offline)}
           hint={offline === 0 ? "All responding" : "Needs a look"}
           valueClass={offline === 0 ? "text-emerald" : "text-destructive"}
         />
-        <Kpi
+        <StatTile
           label="Open work"
           value={String(openIncidents + openRequests)}
           hint={`${openIncidents} incidents, ${openRequests} requests`}
@@ -121,7 +124,7 @@ function StaffDashboard() {
       </section>
 
       <Surface>
-        <SurfaceHeader
+        <SectionHeader inset
           title="Needs attention"
           detail={attention.length === 0 ? undefined : "Most urgent first."}
         />
@@ -146,7 +149,7 @@ function StaffDashboard() {
                     }
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-champagne">{item.title}</p>
+                    <p className="font-medium text-foreground">{item.title}</p>
                     <p className="text-sm text-muted-foreground">{item.detail}</p>
                   </div>
                   <span className="text-sm font-medium text-emerald">Open</span>
@@ -159,10 +162,10 @@ function StaffDashboard() {
 
       {missingSite.length > 0 ? (
         <Surface>
-          <SurfaceHeader
+          <SectionHeader inset
             title="No public site yet"
             action={
-              <Button asChild size="sm" className="rounded-full">
+              <Button asChild size="sm">
                 <Link to="/sites">Add a site</Link>
               </Button>
             }
@@ -171,12 +174,12 @@ function StaffDashboard() {
             {missingSite.map((c) => (
               <li key={c.id} className="flex items-center justify-between gap-3 px-5 py-4">
                 <div>
-                  <p className="font-medium text-champagne">{c.name}</p>
+                  <p className="font-medium text-foreground">{c.name}</p>
                   <p className="text-sm text-muted-foreground">
                     Their login cannot edit a website until you attach one.
                   </p>
                 </div>
-                <Button asChild size="sm" variant="outline" className="rounded-full">
+                <Button asChild size="sm" variant="outline">
                   <Link to="/sites">Sites</Link>
                 </Button>
               </li>
@@ -224,7 +227,7 @@ function DeskCard({
       className="border border-border bg-card px-5 py-4 hover:border-emerald/40"
     >
       <p className="text-sm font-medium text-emerald">{kicker}</p>
-      <p className="mt-2 font-display text-xl text-champagne">{title}</p>
+      <p className="mt-2 font-display text-xl text-foreground">{title}</p>
       <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
     </Link>
   );
@@ -254,7 +257,7 @@ function ClientOverview() {
     : [];
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Overview"
         title="Today"
@@ -285,7 +288,7 @@ function ClientOverview() {
       />
 
       {sites.length === 0 ? (
-        <EmptyDesk
+        <EmptyState framed
           title="No website attached yet"
           detail="When ASC adds a public site, you will edit that site from here. Store, calendar, and bookings still work for the whole account."
         />
@@ -293,14 +296,13 @@ function ClientOverview() {
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {can("enquiries") ? (
-          <Kpi
+          <StatTile
             label="New enquiries"
             value={String(fresh.length)}
             hint="From the form on your sites"
-            accent
           />
         ) : null}
-        <Kpi
+        <StatTile
           label="Problems now"
           value={siteId ? String(problems) : "—"}
           hint={
@@ -313,14 +315,14 @@ function ClientOverview() {
           valueClass={!siteId || problems === 0 ? "text-emerald" : "text-destructive"}
         />
         {can("visitors") ? (
-          <Kpi
+          <StatTile
             label="Visitors, 14 days"
             value={siteId ? String(views) : "—"}
             hint={siteId ? `On ${activeSite?.name}, bots excluded` : "No public site yet"}
           />
         ) : null}
         {can("billing") ? (
-          <Kpi
+          <StatTile
             label="Invoices due"
             value={String(dueInvoices.length)}
             hint={dueInvoices[0] ? dueInvoices[0].item : "Nothing outstanding"}
@@ -481,7 +483,7 @@ function NeedsYou() {
   return (
     <Surface>
       <div className="border-b border-border px-5 py-3">
-        <p className="font-mono text-sm font-semibold text-champagne">
+        <p className="font-mono text-sm font-semibold text-foreground">
           Needs you
         </p>
       </div>
@@ -499,7 +501,7 @@ function NeedsYou() {
                 className="flex min-h-11 items-center justify-between gap-3 px-5 py-4 hover:bg-accent/40"
               >
                 <div>
-                  <p className="text-champagne">{item.title}</p>
+                  <p className="text-foreground">{item.title}</p>
                   <p className="line-clamp-1 text-sm text-muted-foreground">{item.detail}</p>
                 </div>
                 <span className="text-sm text-emerald">Open</span>
@@ -538,11 +540,11 @@ function SystemsTable({ clientOnly = false }: { clientOnly?: boolean }) {
   return (
     <Surface>
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-        <p className="text-sm font-semibold text-champagne">
+        <p className="text-sm font-semibold text-foreground">
           {clientOnly ? "Your sites" : "All sites"}
         </p>
         {!clientOnly ? (
-          <Button asChild size="sm" className="rounded-full">
+          <Button asChild size="sm">
             <Link to="/sites">Manage sites</Link>
           </Button>
         ) : null}
@@ -576,13 +578,13 @@ function SystemsTable({ clientOnly = false }: { clientOnly?: boolean }) {
             {rows.map(({ site, client, down, up, last, uptime }) => (
               <tr key={site.id} className="border-b border-border last:border-0">
                 <td className="px-5 py-4">
-                  <StatusDot status={down ? "down" : up ? "up" : "unchecked"} />
+                  <StatusBadge status={down ? "down" : up ? "up" : "unchecked"} />
                 </td>
                 {!clientOnly ? (
-                  <td className="px-5 py-4 text-champagne">{client?.name}</td>
+                  <td className="px-5 py-4 text-foreground">{client?.name}</td>
                 ) : null}
                 <td className="px-5 py-4">
-                  <p className="font-medium text-champagne">{site.name}</p>
+                  <p className="font-medium text-foreground">{site.name}</p>
                   <p className="text-xs text-muted-foreground">{site.url}</p>
                 </td>
                 <td className="px-5 py-4 text-muted-foreground">
@@ -596,7 +598,7 @@ function SystemsTable({ clientOnly = false }: { clientOnly?: boolean }) {
                 </td>
                 <td className="px-5 py-4 text-right">
                   {clientOnly ? (
-                    <Button asChild size="sm" variant="outline" className="rounded-full">
+                    <Button asChild size="sm" variant="outline">
                       <Link
                         to="/content"
                         onClick={() => useAscStore.getState().setActiveSite(site.id)}
@@ -608,7 +610,6 @@ function SystemsTable({ clientOnly = false }: { clientOnly?: boolean }) {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="rounded-full"
                       onClick={() => {
                         void runChecks(site.id);
                       }}
@@ -641,10 +642,10 @@ function RenewalsPanel() {
   return (
     <Surface>
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-        <p className="text-sm font-semibold text-champagne">
+        <p className="text-sm font-semibold text-foreground">
           Renewals due
         </p>
-        <Button asChild size="sm" variant="outline" className="rounded-full">
+        <Button asChild size="sm" variant="outline">
           <Link to={user?.role === "operator" ? "/renewals" : "/billing"}>
             {user?.role === "operator" ? "All renewals" : "Billing"}
           </Link>
@@ -668,12 +669,12 @@ function RenewalsPanel() {
             return (
               <tr key={r.id} className="border-b border-border last:border-0">
                 {user?.role === "operator" ? (
-                  <td className="px-5 py-3 text-champagne">{client?.name}</td>
+                  <td className="px-5 py-3 text-foreground">{client?.name}</td>
                 ) : null}
-                <td className="px-5 py-3 text-champagne">{r.item}</td>
+                <td className="px-5 py-3 text-foreground">{r.item}</td>
                 <td className="px-5 py-3 capitalize text-muted-foreground">{r.type}</td>
                 <td className="px-5 py-3">
-                  <p className="text-gold">{formatDay(r.expiresAt)}</p>
+                  <p className="text-foreground">{formatDay(r.expiresAt)}</p>
                   <p className="text-xs text-muted-foreground">in {days} days</p>
                 </td>
               </tr>
@@ -695,10 +696,10 @@ function ChangesPanel() {
   return (
     <Surface>
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-        <p className="text-sm font-semibold text-champagne">
+        <p className="text-sm font-semibold text-foreground">
           Recent changes
         </p>
-        <Button size="sm" variant="outline" className="rounded-full" disabled>
+        <Button size="sm" variant="outline" disabled>
           Full log
         </Button>
       </div>
@@ -710,7 +711,7 @@ function ChangesPanel() {
         <ul className="divide-y divide-border">
           {rows.map((l) => (
             <li key={l.id} className="px-5 py-3 text-sm">
-              <p className="text-champagne">{l.summary}</p>
+              <p className="text-foreground">{l.summary}</p>
               <p className="text-xs text-muted-foreground">
                 {l.actor} · {formatRelative(l.at)}
               </p>

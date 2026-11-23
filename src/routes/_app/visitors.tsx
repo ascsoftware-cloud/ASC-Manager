@@ -1,8 +1,10 @@
+import { StatTile } from "@/components/ui/stat-tile";
+import { Surface } from "@/components/ui/surface";
 import { useMemo } from "react";
 import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
-import { Kpi, NativeSelect, PageHeader, Surface } from "@/components/page-header";
+import { NativeSelect, PageHeader } from "@/components/page-header";
 import { useActiveSite, useAscStore, useCurrentUser, useOwnSites, visibleClientIds } from "@/lib/store";
 
 export const Route = createFileRoute("/_app/visitors")({
@@ -40,7 +42,7 @@ function VisitorsPage() {
   }, [points]);
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Visitors"
         title="Visitors"
@@ -60,9 +62,9 @@ function VisitorsPage() {
         </NativeSelect>
       ) : null}
       <section className="grid gap-3 sm:grid-cols-3">
-        <Kpi label="Page views" value={String(views)} hint="Last 14 days" accent />
-        <Kpi label="Bots excluded" value={String(bots)} hint="Not counted in views" />
-        <Kpi
+        <StatTile label="Page views" value={String(views)} hint="Last 14 days" />
+        <StatTile label="Bots excluded" value={String(bots)} hint="Not counted in views" />
+        <StatTile
           label="Sites"
           value={String(user?.role === "client" && activeSite ? 1 : sites.length)}
           hint={activeSite ? activeSite.name : "In this account"}

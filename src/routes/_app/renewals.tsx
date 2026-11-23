@@ -1,6 +1,7 @@
+import { Surface } from "@/components/ui/surface";
 import { createFileRoute } from "@tanstack/react-router";
 import { differenceInCalendarDays, parseISO } from "date-fns";
-import { PageHeader, Surface } from "@/components/page-header";
+import { PageHeader } from "@/components/page-header";
 import { formatDay } from "@/lib/format";
 import { useAscStore, useCurrentUser, visibleClientIds } from "@/lib/store";
 
@@ -18,7 +19,7 @@ function RenewalsPage() {
     .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt));
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Renewals"
         title="Renewals"
@@ -31,7 +32,7 @@ function RenewalsPage() {
       <Surface>
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-border text-[13px] text-muted-foreground">
+            <tr className="border-b border-border type-small text-muted-foreground">
               {user?.role === "operator" ? (
                 <th className="px-5 py-3 font-medium">Client</th>
               ) : null}
@@ -47,12 +48,12 @@ function RenewalsPage() {
               return (
                 <tr key={r.id} className="border-b border-border last:border-0">
                   {user?.role === "operator" ? (
-                    <td className="px-5 py-4 text-champagne">{client?.name}</td>
+                    <td className="px-5 py-4 text-foreground">{client?.name}</td>
                   ) : null}
-                  <td className="px-5 py-4 text-champagne">{r.item}</td>
+                  <td className="px-5 py-4 text-foreground">{r.item}</td>
                   <td className="px-5 py-4 capitalize text-muted-foreground">{r.type}</td>
                   <td className="px-5 py-4">
-                    <p className="text-gold">{formatDay(r.expiresAt)}</p>
+                    <p className="text-foreground">{formatDay(r.expiresAt)}</p>
                     <p className="text-xs text-muted-foreground">in {days} days</p>
                   </td>
                 </tr>

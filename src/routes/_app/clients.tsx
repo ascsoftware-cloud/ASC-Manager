@@ -1,11 +1,12 @@
+import { Surface } from "@/components/ui/surface";
 import { useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, UsersRound } from "lucide-react";
 import { ConfirmDangerDialog } from "@/components/confirm-danger";
 import { StaffGate } from "@/components/staff-gate";
 import { TeamManager } from "@/components/team-manager";
-import { Field, PageHeader, Surface } from "@/components/page-header";
-import { StatusDot } from "@/components/status-badge";
+import { Field, PageHeader } from "@/components/page-header";
+import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -50,13 +51,13 @@ function ClientsPage() {
   } | null>(null);
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Clients"
         title="Clients"
         description="Desk modules (store, calendar, bookings, site media) and website extras (SEO, FAQ, testimonials, gallery, services, staff). Turn on only what that public site actually has."
         action={
-          <Button className="rounded-full" onClick={() => setOpen(true)}>
+          <Button onClick={() => setOpen(true)}>
             <Plus className="size-4" />
             New client
           </Button>
@@ -72,7 +73,7 @@ function ClientsPage() {
           <div className="overflow-x-auto">
           <table className="w-full min-w-[1280px] text-left text-sm">
             <thead>
-              <tr className="border-b border-border text-[13px] text-muted-foreground">
+              <tr className="border-b border-border type-small text-muted-foreground">
                 <th className="px-5 py-3 font-medium">Client</th>
                 <th className="px-5 py-3 font-medium">Contact</th>
                 <th className="px-5 py-3 font-medium">Sites</th>
@@ -98,7 +99,7 @@ function ClientsPage() {
                 return (
                   <tr key={c.id} className="border-b border-border last:border-0">
                     <td className="px-5 py-4">
-                      <p className="text-champagne">{c.name}</p>
+                      <p className="text-foreground">{c.name}</p>
                       <p className="text-xs text-muted-foreground">{c.city}</p>
                     </td>
                     <td className="px-5 py-4 text-muted-foreground">{c.contactName}</td>
@@ -119,7 +120,7 @@ function ClientsPage() {
                       </td>
                     ))}
                     <td className="px-5 py-4">
-                      <StatusDot status={c.status} />
+                      <StatusBadge status={c.status} />
                     </td>
                     <td className="sticky right-0 bg-card px-5 py-4 text-right shadow-[-10px_0_10px_-10px_rgb(29_42_34/0.18)]">
                       <div className="flex justify-end gap-1">

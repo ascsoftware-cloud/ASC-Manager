@@ -60,7 +60,7 @@ export function ClientJump({
       >
         <Search className="size-4 shrink-0" />
         <span className="truncate">Jump to a page</span>
-        <kbd className="ml-auto hidden rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground sm:inline">
+        <kbd className="ml-auto hidden rounded-md bg-muted px-1.5 py-0.5 type-label font-medium text-muted-foreground sm:inline">
           {mod}K
         </kbd>
       </button>

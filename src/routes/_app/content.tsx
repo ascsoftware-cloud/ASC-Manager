@@ -1,9 +1,11 @@
+import { EmptyState } from "@/components/ui/empty-state";
+import { Surface } from "@/components/ui/surface";
 import { useEffect, useMemo, useState } from "react";
 import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute, useRouterState } from "@tanstack/react-router";
-import { EmptyDesk, GripHandle } from "@/components/desk-ui";
+import { GripHandle } from "@/components/desk-ui";
 import { MediaPicker } from "@/components/media-picker";
-import { Field, NativeSelect, PageHeader, Surface } from "@/components/page-header";
+import { Field, NativeSelect, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -115,7 +117,7 @@ function WebsitePage() {
 
   if (!clientId || !siteId) {
     return (
-      <EmptyDesk
+      <EmptyState framed
         title="No site yet"
         detail={
           user?.role === "client"
@@ -127,7 +129,7 @@ function WebsitePage() {
   }
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-8 xl:grid-cols-[1fr_20rem]">
+    <div className="grid gap-6 xl:grid-cols-[1fr_20rem]">
       <div className="flex flex-col gap-8">
         <PageHeader
           eyebrow="Website"
@@ -230,10 +232,10 @@ function WebsitePage() {
       </div>
 
       <aside className="xl:sticky xl:top-20">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">On your site</p>
+        <p className="type-label">On your site</p>
         <div className="mx-auto mt-3 w-[280px] overflow-hidden rounded-[2rem] border border-border bg-ink p-3 shadow-[var(--shadow-lift)]">
           <div className="aspect-[9/16] overflow-y-auto bg-[#081410] px-4 py-6">
-            <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-emerald">
+            <p className="type-label text-emerald">
               {client?.name}
             </p>
             {sections
@@ -242,13 +244,13 @@ function WebsitePage() {
               .map((s) => (
                 <div key={s.id} className="mt-4">
                   {s.key === "welcome" ? (
-                    <p className="font-display text-xl leading-tight text-champagne">
+                    <p className="text-xl leading-tight text-foreground">
                       {welcome || "Welcome line"}
                     </p>
                   ) : null}
                   {s.key === "this_week" ? (
                     <div>
-                      <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-emerald">
+                      <p className="type-label text-emerald">
                         Pictures
                       </p>
                       {adverts.filter((a) => a.status === "live").length === 0 ? (
@@ -258,7 +260,7 @@ function WebsitePage() {
                           .filter((a) => a.status === "live")
                           .slice(0, 5)
                           .map((a) => (
-                            <p key={a.id} className="mt-1 text-xs text-champagne">
+                            <p key={a.id} className="mt-1 text-xs text-foreground">
                               {a.headline || "Picture"}
                             </p>
                           ))
@@ -271,7 +273,7 @@ function WebsitePage() {
                         .filter((p) => (s.payload.productIds as string[] | undefined)?.includes(p.id) || p.featured)
                         .slice(0, 4)
                         .map((p) => (
-                          <li key={p.id} className="text-xs text-champagne">
+                          <li key={p.id} className="text-xs text-foreground">
                             {p.name} · {formatZar(p.priceZar)}
                           </li>
                         ))}
@@ -623,15 +625,14 @@ function SiteMediaBoard({
     <Surface className="p-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-emerald">Site pictures</p>
-          <p className="mt-1 text-xl font-semibold tracking-tight text-foreground">Add pictures to the site</p>
+          <p className="type-label">Site pictures</p>
+          <p className="type-section mt-1">Add pictures to the site</p>
           <p className="mt-1 max-w-md text-sm text-muted-foreground">
             This slot is on your public homepage. Add a photo, give it a caption if you want, and mark it Live.
           </p>
         </div>
         <Button
           type="button"
-          className="rounded-full"
           onClick={() => setSelectedId("new")}
         >
           Add picture
@@ -649,8 +650,8 @@ function SiteMediaBoard({
                   selectedId === a.id ? "bg-accent" : "hover:bg-accent/50",
                 )}
               >
-                <span className="text-sm text-champagne">{a.headline || "Untitled picture"}</span>
-                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                <span className="text-sm text-foreground">{a.headline || "Untitled picture"}</span>
+                <span className="type-label text-muted-foreground">
                   {a.status === "draft" ? "hidden" : a.status} · {formatDay(a.startsOn)}–{formatDay(a.endsOn)}
                 </span>
               </button>
@@ -660,7 +661,7 @@ function SiteMediaBoard({
       ) : (
         <p className="mt-4 text-sm text-muted-foreground">No pictures on the site yet.</p>
       )}
-      <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+      <p className="mt-6 type-label text-muted-foreground">
         {selectedId === "new" ? "New picture" : expired ? "Dates ended" : status === "draft" ? "Hidden" : status}
       </p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -750,7 +751,6 @@ function SiteMediaBoard({
             key={st}
             type="button"
             variant={status === st ? "default" : "outline"}
-            className="rounded-full"
             onClick={() => setStatus(st)}
           >
             {label}
@@ -758,7 +758,6 @@ function SiteMediaBoard({
         ))}
         <Button
           type="button"
-          className="rounded-full"
           onClick={() =>
             void saveAction("Picture saved", async () => {
               await saveAdvert({

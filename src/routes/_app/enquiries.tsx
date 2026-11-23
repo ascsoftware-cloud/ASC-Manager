@@ -1,8 +1,9 @@
+import { Surface } from "@/components/ui/surface";
 import { useState } from "react";
 import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
-import { Field, NativeSelect, PageHeader, Surface } from "@/components/page-header";
-import { StatusDot } from "@/components/status-badge";
+import { Field, NativeSelect, PageHeader } from "@/components/page-header";
+import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { formatRelative } from "@/lib/format";
 import { saveAction } from "@/lib/mutate";
@@ -39,7 +40,7 @@ function EnquiriesPage() {
   const fresh = rows.filter((e) => e.status === "new").length;
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Enquiries"
         title="Enquiries"
@@ -98,7 +99,7 @@ function EnquiriesPage() {
                 <li key={e.id} className="px-5 py-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-champagne">{e.name}</p>
+                      <p className="text-foreground">{e.name}</p>
                       <p className="text-sm text-muted-foreground">
                         {e.email} · {e.phone}
                       </p>
@@ -107,7 +108,7 @@ function EnquiriesPage() {
                         {user?.role === "operator" && client ? ` · ${client.name}` : ""}
                       </p>
                     </div>
-                    <StatusDot
+                    <StatusBadge
                       status={
                         e.status === "new" ? "open" : e.status === "done" ? "done" : "read"
                       }
@@ -119,18 +120,17 @@ function EnquiriesPage() {
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {e.phone ? (
-                      <Button asChild size="sm" variant="outline" className="rounded-full">
+                      <Button asChild size="sm" variant="outline">
                         <a href={`tel:${e.phone.replace(/\s/g, "")}`}>Call</a>
                       </Button>
                     ) : null}
-                    <Button asChild size="sm" variant="outline" className="rounded-full">
+                    <Button asChild size="sm" variant="outline">
                       <a href={`mailto:${e.email}`}>Email</a>
                     </Button>
                     {e.status === "new" ? (
                       <Button
                         size="sm"
                         variant="outline"
-                        className="rounded-full"
                         onClick={() => {
                           void saveAction("Marked read", () =>
                             setEnquiryStatus(e.id, "read"),
@@ -143,7 +143,6 @@ function EnquiriesPage() {
                     {e.status !== "done" ? (
                       <Button
                         size="sm"
-                        className="rounded-full"
                         onClick={() => {
                           void saveAction("Done", () => setEnquiryStatus(e.id, "done"));
                         }}

@@ -214,8 +214,8 @@ function StaffSidebar({
                     className={cn(
                       "relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-[15px] font-medium transition-colors duration-150",
                       active
-                        ? "bg-accent text-champagne"
-                        : "text-muted-foreground hover:bg-accent/60 hover:text-champagne",
+                        ? "bg-accent text-foreground"
+                        : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
                     )}
                   >
                     {active ? (
@@ -245,7 +245,7 @@ function StaffSidebar({
       <div className="shrink-0 border-t border-border pt-3">
         <button
           type="button"
-          className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-[15px] text-muted-foreground hover:bg-accent/60 hover:text-champagne"
+          className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-[15px] text-muted-foreground hover:bg-accent/60 hover:text-foreground"
           onClick={() => {
             void signOut().then(() => navigate({ to: "/" }));
           }}
@@ -342,7 +342,7 @@ function UserMenu() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-champagne"
+          className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-foreground"
         >
           <span className="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
             {initials(activeSite?.name || user.name) || "•"}
@@ -423,7 +423,7 @@ function HydrateGate({ children }: { children: ReactNode }) {
 
 function Splash() {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background text-champagne">
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background text-foreground">
       <AscLockup size="lg" />
       <p className="animate-pulse text-[11px] uppercase tracking-[0.22em] text-emerald">
         Loading
@@ -577,7 +577,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 >
                   <Menu className="size-5" />
                 </Button>
-                <p className="truncate text-sm font-medium text-champagne lg:hidden">
+                <p className="truncate text-sm font-medium text-foreground lg:hidden">
                   {activeSite?.name || client?.name}
                 </p>
                 <div className="hidden min-w-0 flex-1 sm:flex">

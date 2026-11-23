@@ -1,9 +1,11 @@
+import { EmptyState } from "@/components/ui/empty-state";
+import { Surface } from "@/components/ui/surface";
 import { useState, type FormEvent } from "react";
 import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
 import { addDays, format, isSameDay, parseISO, startOfWeek } from "date-fns";
-import { EmptyDesk } from "@/components/desk-ui";
-import { Field, NativeSelect, PageHeader, Surface } from "@/components/page-header";
+
+import { Field, NativeSelect, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -47,7 +49,7 @@ function CalendarPage() {
 
   if (!allowed) {
     return (
-      <EmptyDesk
+      <EmptyState framed
         title="Calendar is off"
         detail="This site does not run a public diary. Ask ASC if you need one."
       />
@@ -58,7 +60,7 @@ function CalendarPage() {
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Calendar"
         title="Calendar"
@@ -68,7 +70,7 @@ function CalendarPage() {
             : "Add a public site first, then add dates for that calendar."
         }
         action={
-          <Button className="rounded-full" disabled={!siteId} onClick={() => setOpen(true)}>
+          <Button disabled={!siteId} onClick={() => setOpen(true)}>
             Add date
           </Button>
         }
@@ -101,10 +103,10 @@ function CalendarPage() {
           const n = rows.filter((e) => isSameDay(parseISO(e.startsAt), d)).length;
           return (
             <div key={d.toISOString()} className="border border-border bg-card px-1 py-3 text-center">
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="type-label text-muted-foreground">
                 {format(d, "EEE")}
               </p>
-              <p className="mt-1 text-sm text-champagne">{format(d, "d")}</p>
+              <p className="mt-1 text-sm text-foreground">{format(d, "d")}</p>
               {n > 0 ? <span className="mt-1 inline-block size-1.5 rounded-full bg-emerald" /> : null}
             </div>
           );
@@ -128,11 +130,11 @@ function CalendarPage() {
                   className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-start sm:justify-between"
                 >
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-emerald">
+                    <p className="type-label text-emerald">
                       {formatDay(e.startsAt)}
                       {sameDay ? "" : ` – ${formatDay(e.endsAt)}`}
                     </p>
-                    <p className="mt-1 text-champagne">{e.title}</p>
+                    <p className="mt-1 text-foreground">{e.title}</p>
                     <p className="text-sm text-muted-foreground">
                       {formatTime(e.startsAt)}–{formatTime(e.endsAt)}
                       {e.place ? ` · ${e.place}` : ""}
@@ -211,7 +213,7 @@ function CalendarPage() {
               </Field>
             </div>
             <DialogFooter>
-              <Button type="submit" className="rounded-full">
+              <Button type="submit">
                 Save date
               </Button>
             </DialogFooter>

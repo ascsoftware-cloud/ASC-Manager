@@ -1,9 +1,10 @@
+import { Surface } from "@/components/ui/surface";
 import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ExternalLink, Pencil, Plus } from "lucide-react";
 import { ConfirmDangerDialog } from "@/components/confirm-danger";
 import { StaffGate } from "@/components/staff-gate";
-import { Field, NativeSelect, PageHeader, Surface } from "@/components/page-header";
+import { Field, NativeSelect, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -39,13 +40,13 @@ function SitesPage() {
   const [removeFor, setRemoveFor] = useState<Site | null>(null);
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Sites"
         title="Sites"
         description="Public sites and admin systems we host or watch. Live site and redesign links are staff-only — clients never see this page."
         action={
-          <Button className="rounded-full" onClick={() => setOpen(true)}>
+          <Button onClick={() => setOpen(true)}>
             <Plus className="size-4" />
             New site
           </Button>
@@ -60,7 +61,7 @@ function SitesPage() {
         ) : (
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-border text-[13px] text-muted-foreground">
+            <tr className="border-b border-border type-small text-muted-foreground">
               <th className="px-5 py-3 font-medium">System</th>
               <th className="px-5 py-3 font-medium">Client</th>
               <th className="px-5 py-3 font-medium">Kind</th>
@@ -75,7 +76,7 @@ function SitesPage() {
               const redesign = siteRedesigns.find((r) => r.siteId === s.id);
               return (
                 <tr key={s.id} className="border-b border-border last:border-0">
-                  <td className="px-5 py-4 text-champagne">{s.name}</td>
+                  <td className="px-5 py-4 text-foreground">{s.name}</td>
                   <td className="px-5 py-4 text-muted-foreground">{client?.name}</td>
                   <td className="px-5 py-4 capitalize text-muted-foreground">{s.kind}</td>
                   <td className="px-5 py-4">

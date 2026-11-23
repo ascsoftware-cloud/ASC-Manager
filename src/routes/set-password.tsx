@@ -67,7 +67,7 @@ function SetPasswordPage() {
     <main className="flex min-h-dvh flex-col items-center justify-center bg-background px-6">
       <div className="w-full max-w-sm">
         <AscLockup />
-        <h1 className="mt-10 font-display text-4xl text-champagne">Set password</h1>
+        <h1 className="mt-10 font-display text-4xl text-foreground">Set password</h1>
         <p className="mt-3 text-sm text-muted-foreground">
           Choose a password for this account. Do not share it.
         </p>
@@ -84,7 +84,7 @@ function SetPasswordPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-3 h-11 w-full border-0 border-b border-emerald bg-transparent text-sm text-champagne focus-visible:outline-none"
+                className="mt-3 h-11 w-full border-0 border-b border-emerald bg-transparent text-sm text-foreground focus-visible:outline-none"
               />
             </label>
             <label className="block">
@@ -97,7 +97,7 @@ function SetPasswordPage() {
                 required
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                className="mt-3 h-11 w-full border-0 border-b border-emerald bg-transparent text-sm text-champagne focus-visible:outline-none"
+                className="mt-3 h-11 w-full border-0 border-b border-emerald bg-transparent text-sm text-foreground focus-visible:outline-none"
               />
             </label>
             <Button type="submit" disabled={busy} className="h-12 w-full rounded-full">

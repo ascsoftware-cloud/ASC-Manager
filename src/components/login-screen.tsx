@@ -43,7 +43,7 @@ export function LoginScreen() {
           <p className="text-[11px] uppercase tracking-[0.22em] text-emerald">
             Atlas Scale Collective
           </p>
-          <h1 className="mt-5 font-display text-[2.75rem] leading-[1.08] text-champagne xl:text-5xl">
+          <h1 className="mt-5 font-display text-[2.75rem] leading-[1.08] text-foreground xl:text-5xl">
             Manage your
             <br />
             ASC Software.
@@ -62,7 +62,7 @@ export function LoginScreen() {
           <p className="text-[11px] uppercase tracking-[0.22em] text-emerald">
             Manager
           </p>
-          <h2 className="mt-3 font-display text-4xl text-champagne">Sign in</h2>
+          <h2 className="mt-3 font-display text-4xl text-foreground">Sign in</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Invite only. Use the email ASC gave you.
           </p>
@@ -78,7 +78,7 @@ export function LoginScreen() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-3 h-11 w-full border-0 border-b border-emerald bg-transparent text-sm text-champagne placeholder:text-muted-foreground/50 focus-visible:border-champagne focus-visible:outline-none"
+                className="mt-3 h-11 w-full border-0 border-b border-emerald bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 focus-visible:border-champagne focus-visible:outline-none"
               />
             </label>
             <label className="block" htmlFor="login-password">
@@ -92,7 +92,7 @@ export function LoginScreen() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-3 h-11 w-full border-0 border-b border-emerald bg-transparent text-sm text-champagne focus-visible:border-champagne focus-visible:outline-none"
+                className="mt-3 h-11 w-full border-0 border-b border-emerald bg-transparent text-sm text-foreground focus-visible:border-champagne focus-visible:outline-none"
               />
             </label>
             {error ? (
@@ -100,7 +100,7 @@ export function LoginScreen() {
                 {error}
               </p>
             ) : null}
-            <Button type="submit" disabled={busy} className="h-12 w-full rounded-full text-base">
+            <Button type="submit" disabled={busy} className="h-12 w-full text-base">
               {busy ? "Please wait" : "Sign in"}
             </Button>
           </form>
@@ -114,10 +114,10 @@ export function LoginScreen() {
             </a>
           </p>
           <div className="mt-6 flex gap-4 text-xs text-muted-foreground">
-            <Link to="/privacy" className="hover:text-champagne">
+            <Link to="/privacy" className="hover:text-foreground">
               Privacy
             </Link>
-            <Link to="/terms" className="hover:text-champagne">
+            <Link to="/terms" className="hover:text-foreground">
               Terms
             </Link>
           </div>

@@ -189,13 +189,13 @@ export function MediaPicker({
           {current?.url ? (
             <img src={current.url} alt="" className="h-full w-full object-cover" decoding="async" />
           ) : (
-            <span className="px-2 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+            <span className="px-2 text-center type-label text-muted-foreground">
               None
             </span>
           )}
         </button>
         <div className="flex flex-col gap-2">
-          <Button type="button" variant="outline" className="rounded-full" onClick={() => setOpen(true)}>
+          <Button type="button" variant="outline" onClick={() => setOpen(true)}>
             Pick from Photos
           </Button>
           {valuePath ? (

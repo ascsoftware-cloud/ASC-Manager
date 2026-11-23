@@ -1,7 +1,10 @@
+import { EmptyState } from "@/components/ui/empty-state";
+import { SectionHeader } from "@/components/section-header";
+import { Surface } from "@/components/ui/surface";
 import { useState, type FormEvent } from "react";
 import { KeyRound, Pencil, Plus, Trash2 } from "lucide-react";
 import { ConfirmDangerDialog } from "@/components/confirm-danger";
-import { EmptyState, Field, Surface, SurfaceHeader } from "@/components/page-header";
+import { Field } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -51,11 +54,11 @@ export function TeamManager({ clientId }: { clientId: string }) {
 
   return (
     <Surface>
-      <SurfaceHeader
+      <SectionHeader inset
         title={`People on ${client?.name ?? "this account"}`}
         detail="Admins manage the team. Staff only see what you tick for them."
         action={
-          <Button className="rounded-full" onClick={() => setEditing({ member: null })}>
+          <Button onClick={() => setEditing({ member: null })}>
             <Plus className="size-4" />
             Add a person
           </Button>
@@ -76,11 +79,11 @@ export function TeamManager({ clientId }: { clientId: string }) {
                 className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center"
               >
                 <div className="flex min-w-0 flex-1 items-start gap-3">
-                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-champagne">
+                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-foreground">
                     {initials(m.name) || "•"}
                   </span>
                   <div className="min-w-0">
-                    <p className="flex flex-wrap items-center gap-2 font-medium text-champagne">
+                    <p className="flex flex-wrap items-center gap-2 font-medium text-foreground">
                       {m.name}
                       {isMe ? (
                         <span className="text-sm font-normal text-muted-foreground">(you)</span>
@@ -284,7 +287,7 @@ function MemberDialog({
           </Field>
 
           <fieldset className="grid gap-2">
-            <legend className="mb-1 text-[13px] font-medium text-muted-foreground">Role</legend>
+            <legend className="mb-1 type-small font-medium text-muted-foreground">Role</legend>
             <div className="grid gap-2 sm:grid-cols-2">
               {(
                 [
@@ -305,7 +308,7 @@ function MemberDialog({
                       : "hover:bg-accent/60",
                   )}
                 >
-                  <span className="block font-medium text-champagne">{label}</span>
+                  <span className="block font-medium text-foreground">{label}</span>
                   <span className="block text-sm text-muted-foreground">{detail}</span>
                 </button>
               ))}
@@ -320,7 +323,7 @@ function MemberDialog({
           {access === "staff" ? (
             <>
               <fieldset className="grid gap-2">
-                <legend className="mb-1 text-[13px] font-medium text-muted-foreground">
+                <legend className="mb-1 type-small font-medium text-muted-foreground">
                   Pages they can open
                 </legend>
                 <div className="grid gap-1 sm:grid-cols-2">
@@ -338,7 +341,7 @@ function MemberDialog({
                         }
                       />
                       <span>
-                        <span className="block text-[15px] font-medium text-champagne">
+                        <span className="block type-body font-medium text-foreground">
                           {p.label}
                         </span>
                         <span className="block text-sm text-muted-foreground">{p.detail}</span>
@@ -350,7 +353,7 @@ function MemberDialog({
 
               {sites.length > 1 ? (
                 <fieldset className="grid gap-2">
-                  <legend className="mb-1 text-[13px] font-medium text-muted-foreground">
+                  <legend className="mb-1 type-small font-medium text-muted-foreground">
                     Sites they can work on
                   </legend>
                   <label className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent/60">
@@ -361,7 +364,7 @@ function MemberDialog({
                       checked={!onlySome}
                       onChange={() => setOnlySome(false)}
                     />
-                    <span className="text-[15px] text-champagne">All sites on this account</span>
+                    <span className="type-body text-foreground">All sites on this account</span>
                   </label>
                   <label className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent/60">
                     <input
@@ -371,7 +374,7 @@ function MemberDialog({
                       checked={onlySome}
                       onChange={() => setOnlySome(true)}
                     />
-                    <span className="text-[15px] text-champagne">Only some sites</span>
+                    <span className="type-body text-foreground">Only some sites</span>
                   </label>
                   {onlySome ? (
                     <div className="ml-7 grid gap-1">
@@ -388,7 +391,7 @@ function MemberDialog({
                               setSiteIds((list) => toggle(list, site.id, e.target.checked))
                             }
                           />
-                          <span className="text-[15px] text-champagne">{site.name}</span>
+                          <span className="type-body text-foreground">{site.name}</span>
                         </label>
                       ))}
                     </div>

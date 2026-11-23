@@ -27,7 +27,7 @@ export function AscLockup({
     <Link
       to={to}
       aria-label="ASC Manager"
-      className={cn("flex items-center gap-2.5 text-champagne", className)}
+      className={cn("flex items-center gap-2.5 text-foreground", className)}
     >
       <img
         src={LOGO_SRC}

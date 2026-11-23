@@ -1,6 +1,7 @@
 import type { ReactNode, SelectHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
+/** Page title, optional one-line description, and the page's main action. */
 export function PageHeader({
   eyebrow,
   title,
@@ -16,26 +17,19 @@ export function PageHeader({
 }) {
   return (
     <header
-      data-page-header
       className={cn(
-        "flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between",
+        "flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between",
         className,
       )}
     >
-      <div className="min-w-0 space-y-2">
-        {eyebrow && eyebrow !== title ? (
-          <p className="text-sm font-medium text-emerald">{eyebrow}</p>
-        ) : null}
-        <h1 className="font-display text-3xl font-medium tracking-tight text-champagne sm:text-4xl">
-          {title}
-        </h1>
+      <div className="min-w-0 space-y-1">
+        {eyebrow && eyebrow !== title ? <p className="type-label">{eyebrow}</p> : null}
+        <h1 className="type-title">{title}</h1>
         {description ? (
-          <p className="max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
-            {description}
-          </p>
+          <p className="type-body max-w-2xl text-muted-foreground">{description}</p>
         ) : null}
       </div>
-      {action ? <div className="flex shrink-0 items-center gap-2">{action}</div> : null}
+      {action ? <div className="flex shrink-0 flex-wrap items-center gap-2">{action}</div> : null}
     </header>
   );
 }
@@ -51,66 +45,10 @@ export function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-[13px] font-medium text-muted-foreground">{label}</span>
+      <span className="type-small font-medium text-foreground">{label}</span>
       {children}
-      {hint ? <span className="text-xs text-muted-foreground">{hint}</span> : null}
+      {hint ? <span className="type-small text-muted-foreground">{hint}</span> : null}
     </label>
-  );
-}
-
-export function Surface({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <section
-      data-surface
-      className={cn("rounded-xl border border-border bg-card/80", className)}
-    >
-      {children}
-    </section>
-  );
-}
-
-/** Title row at the top of a Surface, with an optional action on the right. */
-export function SurfaceHeader({
-  title,
-  detail,
-  action,
-}: {
-  title: string;
-  detail?: string;
-  action?: ReactNode;
-}) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3.5">
-      <div className="min-w-0">
-        <h2 className="text-base font-semibold text-champagne">{title}</h2>
-        {detail ? <p className="text-sm text-muted-foreground">{detail}</p> : null}
-      </div>
-      {action}
-    </div>
-  );
-}
-
-export function EmptyState({
-  title,
-  detail,
-  action,
-}: {
-  title: string;
-  detail: string;
-  action?: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col items-start gap-3 px-5 py-10">
-      <h2 className="font-display text-xl text-champagne">{title}</h2>
-      <p className="max-w-md text-sm text-muted-foreground">{detail}</p>
-      {action}
-    </div>
   );
 }
 
@@ -122,39 +60,12 @@ export function NativeSelect({
   return (
     <select
       className={cn(
-        "flex h-11 w-full border-0 border-b border-border bg-transparent px-0 text-sm text-foreground focus-visible:border-emerald focus-visible:outline-none",
+        "type-body flex h-11 w-full rounded-lg border border-input bg-card px-3 text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 sm:h-10",
         className,
       )}
       {...props}
     >
       {children}
     </select>
-  );
-}
-
-export function Kpi({
-  label,
-  value,
-  hint,
-  accent,
-  valueClass,
-}: {
-  label: string;
-  value: string;
-  hint: string;
-  accent?: boolean;
-  valueClass?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-xl border border-border bg-card px-5 py-4",
-        accent && "border-l-2 border-l-emerald",
-      )}
-    >
-      <p className="text-sm font-medium text-muted-foreground">{label}</p>
-      <p className={cn("mt-2 font-display text-4xl", valueClass ?? "text-champagne")}>{value}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{hint}</p>
-    </div>
   );
 }

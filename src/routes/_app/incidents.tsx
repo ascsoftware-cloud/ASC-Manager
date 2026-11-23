@@ -1,7 +1,9 @@
+import { EmptyState } from "@/components/ui/empty-state";
+import { Surface } from "@/components/ui/surface";
 import { createFileRoute } from "@tanstack/react-router";
 import { StaffGate } from "@/components/staff-gate";
-import { EmptyState, PageHeader, Surface } from "@/components/page-header";
-import { StatusDot } from "@/components/status-badge";
+import { PageHeader } from "@/components/page-header";
+import { StatusBadge } from "@/components/status-badge";
 import { formatRelative } from "@/lib/format";
 import { useAscStore } from "@/lib/store";
 
@@ -19,7 +21,7 @@ function IncidentsPage() {
   const clients = useAscStore((s) => s.clients);
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Incidents"
         title="Incidents"
@@ -41,12 +43,12 @@ function IncidentsPage() {
               return (
                 <li key={i.id} className="flex items-center justify-between gap-3 px-5 py-4">
                   <div>
-                    <p className="text-champagne">{i.title}</p>
+                    <p className="text-foreground">{i.title}</p>
                     <p className="text-xs text-muted-foreground">
                       {client?.name} · {site?.name} · {formatRelative(i.openedAt)}
                     </p>
                   </div>
-                  <StatusDot status={i.status} />
+                  <StatusBadge status={i.status} />
                 </li>
               );
             })}

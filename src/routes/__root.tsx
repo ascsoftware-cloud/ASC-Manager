@@ -7,7 +7,7 @@ import appCss from "../styles.css?url";
 
 const APP_NAME = "ASC Manager";
 const FONT_HREF =
-  "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap";
+  "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap";
 
 export const Route = createRootRoute({
   head: () => ({

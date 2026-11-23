@@ -1,7 +1,8 @@
+import { Surface } from "@/components/ui/surface";
 import { createFileRoute } from "@tanstack/react-router";
 import { StaffGate } from "@/components/staff-gate";
-import { PageHeader, Surface } from "@/components/page-header";
-import { StatusDot } from "@/components/status-badge";
+import { PageHeader } from "@/components/page-header";
+import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { formatRelative } from "@/lib/format";
 import { useAscStore } from "@/lib/store";
@@ -19,7 +20,7 @@ function MonitorsPage() {
   const runChecks = useAscStore((s) => s.runChecks);
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Monitors"
         title="Monitors"
@@ -28,7 +29,7 @@ function MonitorsPage() {
       <Surface>
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
-            <tr className="border-b border-border text-[13px] text-muted-foreground">
+            <tr className="border-b border-border type-small text-muted-foreground">
               <th className="px-5 py-3 font-medium">Status</th>
               <th className="px-5 py-3 font-medium">Check</th>
               <th className="px-5 py-3 font-medium">System</th>
@@ -43,11 +44,11 @@ function MonitorsPage() {
               return (
                 <tr key={m.id} className="border-b border-border last:border-0">
                   <td className="px-5 py-4">
-                    <StatusDot status={m.status} />
+                    <StatusBadge status={m.status} />
                   </td>
-                  <td className="px-5 py-4 text-champagne">{m.label}</td>
+                  <td className="px-5 py-4 text-foreground">{m.label}</td>
                   <td className="px-5 py-4">
-                    <p className="text-champagne">{site?.name}</p>
+                    <p className="text-foreground">{site?.name}</p>
                     <p className="text-xs text-muted-foreground">{client?.name}</p>
                   </td>
                   <td className="px-5 py-4 text-muted-foreground">
@@ -57,7 +58,6 @@ function MonitorsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="rounded-full"
                       onClick={() => {
                         if (site) void runChecks(site.id);
                       }}

@@ -1,6 +1,7 @@
+import { Surface } from "@/components/ui/surface";
 import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader, Surface } from "@/components/page-header";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { formatRelative } from "@/lib/format";
 import { saveAction } from "@/lib/mutate";
@@ -24,7 +25,7 @@ function MediaPage() {
   const clientId = user?.clientId ?? ids[0];
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Photos"
         title="Photos"
@@ -57,7 +58,7 @@ function MediaPage() {
       {rows.length === 0 ? (
         <Surface>
           <div className="flex flex-col items-start gap-4 px-5 py-12">
-            <h2 className="font-display text-2xl text-champagne">No photos yet.</h2>
+            <h2 className="text-2xl text-foreground">No photos yet.</h2>
             <p className="max-w-md text-sm text-muted-foreground">
               Add one picture. Store and Website pick from here.
             </p>
@@ -78,7 +79,7 @@ function MediaPage() {
               </div>
               <div className="flex items-start justify-between gap-2 p-3">
                 <div>
-                  <p className="text-sm text-champagne">{m.name}</p>
+                  <p className="text-sm text-foreground">{m.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {formatRelative(m.addedAt)}
                   </p>

@@ -1,8 +1,9 @@
+import { Surface } from "@/components/ui/surface";
 import { useState, type FormEvent } from "react";
 import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
-import { Field, PageHeader, Surface } from "@/components/page-header";
-import { StatusDot } from "@/components/status-badge";
+import { Field, PageHeader } from "@/components/page-header";
+import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -36,7 +37,7 @@ function RequestsPage() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Requests"
         title="Requests"
@@ -47,7 +48,7 @@ function RequestsPage() {
         }
         action={
           user?.role === "client" ? (
-            <Button className="rounded-full" onClick={() => setOpen(true)}>
+            <Button onClick={() => setOpen(true)}>
               Open a new one
             </Button>
           ) : undefined
@@ -63,19 +64,18 @@ function RequestsPage() {
               return (
                 <li key={r.id} className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="text-champagne">{r.title}</p>
+                    <p className="text-foreground">{r.title}</p>
                     <p className="mt-1 max-w-xl text-sm text-muted-foreground">{r.body}</p>
                     <p className="mt-2 text-xs text-muted-foreground">
                       {client?.name} · {r.authorName} · {formatRelative(r.createdAt)}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <StatusDot status={r.status} />
+                    <StatusBadge status={r.status} />
                     {user?.role === "operator" && r.status === "open" ? (
                       <Button
                         size="sm"
                         variant="outline"
-                        className="rounded-full"
                         onClick={() => {
                           void saveAction("Marked done", () =>
                             setRequestStatus(r.id, "done"),
