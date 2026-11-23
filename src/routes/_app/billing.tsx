@@ -2,6 +2,7 @@ import { Surface } from "@/components/ui/surface";
 import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
 import { differenceInCalendarDays, parseISO } from "date-fns";
+import { ClientPlanCard } from "@/components/billing/client-plan";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ function BillingPage() {
         title="Billing"
         description="Your invoices and what is coming up for renewal."
       />
+      {user?.role === "client" ? <ClientPlanCard /> : null}
       <Surface>
         <div className="border-b border-border px-5 py-3">
           <p className="type-label text-muted-foreground">

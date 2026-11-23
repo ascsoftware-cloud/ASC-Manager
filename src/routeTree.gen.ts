@@ -34,8 +34,10 @@ import { Route as AppTermsRouteImport } from './routes/_app/terms'
 import { Route as AppVisitorsRouteImport } from './routes/_app/visitors'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as PayTokenRouteImport } from './routes/pay.$token'
 import { Route as AppClientsIndexRouteImport } from './routes/_app/clients.index'
 import { Route as AppClientsClientIdRouteImport } from './routes/_app/clients.$clientId'
+import { Route as ApiPayfastItnRouteImport } from './routes/api/payfast/itn'
 import { Route as ApiPublicSiteRouteImport } from './routes/api/public/site'
 
 const SplatRoute = SplatRouteImport.update({
@@ -162,6 +164,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PayTokenRoute = PayTokenRouteImport.update({
+  id: '/pay/$token',
+  path: '/pay/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppClientsIndexRoute = AppClientsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -171,6 +178,11 @@ const AppClientsClientIdRoute = AppClientsClientIdRouteImport.update({
   id: '/$clientId',
   path: '/$clientId',
   getParentRoute: () => AppClientsRoute,
+} as any)
+const ApiPayfastItnRoute = ApiPayfastItnRouteImport.update({
+  id: '/api/payfast/itn',
+  path: '/api/payfast/itn',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicSiteRoute = ApiPublicSiteRouteImport.update({
   id: '/api/public/site',
@@ -203,7 +215,9 @@ export interface FileRoutesByFullPath {
   '/visitors': typeof AppVisitorsRoute
   '/api/version': typeof ApiVersionRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/pay/$token': typeof PayTokenRoute
   '/clients/$clientId': typeof AppClientsClientIdRoute
+  '/api/payfast/itn': typeof ApiPayfastItnRoute
   '/api/public/site': typeof ApiPublicSiteRoute
   '/clients/': typeof AppClientsIndexRoute
 }
@@ -230,8 +244,10 @@ export interface FileRoutesByTo {
   '/visitors': typeof AppVisitorsRoute
   '/api/version': typeof ApiVersionRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/pay/$token': typeof PayTokenRoute
   '/': typeof AppIndexRoute
   '/clients/$clientId': typeof AppClientsClientIdRoute
+  '/api/payfast/itn': typeof ApiPayfastItnRoute
   '/api/public/site': typeof ApiPublicSiteRoute
   '/clients': typeof AppClientsIndexRoute
 }
@@ -261,8 +277,10 @@ export interface FileRoutesById {
   '/_app/visitors': typeof AppVisitorsRoute
   '/api/version': typeof ApiVersionRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/pay/$token': typeof PayTokenRoute
   '/_app/': typeof AppIndexRoute
   '/_app/clients/$clientId': typeof AppClientsClientIdRoute
+  '/api/payfast/itn': typeof ApiPayfastItnRoute
   '/api/public/site': typeof ApiPublicSiteRoute
   '/_app/clients/': typeof AppClientsIndexRoute
 }
@@ -293,7 +311,9 @@ export interface FileRouteTypes {
     | '/visitors'
     | '/api/version'
     | '/auth/callback'
+    | '/pay/$token'
     | '/clients/$clientId'
+    | '/api/payfast/itn'
     | '/api/public/site'
     | '/clients/'
   fileRoutesByTo: FileRoutesByTo
@@ -320,8 +340,10 @@ export interface FileRouteTypes {
     | '/visitors'
     | '/api/version'
     | '/auth/callback'
+    | '/pay/$token'
     | '/'
     | '/clients/$clientId'
+    | '/api/payfast/itn'
     | '/api/public/site'
     | '/clients'
   id:
@@ -350,8 +372,10 @@ export interface FileRouteTypes {
     | '/_app/visitors'
     | '/api/version'
     | '/auth/callback'
+    | '/pay/$token'
     | '/_app/'
     | '/_app/clients/$clientId'
+    | '/api/payfast/itn'
     | '/api/public/site'
     | '/_app/clients/'
   fileRoutesById: FileRoutesById
@@ -362,6 +386,8 @@ export interface RootRouteChildren {
   SetPasswordRoute: typeof SetPasswordRoute
   ApiVersionRoute: typeof ApiVersionRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  PayTokenRoute: typeof PayTokenRoute
+  ApiPayfastItnRoute: typeof ApiPayfastItnRoute
   ApiPublicSiteRoute: typeof ApiPublicSiteRoute
 }
 
@@ -542,6 +568,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pay/$token': {
+      id: '/pay/$token'
+      path: '/pay/$token'
+      fullPath: '/pay/$token'
+      preLoaderRoute: typeof PayTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/clients/': {
       id: '/_app/clients/'
       path: '/'
@@ -555,6 +588,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/clients/$clientId'
       preLoaderRoute: typeof AppClientsClientIdRouteImport
       parentRoute: typeof AppClientsRoute
+    }
+    '/api/payfast/itn': {
+      id: '/api/payfast/itn'
+      path: '/api/payfast/itn'
+      fullPath: '/api/payfast/itn'
+      preLoaderRoute: typeof ApiPayfastItnRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/site': {
       id: '/api/public/site'
@@ -634,6 +674,8 @@ const rootRouteChildren: RootRouteChildren = {
   SetPasswordRoute: SetPasswordRoute,
   ApiVersionRoute: ApiVersionRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  PayTokenRoute: PayTokenRoute,
+  ApiPayfastItnRoute: ApiPayfastItnRoute,
   ApiPublicSiteRoute: ApiPublicSiteRoute,
 }
 export const routeTree = rootRouteImport

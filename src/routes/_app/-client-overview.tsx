@@ -16,23 +16,27 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { SectionHeader } from "@/components/section-header";
+import { usePlan } from "@/lib/billing-data";
 import { StatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/ui/stat-tile";
 import { Surface } from "@/components/ui/surface";
-import { formatDay, formatRelative } from "@/lib/format";
+import { formatDay, formatRelative, formatZar } from "@/lib/format";
 import { canManageTeam, canUse, type PermissionKey } from "@/lib/permissions";
-import {
-  useActiveSite,
-  useAscStore,
-  useCurrentUser,
-  useOwnClient,
-  useOwnSites,
-} from "@/lib/store";
+import { useActiveSite, useAscStore, useCurrentUser, useOwnClient, useOwnSites } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-type ClientLink = "/enquiries" | "/content" | "/store" | "/billing" | "/business" | "/media" | "/team" | "/calendar" | "/bookings";
+type ClientLink =
+  | "/enquiries"
+  | "/content"
+  | "/store"
+  | "/billing"
+  | "/business"
+  | "/media"
+  | "/team"
+  | "/calendar"
+  | "/bookings";
 
 /** The client's own overview. Calm when quiet, specific when something needs them. */
 export function ClientOverview() {
@@ -81,7 +85,11 @@ export function ClientOverview() {
         <StatTile
           label="Your website"
           value={down === 0 ? "Online" : "Having trouble"}
-          hint={down === 0 ? `All checks passing on ${activeSite?.name}` : "We have been told and are looking"}
+          hint={
+            down === 0
+              ? `All checks passing on ${activeSite?.name}`
+              : "We have been told and are looking"
+          }
           tone={down === 0 ? "good" : "bad"}
         />
       ),
@@ -90,13 +98,21 @@ export function ClientOverview() {
   if (can("visitors") && views > 0) {
     tiles.push({
       key: "visitors",
-      node: <StatTile label="Visitors, last 14 days" value={views.toLocaleString("en-ZA")} hint="Bots not counted" />,
+      node: (
+        <StatTile
+          label="Visitors, last 14 days"
+          value={views.toLocaleString("en-ZA")}
+          hint="Bots not counted"
+        />
+      ),
     });
   }
   if (can("store") && own?.modules.store && liveProducts > 0) {
     tiles.push({
       key: "products",
-      node: <StatTile label="Products on sale" value={liveProducts} hint={`On ${activeSite?.name}`} />,
+      node: (
+        <StatTile label="Products on sale" value={liveProducts} hint={`On ${activeSite?.name}`} />
+      ),
     });
   }
   if (can("billing") && dueInvoices.length > 0) {
@@ -234,8 +250,8 @@ function Checklist() {
       });
     }
     if (own?.modules.gallery) {
-      const items = sections.find((s) => s.siteId === activeSite.id && s.key === "gallery")
-        ?.payload.items;
+      const items = sections.find((s) => s.siteId === activeSite.id && s.key === "gallery")?.payload
+        .items;
       steps.push({
         key: "gallery",
         label: "Upload gallery photos",
@@ -360,24 +376,47 @@ function NeedsYou() {
   const fresh = enquiries.filter((e) => e.clientId === own?.id && e.status === "new");
   const dueInvoices = invoices.filter((i) => i.clientId === own?.id && i.status === "due");
   const siteSections = sections.filter((s) => s.siteId === siteId);
-  const welcomeLine = String(siteSections.find((s) => s.key === "welcome")?.payload.line ?? "").trim();
+  const welcomeLine = String(
+    siteSections.find((s) => s.key === "welcome")?.payload.line ?? "",
+  ).trim();
   const seoTitle = String(siteSections.find((s) => s.key === "seo")?.payload.title ?? "").trim();
   const ownAdverts = adverts.filter((a) => a.siteId === siteId);
-  const live = ownAdverts.find((a) => a.status === "live" && a.startsOn <= today && a.endsOn >= today);
+  const live = ownAdverts.find(
+    (a) => a.status === "live" && a.startsOn <= today && a.endsOn >= today,
+  );
   const expired =
     ownAdverts.some((a) => a.status === "live" && a.endsOn < today) ||
     (!live && ownAdverts.some((a) => a.status === "expired"));
   const out = products.filter((p) => p.siteId === siteId && p.live && p.stock === 0);
+  const { plan } = usePlan(own?.id);
 
   const items: { to: ClientLink; hash?: string; title: string; detail: string }[] = [];
   for (const e of can("enquiries") ? fresh : []) {
     items.push({ to: "/enquiries", title: `${e.name} sent an enquiry`, detail: e.message });
   }
+  if (can("billing") && plan?.status === "failed") {
+    items.unshift({
+      to: "/billing",
+      title: "Your last monthly payment did not go through",
+      detail: "Update your card to keep your plan going.",
+    });
+  }
+  if (can("billing") && plan?.status === "awaiting") {
+    items.push({
+      to: "/billing",
+      title: "Set up your monthly payment",
+      detail: `${formatZar(plan.amountZar)} a month, paid by card.`,
+    });
+  }
   for (const inv of can("billing") ? dueInvoices : []) {
     items.push({ to: "/billing", title: `${inv.item} is due`, detail: `Invoice ${inv.ref}` });
   }
   for (const p of can("store") ? out : []) {
-    items.push({ to: "/store", title: `${p.name} has sold out`, detail: "Hide it or add more stock." });
+    items.push({
+      to: "/store",
+      title: `${p.name} has sold out`,
+      detail: "Hide it or add more stock.",
+    });
   }
   if (can("content") && siteId && own?.modules.advert && (!live || expired)) {
     items.push({
@@ -454,18 +493,35 @@ function Shortcuts() {
     links.push({
       to: "/content",
       label: "Edit your website",
-      detail: activeSite ? `Change what visitors see on ${activeSite.name}.` : "Change what visitors see.",
+      detail: activeSite
+        ? `Change what visitors see on ${activeSite.name}.`
+        : "Change what visitors see.",
       icon: Globe,
     });
   }
   if (own?.modules.store && can("store")) {
-    links.push({ to: "/store", label: "Products", detail: "Prices, stock and photos.", icon: ShoppingBag });
+    links.push({
+      to: "/store",
+      label: "Products",
+      detail: "Prices, stock and photos.",
+      icon: ShoppingBag,
+    });
   }
   if (own?.modules.calendar && can("calendar")) {
-    links.push({ to: "/calendar", label: "Calendar", detail: "Dates, events and closed days.", icon: CalendarDays });
+    links.push({
+      to: "/calendar",
+      label: "Calendar",
+      detail: "Dates, events and closed days.",
+      icon: CalendarDays,
+    });
   }
   if (own?.modules.bookings && can("bookings")) {
-    links.push({ to: "/bookings", label: "Bookings", detail: "Requests and reservations.", icon: CalendarCheck });
+    links.push({
+      to: "/bookings",
+      label: "Bookings",
+      detail: "Requests and reservations.",
+      icon: CalendarCheck,
+    });
   }
   if (links.length === 0) return null;
 
@@ -510,10 +566,7 @@ function YourSites() {
             .at(-1);
           const uptime = monitors.find((m) => m.uptime30 != null)?.uptime30;
           return (
-            <li
-              key={site.id}
-              className="flex flex-wrap items-center gap-x-6 gap-y-2 px-5 py-4"
-            >
+            <li key={site.id} className="flex flex-wrap items-center gap-x-6 gap-y-2 px-5 py-4">
               <div className="min-w-0 flex-1">
                 <p className="type-body font-medium">{site.name}</p>
                 <a

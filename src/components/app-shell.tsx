@@ -23,6 +23,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { ClientJump } from "@/components/client-jump";
+import { PaymentBanner } from "@/components/billing/payment-banner";
 import { CookieBanner } from "@/components/cookie-banner";
 import { ErrorPanel } from "@/components/error-panel";
 import { LoginScreen } from "@/components/login-screen";
@@ -633,6 +634,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 ) : null}
                 <div className="ml-auto">{user ? <UserMenu /> : null}</div>
               </header>
+              {isClient ? <PaymentBanner /> : null}
               <main
                 id="main"
                 className="mx-auto w-full max-w-[72rem] flex-1 px-4 py-6 sm:px-8 sm:py-8"
