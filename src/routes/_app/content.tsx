@@ -1,9 +1,11 @@
+import { EmptyState } from "@/components/ui/empty-state";
+import { Surface } from "@/components/ui/surface";
 import { useEffect, useMemo, useState } from "react";
 import { PermissionGate } from "@/components/permission-gate";
-import { createFileRoute, useRouterState } from "@tanstack/react-router";
-import { EmptyDesk, GripHandle } from "@/components/desk-ui";
+import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
+import { GripHandle } from "@/components/desk-ui";
 import { MediaPicker } from "@/components/media-picker";
-import { Field, NativeSelect, PageHeader, Surface } from "@/components/page-header";
+import { Field, NativeSelect, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -115,11 +117,11 @@ function WebsitePage() {
 
   if (!clientId || !siteId) {
     return (
-      <EmptyDesk
-        title="No site yet"
+      <EmptyState framed
+        title="Your website is not live yet"
         detail={
           user?.role === "client"
-            ? "ASC still needs to attach a public site to this account. SEO, FAQ, gallery and the rest show here after that."
+            ? "We are still setting it up. Once it is live you can edit it here."
             : "Add a public site on Sites, then this client can edit it from Website."
         }
       />
@@ -127,12 +129,12 @@ function WebsitePage() {
   }
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-8 xl:grid-cols-[1fr_20rem]">
+    <div className="grid gap-6 xl:grid-cols-[1fr_20rem]">
       <div className="flex flex-col gap-8">
         <PageHeader
           eyebrow="Website"
           title="Website"
-          description="Welcome, hours, and every extra ASC switched on for this public site — SEO, FAQ, testimonials, gallery, services, staff."
+          description="Change what visitors see: your welcome line, opening hours and the extra sections on your site."
         />
         {user?.role === "operator" ? (
           <NativeSelect className="max-w-xs" value={clientId} onChange={(e) => setPicked(e.target.value)}>
@@ -160,6 +162,33 @@ function WebsitePage() {
             ))}
           </NativeSelect>
         ) : null}
+
+        <nav
+          aria-label="Website sections"
+          className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1"
+        >
+          {sections
+            .filter((sec) => sectionEnabled(client, sec.key))
+            .map((sec) => {
+              const current = hash === sec.key;
+              return (
+                <Link
+                  key={sec.id}
+                  to="/content"
+                  hash={sec.key}
+                  aria-current={current ? "true" : undefined}
+                  className={cn(
+                    "type-body -mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 px-3 font-medium transition-colors",
+                    current
+                      ? "border-primary text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {LABELS[sec.key]}
+                </Link>
+              );
+            })}
+        </nav>
 
         {client?.modules.advert ? (
           <SiteMediaBoard
@@ -190,7 +219,7 @@ function WebsitePage() {
                         void saveAction("Order saved", () => reorderSections(siteId, next));
               }}
               className={cn(
-                "scroll-mt-20 overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-lift)]",
+                "scroll-mt-20 overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-surface)]",
                 hash === sec.key && "ring-2 ring-emerald",
               )}
             >
@@ -230,10 +259,10 @@ function WebsitePage() {
       </div>
 
       <aside className="xl:sticky xl:top-20">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">On your site</p>
+        <p className="type-label">On your site</p>
         <div className="mx-auto mt-3 w-[280px] overflow-hidden rounded-[2rem] border border-border bg-ink p-3 shadow-[var(--shadow-lift)]">
           <div className="aspect-[9/16] overflow-y-auto bg-[#081410] px-4 py-6">
-            <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-emerald">
+            <p className="type-label text-emerald">
               {client?.name}
             </p>
             {sections
@@ -242,13 +271,13 @@ function WebsitePage() {
               .map((s) => (
                 <div key={s.id} className="mt-4">
                   {s.key === "welcome" ? (
-                    <p className="font-display text-xl leading-tight text-champagne">
+                    <p className="text-xl leading-tight text-foreground">
                       {welcome || "Welcome line"}
                     </p>
                   ) : null}
                   {s.key === "this_week" ? (
                     <div>
-                      <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-emerald">
+                      <p className="type-label text-emerald">
                         Pictures
                       </p>
                       {adverts.filter((a) => a.status === "live").length === 0 ? (
@@ -258,7 +287,7 @@ function WebsitePage() {
                           .filter((a) => a.status === "live")
                           .slice(0, 5)
                           .map((a) => (
-                            <p key={a.id} className="mt-1 text-xs text-champagne">
+                            <p key={a.id} className="mt-1 text-xs text-foreground">
                               {a.headline || "Picture"}
                             </p>
                           ))
@@ -271,7 +300,7 @@ function WebsitePage() {
                         .filter((p) => (s.payload.productIds as string[] | undefined)?.includes(p.id) || p.featured)
                         .slice(0, 4)
                         .map((p) => (
-                          <li key={p.id} className="text-xs text-champagne">
+                          <li key={p.id} className="text-xs text-foreground">
                             {p.name} · {formatZar(p.priceZar)}
                           </li>
                         ))}
@@ -623,15 +652,14 @@ function SiteMediaBoard({
     <Surface className="p-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-emerald">Site pictures</p>
-          <p className="mt-1 text-xl font-semibold tracking-tight text-foreground">Add pictures to the site</p>
+          <p className="type-label">Site pictures</p>
+          <p className="type-section mt-1">Add pictures to the site</p>
           <p className="mt-1 max-w-md text-sm text-muted-foreground">
             This slot is on your public homepage. Add a photo, give it a caption if you want, and mark it Live.
           </p>
         </div>
         <Button
           type="button"
-          className="rounded-full"
           onClick={() => setSelectedId("new")}
         >
           Add picture
@@ -649,8 +677,8 @@ function SiteMediaBoard({
                   selectedId === a.id ? "bg-accent" : "hover:bg-accent/50",
                 )}
               >
-                <span className="text-sm text-champagne">{a.headline || "Untitled picture"}</span>
-                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                <span className="text-sm text-foreground">{a.headline || "Untitled picture"}</span>
+                <span className="type-label text-muted-foreground">
                   {a.status === "draft" ? "hidden" : a.status} · {formatDay(a.startsOn)}–{formatDay(a.endsOn)}
                 </span>
               </button>
@@ -660,7 +688,7 @@ function SiteMediaBoard({
       ) : (
         <p className="mt-4 text-sm text-muted-foreground">No pictures on the site yet.</p>
       )}
-      <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+      <p className="mt-6 type-label text-muted-foreground">
         {selectedId === "new" ? "New picture" : expired ? "Dates ended" : status === "draft" ? "Hidden" : status}
       </p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -750,7 +778,6 @@ function SiteMediaBoard({
             key={st}
             type="button"
             variant={status === st ? "default" : "outline"}
-            className="rounded-full"
             onClick={() => setStatus(st)}
           >
             {label}
@@ -758,7 +785,6 @@ function SiteMediaBoard({
         ))}
         <Button
           type="button"
-          className="rounded-full"
           onClick={() =>
             void saveAction("Picture saved", async () => {
               await saveAdvert({

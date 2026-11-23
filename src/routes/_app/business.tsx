@@ -1,7 +1,8 @@
+import { Surface } from "@/components/ui/surface";
 import { useState, type FormEvent } from "react";
 import { PermissionGate } from "@/components/permission-gate";
 import { createFileRoute } from "@tanstack/react-router";
-import { Field, NativeSelect, PageHeader, Surface } from "@/components/page-header";
+import { Field, NativeSelect, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,18 +27,18 @@ function BusinessPage() {
   if (!client) {
     return (
       <PageHeader
-        title="No business yet"
-        description="ASC will add your company here when the tenant exists."
+        title="Your business is not set up yet"
+        description="We are still setting up your account. Your details will appear here soon."
       />
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Business"
         title="Business"
-        description="Phone, hours, address — stored for your public site once it is wired."
+        description="Your phone number, opening hours and address. They show on your website."
       />
       {user?.role === "operator" ? (
         <label className="max-w-md">
@@ -67,7 +68,7 @@ function BusinessForm({ clientId }: { clientId: string }) {
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    void saveAction("Saved in Manager — not live until the public site is wired.", () =>
+    void saveAction("Saved", () =>
       updateClient(clientId, { phone, email, whatsapp, address, hours, contactName }),
     );
   }
@@ -95,7 +96,7 @@ function BusinessForm({ clientId }: { clientId: string }) {
         <Field label="Hours">
           <Textarea value={hours} onChange={(e) => setHours(e.target.value)} rows={2} />
         </Field>
-        <Button type="submit" className="w-fit rounded-full">
+        <Button type="submit" className="w-fit">
           Save on my site
         </Button>
       </form>

@@ -138,8 +138,8 @@ function StorePage() {
     return (
       <ShopShell>
         <EmptyShop
-          title="Store is off"
-          detail="This site does not sell anything. Ask ASC if you need a shop."
+          title="Your store is not switched on"
+          detail="Ask us if you would like to sell online."
         />
       </ShopShell>
     );
@@ -197,7 +197,7 @@ function StorePage() {
     <ShopShell>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-[1.375rem] font-semibold tracking-tight text-foreground">Products</h1>
+          <h1 className="type-title">Products</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {site
               ? `Items on ${site.name}. Other sites have their own shop.`
@@ -254,8 +254,8 @@ function StorePage() {
 
       {!siteId ? (
         <EmptyShop
-          title="No public site yet"
-          detail="ASC needs to attach a public site before this shop can have products."
+          title="Your website is not live yet"
+          detail="Once your website is live, you can add products here."
         />
       ) : catalog.length === 0 && !q ? (
         <EmptyShop
@@ -316,7 +316,7 @@ function StorePage() {
             </p>
           ) : (
             <ul>
-              <li className="hidden border-b border-border bg-muted/60 text-[13px] font-medium text-muted-foreground sm:grid sm:grid-cols-[2rem_minmax(0,1fr)_7.5rem_8.5rem_6.5rem]">
+              <li className="hidden border-b border-border bg-muted/60 type-small font-medium text-muted-foreground sm:grid sm:grid-cols-[2rem_minmax(0,1fr)_7.5rem_8.5rem_6.5rem]">
                 <span className="px-2 py-2.5" />
                 <span className="px-3 py-2.5">Product</span>
                 <span className="px-3 py-2.5">Status</span>
@@ -492,7 +492,7 @@ function ProductEditor({
           <Button type="button" variant="ghost" size="icon" onClick={leave} aria-label="Back to products">
             <ChevronLeft className="size-5" />
           </Button>
-          <h1 className="truncate text-[1.375rem] font-semibold tracking-tight text-foreground">
+          <h1 className="type-title truncate">
             {creating ? "Add product" : name || "Product"}
           </h1>
         </div>
@@ -656,7 +656,7 @@ function ProductEditor({
 
 function ShopShell({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto flex w-full max-w-[62.5rem] flex-col gap-5 text-[15px] leading-6">
+    <div className="mx-auto flex w-full max-w-[62.5rem] flex-col gap-5 type-body leading-6">
       {children}
     </div>
   );
@@ -711,7 +711,7 @@ function StatusPill({ live, stock }: { live: boolean; stock: number }) {
   }
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-      <span className="size-1.5 rounded-full bg-sage" />
+      <span className="size-1.5 rounded-full bg-muted-foreground" />
       Draft
     </span>
   );

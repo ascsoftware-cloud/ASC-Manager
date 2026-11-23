@@ -1,5 +1,5 @@
+import { Surface } from "@/components/ui/surface";
 import type { ReactNode } from "react";
-import { Surface } from "@/components/page-header";
 
 export function LegalDoc({ children }: { children: ReactNode }) {
   return (
@@ -10,7 +10,7 @@ export function LegalDoc({ children }: { children: ReactNode }) {
 }
 
 export function LegalH({ children }: { children: ReactNode }) {
-  return <h2 className="pt-5 font-display text-lg text-champagne first:pt-0">{children}</h2>;
+  return <h2 className="pt-5 text-lg text-foreground first:pt-0">{children}</h2>;
 }
 
 export function LegalList({ items }: { items: ReactNode[] }) {
@@ -35,7 +35,7 @@ export function LegalTable({
       <table className="w-full text-left text-sm">
         {headers ? (
           <thead>
-            <tr className="border-b border-border text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+            <tr className="border-b border-border type-label text-muted-foreground">
               {headers.map((h, i) => (
                 <th key={i} className="px-3 py-2 font-medium">
                   {h}
@@ -52,7 +52,7 @@ export function LegalTable({
                   key={j}
                   className={
                     j === 0 && !headers
-                      ? "px-3 py-2.5 text-champagne"
+                      ? "px-3 py-2.5 text-foreground"
                       : "px-3 py-2.5"
                   }
                 >

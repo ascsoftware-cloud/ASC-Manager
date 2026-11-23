@@ -8,7 +8,7 @@ export function Toaster({ theme = "dark" }: { theme?: "dark" | "light" }) {
       toastOptions={{
         classNames: {
           toast:
-            "group toast bg-card text-card-foreground shadow-[var(--shadow-border),var(--shadow-lift)]",
+            "group toast rounded-xl border border-border bg-card text-card-foreground shadow-[var(--shadow-lift)]",
           description: "text-muted-foreground",
           actionButton: "bg-primary text-primary-foreground",
           cancelButton: "bg-muted text-muted-foreground",

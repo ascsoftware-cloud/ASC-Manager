@@ -34,6 +34,8 @@ import { Route as AppTermsRouteImport } from './routes/_app/terms'
 import { Route as AppVisitorsRouteImport } from './routes/_app/visitors'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as AppClientsIndexRouteImport } from './routes/_app/clients.index'
+import { Route as AppClientsClientIdRouteImport } from './routes/_app/clients.$clientId'
 import { Route as ApiPublicSiteRouteImport } from './routes/api/public/site'
 
 const SplatRoute = SplatRouteImport.update({
@@ -160,6 +162,16 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppClientsIndexRoute = AppClientsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppClientsRoute,
+} as any)
+const AppClientsClientIdRoute = AppClientsClientIdRouteImport.update({
+  id: '/$clientId',
+  path: '/$clientId',
+  getParentRoute: () => AppClientsRoute,
+} as any)
 const ApiPublicSiteRoute = ApiPublicSiteRouteImport.update({
   id: '/api/public/site',
   path: '/api/public/site',
@@ -175,7 +187,7 @@ export interface FileRoutesByFullPath {
   '/bookings': typeof AppBookingsRoute
   '/business': typeof AppBusinessRoute
   '/calendar': typeof AppCalendarRoute
-  '/clients': typeof AppClientsRoute
+  '/clients': typeof AppClientsRouteWithChildren
   '/content': typeof AppContentRoute
   '/enquiries': typeof AppEnquiriesRoute
   '/incidents': typeof AppIncidentsRoute
@@ -191,7 +203,9 @@ export interface FileRoutesByFullPath {
   '/visitors': typeof AppVisitorsRoute
   '/api/version': typeof ApiVersionRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/clients/$clientId': typeof AppClientsClientIdRoute
   '/api/public/site': typeof ApiPublicSiteRoute
+  '/clients/': typeof AppClientsIndexRoute
 }
 export interface FileRoutesByTo {
   '/$': typeof SplatRoute
@@ -201,7 +215,6 @@ export interface FileRoutesByTo {
   '/bookings': typeof AppBookingsRoute
   '/business': typeof AppBusinessRoute
   '/calendar': typeof AppCalendarRoute
-  '/clients': typeof AppClientsRoute
   '/content': typeof AppContentRoute
   '/enquiries': typeof AppEnquiriesRoute
   '/incidents': typeof AppIncidentsRoute
@@ -218,7 +231,9 @@ export interface FileRoutesByTo {
   '/api/version': typeof ApiVersionRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AppIndexRoute
+  '/clients/$clientId': typeof AppClientsClientIdRoute
   '/api/public/site': typeof ApiPublicSiteRoute
+  '/clients': typeof AppClientsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -230,7 +245,7 @@ export interface FileRoutesById {
   '/_app/bookings': typeof AppBookingsRoute
   '/_app/business': typeof AppBusinessRoute
   '/_app/calendar': typeof AppCalendarRoute
-  '/_app/clients': typeof AppClientsRoute
+  '/_app/clients': typeof AppClientsRouteWithChildren
   '/_app/content': typeof AppContentRoute
   '/_app/enquiries': typeof AppEnquiriesRoute
   '/_app/incidents': typeof AppIncidentsRoute
@@ -247,7 +262,9 @@ export interface FileRoutesById {
   '/api/version': typeof ApiVersionRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/clients/$clientId': typeof AppClientsClientIdRoute
   '/api/public/site': typeof ApiPublicSiteRoute
+  '/_app/clients/': typeof AppClientsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -276,7 +293,9 @@ export interface FileRouteTypes {
     | '/visitors'
     | '/api/version'
     | '/auth/callback'
+    | '/clients/$clientId'
     | '/api/public/site'
+    | '/clients/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/$'
@@ -286,7 +305,6 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/business'
     | '/calendar'
-    | '/clients'
     | '/content'
     | '/enquiries'
     | '/incidents'
@@ -303,7 +321,9 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/auth/callback'
     | '/'
+    | '/clients/$clientId'
     | '/api/public/site'
+    | '/clients'
   id:
     | '__root__'
     | '/$'
@@ -331,7 +351,9 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/auth/callback'
     | '/_app/'
+    | '/_app/clients/$clientId'
     | '/api/public/site'
+    | '/_app/clients/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -520,6 +542,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/clients/': {
+      id: '/_app/clients/'
+      path: '/'
+      fullPath: '/clients/'
+      preLoaderRoute: typeof AppClientsIndexRouteImport
+      parentRoute: typeof AppClientsRoute
+    }
+    '/_app/clients/$clientId': {
+      id: '/_app/clients/$clientId'
+      path: '/$clientId'
+      fullPath: '/clients/$clientId'
+      preLoaderRoute: typeof AppClientsClientIdRouteImport
+      parentRoute: typeof AppClientsRoute
+    }
     '/api/public/site': {
       id: '/api/public/site'
       path: '/api/public/site'
@@ -530,13 +566,27 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppClientsRouteChildren {
+  AppClientsClientIdRoute: typeof AppClientsClientIdRoute
+  AppClientsIndexRoute: typeof AppClientsIndexRoute
+}
+
+const AppClientsRouteChildren: AppClientsRouteChildren = {
+  AppClientsClientIdRoute: AppClientsClientIdRoute,
+  AppClientsIndexRoute: AppClientsIndexRoute,
+}
+
+const AppClientsRouteWithChildren = AppClientsRoute._addFileChildren(
+  AppClientsRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppBillingRoute: typeof AppBillingRoute
   AppBookingsRoute: typeof AppBookingsRoute
   AppBusinessRoute: typeof AppBusinessRoute
   AppCalendarRoute: typeof AppCalendarRoute
-  AppClientsRoute: typeof AppClientsRoute
+  AppClientsRoute: typeof AppClientsRouteWithChildren
   AppContentRoute: typeof AppContentRoute
   AppEnquiriesRoute: typeof AppEnquiriesRoute
   AppIncidentsRoute: typeof AppIncidentsRoute
@@ -559,7 +609,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBookingsRoute: AppBookingsRoute,
   AppBusinessRoute: AppBusinessRoute,
   AppCalendarRoute: AppCalendarRoute,
-  AppClientsRoute: AppClientsRoute,
+  AppClientsRoute: AppClientsRouteWithChildren,
   AppContentRoute: AppContentRoute,
   AppEnquiriesRoute: AppEnquiriesRoute,
   AppIncidentsRoute: AppIncidentsRoute,

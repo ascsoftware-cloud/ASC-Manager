@@ -18,7 +18,7 @@ function AuthCallbackPage() {
     async function run() {
       const sb = getSupabase();
       if (!sb) {
-        setError("Database is not configured.");
+        setError("We cannot sign you in right now. Please try again later.");
         return;
       }
 
@@ -27,7 +27,7 @@ function AuthCallbackPage() {
       const hashError = hash.get("error_description") || hash.get("error");
       if (hashError) {
         if (!cancelled) {
-          setError(decodeURIComponent(hashError).replace(/\+/g, " "));
+          setError("That link is invalid or has expired.");
         }
         return;
       }
@@ -90,11 +90,9 @@ function AuthCallbackPage() {
     <main className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background px-6 text-center">
       <AscLockup />
       {error ? (
-        <p className="text-sm text-destructive">{error}</p>
+        <p role="alert" className="type-body text-destructive">{error}</p>
       ) : (
-        <p className="text-[11px] uppercase tracking-[0.22em] text-emerald">
-          Signing you in
-        </p>
+        <p role="status" className="type-body animate-pulse text-muted-foreground">Signing you in…</p>
       )}
     </main>
   );

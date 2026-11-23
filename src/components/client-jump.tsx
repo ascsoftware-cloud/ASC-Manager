@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Kbd } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
 
 export function ClientJump({
@@ -56,13 +57,15 @@ export function ClientJump({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-10 min-w-0 max-w-md flex-1 items-center gap-2 rounded-full border border-border bg-card px-3 text-left text-sm text-muted-foreground shadow-[var(--shadow-lift)] hover:border-emerald/40"
+        aria-label="Search pages"
+        className="flex h-10 min-w-0 max-w-xl flex-1 items-center gap-2 rounded-lg border border-input bg-card px-3 text-left text-muted-foreground hover:bg-accent max-sm:h-11"
       >
-        <Search className="size-4 shrink-0" />
-        <span className="truncate">Jump to a page</span>
-        <kbd className="ml-auto hidden rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground sm:inline">
-          {mod}K
-        </kbd>
+        <Search className="size-4 shrink-0" aria-hidden="true" />
+        <span className="type-body truncate">Search pages</span>
+        <span className="ml-auto hidden items-center gap-1 sm:flex" aria-hidden="true">
+          <Kbd>{mod}</Kbd>
+          <Kbd>K</Kbd>
+        </span>
       </button>
       <Dialog
         open={open}
@@ -73,8 +76,8 @@ export function ClientJump({
       >
         <DialogContent className="top-[18%] translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-md">
           <DialogHeader className="sr-only">
-            <DialogTitle>Jump to a page</DialogTitle>
-            <DialogDescription>Search the pages on your site desk.</DialogDescription>
+            <DialogTitle>Search pages</DialogTitle>
+            <DialogDescription>Type to find a page, then press Enter.</DialogDescription>
           </DialogHeader>
           <div className="border-b border-border p-2">
             <Input

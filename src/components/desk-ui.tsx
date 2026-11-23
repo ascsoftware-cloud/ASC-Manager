@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import { GripVertical } from "lucide-react";
+import { StatusBadge } from "@/components/status-badge";
 import { cn } from "@/lib/utils";
 
 export function GripHandle({ className }: { className?: string }) {
@@ -17,39 +17,6 @@ export function GripHandle({ className }: { className?: string }) {
 }
 
 export function LivePill({ live, stock }: { live: boolean; stock?: number }) {
-  if (live && stock === 0) {
-    return (
-      <span className="text-xs font-medium text-warn">
-        0 left
-      </span>
-    );
-  }
-  return (
-    <span
-      className={cn(
-        "text-xs font-medium",
-        live ? "text-emerald" : "text-muted-foreground",
-      )}
-    >
-      {live ? "Live" : "Hidden"}
-    </span>
-  );
-}
-
-export function EmptyDesk({
-  title,
-  detail,
-  action,
-}: {
-  title: string;
-  detail: string;
-  action?: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col items-start gap-4 border border-border bg-card px-5 py-12">
-      <h2 className="font-display text-2xl text-champagne">{title}</h2>
-      <p className="max-w-md text-sm leading-relaxed text-muted-foreground">{detail}</p>
-      {action}
-    </div>
-  );
+  if (live && stock === 0) return <StatusBadge tone="warn" label="0 left" />;
+  return <StatusBadge status={live ? "live" : "hidden"} />;
 }

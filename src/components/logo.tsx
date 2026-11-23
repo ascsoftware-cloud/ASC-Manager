@@ -1,74 +1,83 @@
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
-const LOGO_SRC = "/asc-logo.webp";
+const EMERALD = "#0b3d2e";
+const CREAM = "#f4ecd6";
+const RING = "#e2d8bd";
+const CHAMPAGNE = "#c8ad72";
 
-export function AscMark({ className }: { className?: string }) {
+/**
+ * The official ASC mark: a dark emerald disc, serif "ASC", a champagne rule,
+ * "SOFTWARE" in spaced caps, inside a thin cream ring with four champagne dots.
+ * Drawn as SVG so it stays sharp at every size.
+ */
+export function AscLogo({ className }: { className?: string }) {
   return (
-    <img
-      src={LOGO_SRC}
-      alt=""
-      draggable={false}
-      className={cn("h-10 w-auto", className)}
-    />
+    <svg
+      viewBox="0 0 120 120"
+      role="img"
+      aria-label="ASC Software"
+      className={cn("size-10 shrink-0", className)}
+    >
+      <circle cx="60" cy="60" r="57" fill="none" stroke={RING} strokeWidth="1.5" />
+      <circle cx="60" cy="60" r="50" fill={EMERALD} />
+      <g fill={CHAMPAGNE}>
+        <circle cx="60" cy="3" r="2.4" />
+        <circle cx="117" cy="60" r="2.4" />
+        <circle cx="60" cy="117" r="2.4" />
+        <circle cx="3" cy="60" r="2.4" />
+      </g>
+      <text
+        x="60"
+        y="62"
+        textAnchor="middle"
+        fill={CREAM}
+        fontFamily="Fraunces, 'Times New Roman', serif"
+        fontSize="33"
+        fontWeight="500"
+        letterSpacing="-0.5"
+      >
+        ASC
+      </text>
+      <line x1="38" y1="70" x2="82" y2="70" stroke={CHAMPAGNE} strokeWidth="1.2" />
+      <text
+        x="60"
+        y="83"
+        textAnchor="middle"
+        fill={CHAMPAGNE}
+        fontFamily="Inter, system-ui, sans-serif"
+        fontSize="7"
+        fontWeight="600"
+        letterSpacing="2.6"
+      >
+        SOFTWARE
+      </text>
+    </svg>
   );
 }
 
+/** The mark with the product name beside it, linking home. */
 export function AscLockup({
   to = "/",
   className,
-  size = "sm",
+  caption,
 }: {
   to?: string;
   className?: string;
-  size?: "sm" | "lg";
+  /** A small line under the name, for example "Staff console". */
+  caption?: string;
 }) {
   return (
     <Link
       to={to}
-      aria-label="ASC Manager"
-      className={cn("flex items-center gap-2.5 text-champagne", className)}
+      aria-label="ASC Manager, home"
+      className={cn("flex items-center gap-3 rounded-lg text-foreground", className)}
     >
-      <img
-        src={LOGO_SRC}
-        alt=""
-        draggable={false}
-        className={cn("w-auto", size === "lg" ? "h-14" : "h-8 sm:h-9")}
-      />
-      <span className="flex flex-col leading-none">
-        <span
-          className={cn(
-            "uppercase tracking-[0.2em] text-gold",
-            size === "lg" ? "text-[11px]" : "text-[9px] sm:text-[10px]",
-          )}
-        >
-          Software
-        </span>
-        <span
-          className={cn(
-            "mt-0.5 uppercase tracking-[0.2em] text-muted-foreground",
-            size === "lg" ? "text-[11px]" : "text-[9px] sm:text-[10px]",
-          )}
-        >
-          Manager
-        </span>
+      <AscLogo className="size-10" />
+      <span className="flex flex-col leading-tight">
+        <span className="type-section">ASC Manager</span>
+        {caption ? <span className="type-small text-muted-foreground">{caption}</span> : null}
       </span>
     </Link>
-  );
-}
-
-export function AscWordmark({ compact = false }: { compact?: boolean }) {
-  return (
-    <div className="flex items-center gap-3">
-      <AscMark />
-      {!compact ? (
-        <div className="leading-tight">
-          <div className="text-[11px] uppercase tracking-[0.16em] text-gold">Software</div>
-          <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            Manager
-          </div>
-        </div>
-      ) : null}
-    </div>
   );
 }

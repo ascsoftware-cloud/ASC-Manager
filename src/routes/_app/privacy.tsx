@@ -166,19 +166,19 @@ function PrivacyPage() {
         <LegalList
           items={[
             <>
-              <strong className="text-champagne">Briefs that do not become work:</strong>{" "}
+              <strong className="text-foreground">Briefs that do not become work:</strong>{" "}
               12 months from your last contact with us, then deleted.
             </>,
             <>
-              <strong className="text-champagne">Client records and correspondence:</strong>{" "}
+              <strong className="text-foreground">Client records and correspondence:</strong>{" "}
               5 years after the engagement ends.
             </>,
             <>
-              <strong className="text-champagne">Accounting records:</strong> 7
+              <strong className="text-foreground">Accounting records:</strong> 7
               years, as the Companies Act 71 of 2008 requires.
             </>,
             <>
-              <strong className="text-champagne">Hosting logs:</strong> as long as
+              <strong className="text-foreground">Hosting logs:</strong> as long as
               our providers retain them for security and operations, typically a
               short period measured in weeks.
             </>,
@@ -228,7 +228,7 @@ function PrivacyPage() {
 
         <LegalH>Cookies and browser storage</LegalH>
         <p>
-          This site sets <strong className="text-champagne">no cookies</strong>.
+          This site sets <strong className="text-foreground">no cookies</strong>.
         </p>
         <p>
           It uses one browser storage entry, which remembers your scroll position

@@ -1,24 +1,22 @@
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { TriangleAlert } from "lucide-react";
+import { ErrorPanel } from "@/components/error-panel";
 
-const FALLBACK_MESSAGE = "An unexpected error occurred. Try reloading the page.";
-
-function errorMessage(error: unknown): string {
-  if (error instanceof Error && error.message) return error.message;
-  if (typeof error === "string" && error) return error;
-  return FALLBACK_MESSAGE;
-}
-
+/**
+ * The page-level error screen. The real error goes to the console for us;
+ * the person sees a plain message and a way to try again.
+ */
 export function AppErrorComponent({ error }: ErrorComponentProps) {
+  if (typeof console !== "undefined") console.error(error);
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-background px-6 text-center text-foreground">
-      <span className="text-destructive" aria-hidden="true">
-        <TriangleAlert className="size-10" strokeWidth={2} />
-      </span>
-      <h1 className="font-display text-2xl text-champagne">Something went wrong</h1>
-      <p className="max-w-md text-sm break-words text-muted-foreground">
-        {errorMessage(error)}
-      </p>
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 text-foreground">
+      <div className="w-full max-w-md">
+        <ErrorPanel
+          title="Something went wrong"
+          detail="That page did not load. Try again, and if it keeps happening, email us."
+          onRetry={() => window.location.reload()}
+          retryLabel="Reload the page"
+        />
+      </div>
     </main>
   );
 }
