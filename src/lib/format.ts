@@ -62,7 +62,3 @@ export function sundayOf(d = new Date()): string {
   sun.setDate(sun.getDate() + 6);
   return format(sun, "yyyy-MM-dd");
 }
-
-export function uid(prefix = "id"): string {
-  return `${prefix}_${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-4)}`;
-}

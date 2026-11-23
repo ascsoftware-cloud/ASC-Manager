@@ -180,10 +180,37 @@ async function shoot(browser, persona, size, report) {
         overflowX: document.documentElement.scrollWidth > window.innerWidth + 1,
         sidebarScrolls: scroller ? scroller.scrollHeight > scroller.clientHeight + 1 : false,
         title: document.querySelector("h1")?.textContent ?? "",
+        smallTargets: [...document.querySelectorAll("button, a[href], input:not([type=hidden]), select")]
+          .filter((el) => {
+            const r = el.getBoundingClientRect();
+            const inText = el.closest("p, footer, .sr-only") || el.matches(".sr-only, [type=file]");
+            return r.width > 0 && r.height > 0 && r.height < 44 && !inText && !el.closest("[aria-hidden=true]");
+          })
+          .slice(0, 8)
+          .map((el) => `${el.tagName.toLowerCase()}:${(el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 24)}:${Math.round(el.getBoundingClientRect().height)}`),
       };
     });
     report.push({ persona, route, size: size.name, file, ...metrics, errors: [...errors] });
     console.log(`${persona} ${route} ${size.name}`);
+  }
+  if (size.name === "mobile" && persona !== "client-new") {
+    await page.goto(`${BASE}/`, { waitUntil: "networkidle" }).catch(() => {});
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.waitForTimeout(600);
+    const file = `${persona}-menu-mobile.png`;
+    await page.screenshot({ path: join(OUT, file) });
+    const menu = await page.evaluate(() => {
+      const nav = document.querySelector("[role=dialog] nav");
+      const body = nav?.closest("[role=dialog]");
+      const items = [...(body?.querySelectorAll("a[href], button") ?? [])].filter((el) => !el.closest(".sr-only") && el.getAttribute("aria-label") !== "Close");
+      return {
+        sheetOverflow: nav ? nav.scrollHeight > nav.clientHeight + 1 : null,
+        smallTargets: items.filter((el) => el.getBoundingClientRect().height < 44).length,
+        items: items.length,
+      };
+    });
+    report.push({ persona, route: "menu", size: "mobile", file, ...menu });
+    console.log(persona, "menu", JSON.stringify(menu));
   }
   await context.close();
 }

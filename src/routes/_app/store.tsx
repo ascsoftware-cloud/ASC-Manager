@@ -138,8 +138,8 @@ function StorePage() {
     return (
       <ShopShell>
         <EmptyShop
-          title="Store is off"
-          detail="This site does not sell anything. Ask ASC if you need a shop."
+          title="Your store is not switched on"
+          detail="Ask us if you would like to sell online."
         />
       </ShopShell>
     );
@@ -254,8 +254,8 @@ function StorePage() {
 
       {!siteId ? (
         <EmptyShop
-          title="No public site yet"
-          detail="ASC needs to attach a public site before this shop can have products."
+          title="Your website is not live yet"
+          detail="Once your website is live, you can add products here."
         />
       ) : catalog.length === 0 && !q ? (
         <EmptyShop

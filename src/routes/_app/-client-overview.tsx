@@ -520,7 +520,7 @@ function YourSites() {
                   href={site.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="type-small text-muted-foreground hover:text-foreground hover:underline"
+                  className="type-small inline-flex min-h-11 items-center text-muted-foreground hover:text-foreground hover:underline sm:min-h-0"
                 >
                   {site.url.replace(/^https?:\/\//, "")}
                 </a>

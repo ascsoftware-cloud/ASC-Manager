@@ -49,8 +49,8 @@ function BookingsPage() {
   if (!allowed) {
     return (
       <PageHeader
-        title="Bookings is off"
-        description="This site does not take bookings. Ask ASC if you need the booking system."
+        title="Bookings are not switched on"
+        description="Your site does not take bookings online yet. Ask us if you would like it to."
       />
     );
   }
@@ -169,7 +169,7 @@ function BookingsPage() {
         onOpenChange={setOpen}
         onCreate={(input) => {
           if (!clientId || !siteId) return;
-          void saveAction("Saved in Manager", async () => {
+          void saveAction("Saved", async () => {
             await addBooking({
               clientId,
               siteId,

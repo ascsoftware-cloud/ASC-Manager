@@ -76,7 +76,7 @@ function ClientPage() {
     <div className="flex flex-col gap-6">
       <Link
         to="/clients"
-        className="type-small -mb-2 inline-flex w-fit items-center gap-1 text-muted-foreground hover:text-foreground"
+        className="type-small -mb-2 inline-flex min-h-11 w-fit items-center gap-1 text-muted-foreground hover:text-foreground sm:min-h-0"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         All clients
@@ -411,7 +411,7 @@ function InviteDialog({
           <DialogHeader>
             <DialogTitle>Invite to {target?.name}</DialogTitle>
             <DialogDescription>
-              They get an email, set a password, and only see this tenant.
+              They get an email, set a password, and only see this client.
             </DialogDescription>
           </DialogHeader>
           <Field label="Name">

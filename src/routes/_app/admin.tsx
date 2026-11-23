@@ -255,7 +255,7 @@ function AdminPage() {
                     to="/clients/$clientId"
                     params={{ clientId: u.clientId }}
                     search={{ tab: "logins" }}
-                    className="font-medium text-primary hover:underline"
+                    className="inline-flex min-h-11 items-center font-medium text-primary hover:underline sm:min-h-0"
                   >
                     {clientName(u) || "Open client"}
                   </Link>

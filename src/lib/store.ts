@@ -599,7 +599,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
           ready: true,
           hydrating: false,
           session: { userId: session.user.id },
-          loadError: "Could not load your profile. Check the database grants.",
+          loadError: "We could not load your account.",
           cookiesAccepted,
         });
         return;
@@ -685,7 +685,7 @@ export const useAscStore = create<AscStore>()((set, get) => ({
       return {
         ok: false,
         error:
-          "Database is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.local.",
+          "Sign-in is not available right now. Please try again later.",
       };
     }
     const sb = requireSupabase();

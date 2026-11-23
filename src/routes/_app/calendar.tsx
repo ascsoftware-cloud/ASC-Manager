@@ -50,8 +50,8 @@ function CalendarPage() {
   if (!allowed) {
     return (
       <EmptyState framed
-        title="Calendar is off"
-        detail="This site does not run a public diary. Ask ASC if you need one."
+        title="Calendar is not switched on"
+        detail="Your site does not show dates and events yet. Ask us if you would like it to."
       />
     );
   }
@@ -170,7 +170,7 @@ function CalendarPage() {
               const day = String(fd.get("day") ?? "");
               const start = String(fd.get("start") ?? "09:00");
               const end = String(fd.get("end") ?? "10:00");
-              void saveAction("Saved in Manager", async () => {
+              void saveAction("Saved", async () => {
                 await addEvent({
                   clientId,
                   siteId,

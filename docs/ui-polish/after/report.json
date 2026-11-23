@@ -19,6 +19,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Dashboard",
+    "smallTargets": [
+      "a:Dashboard:36",
+      "a:Clients:36",
+      "a:Sites:36",
+      "a:Monitors:36",
+      "a:Incidents, 1:36",
+      "a:Renewals:36",
+      "a:Requests, 2:36",
+      "a:Visitors:36"
+    ],
     "errors": []
   },
   {
@@ -29,6 +39,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Clients",
+    "smallTargets": [
+      "a:Dashboard:36",
+      "a:Clients:36",
+      "a:Sites:36",
+      "a:Monitors:36",
+      "a:Incidents, 1:36",
+      "a:Renewals:36",
+      "a:Requests, 2:36",
+      "a:Visitors:36"
+    ],
     "errors": []
   },
   {
@@ -39,6 +59,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Sites",
+    "smallTargets": [
+      "a:Dashboard:36",
+      "a:Clients:36",
+      "a:Sites:36",
+      "a:Monitors:36",
+      "a:Incidents, 1:36",
+      "a:Renewals:36",
+      "a:Requests, 2:36",
+      "a:Visitors:36"
+    ],
     "errors": []
   },
   {
@@ -49,6 +79,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Monitors",
+    "smallTargets": [
+      "a:Dashboard:36",
+      "a:Clients:36",
+      "a:Sites:36",
+      "a:Monitors:36",
+      "a:Incidents, 1:36",
+      "a:Renewals:36",
+      "a:Requests, 2:36",
+      "a:Visitors:36"
+    ],
     "errors": []
   },
   {
@@ -59,6 +99,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Incidents",
+    "smallTargets": [
+      "a:Dashboard:36",
+      "a:Clients:36",
+      "a:Sites:36",
+      "a:Monitors:36",
+      "a:Incidents, 1:36",
+      "a:Renewals:36",
+      "a:Requests, 2:36",
+      "a:Visitors:36"
+    ],
     "errors": []
   },
   {
@@ -69,6 +119,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Renewals",
+    "smallTargets": [
+      "a:Dashboard:36",
+      "a:Clients:36",
+      "a:Sites:36",
+      "a:Monitors:36",
+      "a:Incidents, 1:36",
+      "a:Renewals:36",
+      "a:Requests, 2:36",
+      "a:Visitors:36"
+    ],
     "errors": []
   },
   {
@@ -79,6 +139,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Requests",
+    "smallTargets": [
+      "a:Dashboard:36",
+      "a:Clients:36",
+      "a:Sites:36",
+      "a:Monitors:36",
+      "a:Incidents, 1:36",
+      "a:Renewals:36",
+      "a:Requests, 2:36",
+      "a:Visitors:36"
+    ],
     "errors": []
   },
   {
@@ -89,6 +159,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Visitors",
+    "smallTargets": [
+      "a:Dashboard:36",
+      "a:Clients:36",
+      "a:Sites:36",
+      "a:Monitors:36",
+      "a:Incidents, 1:36",
+      "a:Renewals:36",
+      "a:Requests, 2:36",
+      "a:Visitors:36"
+    ],
     "errors": []
   },
   {
@@ -99,6 +179,76 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Admin",
+    "smallTargets": [
+      "a:Dashboard:36",
+      "a:Clients:36",
+      "a:Sites:36",
+      "a:Monitors:36",
+      "a:Incidents, 1:36",
+      "a:Renewals:36",
+      "a:Requests, 2:36",
+      "a:Visitors:36"
+    ],
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/clients/00000000-0000-4000-8000-0000000000b2",
+    "size": "desktop",
+    "file": "staff-clients-detail-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Kloof View Guest House",
+    "smallTargets": [
+      "a:Dashboard:36",
+      "a:Clients:36",
+      "a:Sites:36",
+      "a:Monitors:36",
+      "a:Incidents, 1:36",
+      "a:Renewals:36",
+      "a:Requests, 2:36",
+      "a:Visitors:36"
+    ],
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/clients/00000000-0000-4000-8000-0000000000b2?tab=modules",
+    "size": "desktop",
+    "file": "staff-clients-detail-tab-modules-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Kloof View Guest House",
+    "smallTargets": [
+      "a:Dashboard:36",
+      "a:Clients:36",
+      "a:Sites:36",
+      "a:Monitors:36",
+      "a:Incidents, 1:36",
+      "a:Renewals:36",
+      "a:Requests, 2:36",
+      "a:Visitors:36"
+    ],
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/clients/00000000-0000-4000-8000-0000000000b2?tab=logins",
+    "size": "desktop",
+    "file": "staff-clients-detail-tab-logins-desktop.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Kloof View Guest House",
+    "smallTargets": [
+      "a:Dashboard:36",
+      "a:Clients:36",
+      "a:Sites:36",
+      "a:Monitors:36",
+      "a:Incidents, 1:36",
+      "a:Renewals:36",
+      "a:Requests, 2:36",
+      "a:Visitors:36"
+    ],
     "errors": []
   },
   {
@@ -109,6 +259,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Privacy policy",
+    "smallTargets": [
+      "a:Dashboard:36",
+      "a:Clients:36",
+      "a:Sites:36",
+      "a:Monitors:36",
+      "a:Incidents, 1:36",
+      "a:Renewals:36",
+      "a:Requests, 2:36",
+      "a:Visitors:36"
+    ],
     "errors": []
   },
   {
@@ -119,6 +279,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Terms and conditions",
+    "smallTargets": [
+      "a:Dashboard:36",
+      "a:Clients:36",
+      "a:Sites:36",
+      "a:Monitors:36",
+      "a:Incidents, 1:36",
+      "a:Renewals:36",
+      "a:Requests, 2:36",
+      "a:Visitors:36"
+    ],
     "errors": []
   },
   {
@@ -129,6 +299,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Dashboard",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -139,6 +310,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Clients",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -149,6 +321,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Sites",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -159,6 +332,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Monitors",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -169,6 +343,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Incidents",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -179,6 +354,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Renewals",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -189,6 +365,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Requests",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -199,6 +376,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Visitors",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -209,6 +387,49 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Admin",
+    "smallTargets": [],
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/clients/00000000-0000-4000-8000-0000000000b2",
+    "size": "mobile",
+    "file": "staff-clients-detail-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Kloof View Guest House",
+    "smallTargets": [],
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/clients/00000000-0000-4000-8000-0000000000b2?tab=modules",
+    "size": "mobile",
+    "file": "staff-clients-detail-tab-modules-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Kloof View Guest House",
+    "smallTargets": [
+      "button:Store for Kloof View Gue:24",
+      "button:Calendar for Kloof View :24",
+      "button:Bookings for Kloof View :24",
+      "button:Site media for Kloof Vie:24",
+      "button:Gallery for Kloof View G:24",
+      "button:Services for Kloof View :24",
+      "button:Staff for Kloof View Gue:24",
+      "button:Testimonials for Kloof V:24"
+    ],
+    "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "/clients/00000000-0000-4000-8000-0000000000b2?tab=logins",
+    "size": "mobile",
+    "file": "staff-clients-detail-tab-logins-mobile.png",
+    "overflowX": false,
+    "sidebarScrolls": false,
+    "title": "Kloof View Guest House",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -219,6 +440,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Privacy policy",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -229,7 +451,19 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Terms and conditions",
+    "smallTargets": [
+      "a:hello@ascsoftware.co.za:17"
+    ],
     "errors": []
+  },
+  {
+    "persona": "staff",
+    "route": "menu",
+    "size": "mobile",
+    "file": "staff-menu-mobile.png",
+    "sheetOverflow": false,
+    "smallTargets": 1,
+    "items": 12
   },
   {
     "persona": "client",
@@ -239,6 +473,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Overview",
+    "smallTargets": [
+      "a:Overview:36",
+      "a:Website:36",
+      "a:Store:36",
+      "a:Calendar:36",
+      "a:Bookings:36",
+      "a:Enquiries, 1:36",
+      "a:Visitors:36",
+      "a:Business:36"
+    ],
     "errors": []
   },
   {
@@ -249,6 +493,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Website",
+    "smallTargets": [
+      "a:Overview:36",
+      "a:Website:36",
+      "a:Store:36",
+      "a:Calendar:36",
+      "a:Bookings:36",
+      "a:Enquiries, 1:36",
+      "a:Visitors:36",
+      "a:Business:36"
+    ],
     "errors": [
       "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1",
       "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1",
@@ -269,6 +523,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Products",
+    "smallTargets": [
+      "a:Overview:36",
+      "a:Website:36",
+      "a:Store:36",
+      "a:Calendar:36",
+      "a:Bookings:36",
+      "a:Enquiries, 1:36",
+      "a:Visitors:36",
+      "a:Business:36"
+    ],
     "errors": []
   },
   {
@@ -279,6 +543,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Calendar",
+    "smallTargets": [
+      "a:Overview:36",
+      "a:Website:36",
+      "a:Store:36",
+      "a:Calendar:36",
+      "a:Bookings:36",
+      "a:Enquiries, 1:36",
+      "a:Visitors:36",
+      "a:Business:36"
+    ],
     "errors": []
   },
   {
@@ -289,6 +563,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Bookings",
+    "smallTargets": [
+      "a:Overview:36",
+      "a:Website:36",
+      "a:Store:36",
+      "a:Calendar:36",
+      "a:Bookings:36",
+      "a:Enquiries, 1:36",
+      "a:Visitors:36",
+      "a:Business:36"
+    ],
     "errors": []
   },
   {
@@ -299,6 +583,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Enquiries",
+    "smallTargets": [
+      "a:Overview:36",
+      "a:Website:36",
+      "a:Store:36",
+      "a:Calendar:36",
+      "a:Bookings:36",
+      "a:Enquiries, 1:36",
+      "a:Visitors:36",
+      "a:Business:36"
+    ],
     "errors": []
   },
   {
@@ -309,6 +603,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Visitors",
+    "smallTargets": [
+      "a:Overview:36",
+      "a:Website:36",
+      "a:Store:36",
+      "a:Calendar:36",
+      "a:Bookings:36",
+      "a:Enquiries, 1:36",
+      "a:Visitors:36",
+      "a:Business:36"
+    ],
     "errors": []
   },
   {
@@ -319,6 +623,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Business",
+    "smallTargets": [
+      "a:Overview:36",
+      "a:Website:36",
+      "a:Store:36",
+      "a:Calendar:36",
+      "a:Bookings:36",
+      "a:Enquiries, 1:36",
+      "a:Visitors:36",
+      "a:Business:36"
+    ],
     "errors": []
   },
   {
@@ -329,6 +643,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Billing",
+    "smallTargets": [
+      "a:Overview:36",
+      "a:Website:36",
+      "a:Store:36",
+      "a:Calendar:36",
+      "a:Bookings:36",
+      "a:Enquiries, 1:36",
+      "a:Visitors:36",
+      "a:Business:36"
+    ],
     "errors": []
   },
   {
@@ -339,6 +663,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Team",
+    "smallTargets": [
+      "a:Overview:36",
+      "a:Website:36",
+      "a:Store:36",
+      "a:Calendar:36",
+      "a:Bookings:36",
+      "a:Enquiries, 1:36",
+      "a:Visitors:36",
+      "a:Business:36"
+    ],
     "errors": []
   },
   {
@@ -348,7 +682,17 @@
     "file": "client-requests-desktop.png",
     "overflowX": false,
     "sidebarScrolls": false,
-    "title": "Requests",
+    "title": "Ask ASC",
+    "smallTargets": [
+      "a:Overview:36",
+      "a:Website:36",
+      "a:Store:36",
+      "a:Calendar:36",
+      "a:Bookings:36",
+      "a:Enquiries, 1:36",
+      "a:Visitors:36",
+      "a:Business:36"
+    ],
     "errors": []
   },
   {
@@ -359,6 +703,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Renewals",
+    "smallTargets": [
+      "a:Overview:36",
+      "a:Website:36",
+      "a:Store:36",
+      "a:Calendar:36",
+      "a:Bookings:36",
+      "a:Enquiries, 1:36",
+      "a:Visitors:36",
+      "a:Business:36"
+    ],
     "errors": []
   },
   {
@@ -369,6 +723,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Photos",
+    "smallTargets": [
+      "a:Overview:36",
+      "a:Website:36",
+      "a:Store:36",
+      "a:Calendar:36",
+      "a:Bookings:36",
+      "a:Enquiries, 1:36",
+      "a:Visitors:36",
+      "a:Business:36"
+    ],
     "errors": []
   },
   {
@@ -379,6 +743,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Overview",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -389,6 +754,11 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Website",
+    "smallTargets": [
+      "button::24",
+      "button::24",
+      "button::24"
+    ],
     "errors": [
       "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1",
       "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. c1",
@@ -409,6 +779,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Products",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -419,6 +790,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Calendar",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -429,6 +801,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Bookings",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -439,6 +812,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Enquiries",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -449,6 +823,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Visitors",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -459,6 +834,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Business",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -469,6 +845,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Billing",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -479,6 +856,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Team",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -488,7 +866,8 @@
     "file": "client-requests-mobile.png",
     "overflowX": false,
     "sidebarScrolls": false,
-    "title": "Requests",
+    "title": "Ask ASC",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -499,6 +878,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Renewals",
+    "smallTargets": [],
     "errors": []
   },
   {
@@ -509,7 +889,17 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Photos",
+    "smallTargets": [],
     "errors": []
+  },
+  {
+    "persona": "client",
+    "route": "menu",
+    "size": "mobile",
+    "file": "client-menu-mobile.png",
+    "sheetOverflow": false,
+    "smallTargets": 1,
+    "items": 15
   },
   {
     "persona": "client-new",
@@ -519,6 +909,16 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Overview",
+    "smallTargets": [
+      "a:Overview:36",
+      "a:Website:36",
+      "a:Enquiries:36",
+      "a:Visitors:36",
+      "a:Business:36",
+      "a:Billing:36",
+      "a:Team:36",
+      "a:Ask ASC:36"
+    ],
     "errors": []
   },
   {
@@ -529,6 +929,7 @@
     "overflowX": false,
     "sidebarScrolls": false,
     "title": "Overview",
+    "smallTargets": [],
     "errors": []
   }
 ]

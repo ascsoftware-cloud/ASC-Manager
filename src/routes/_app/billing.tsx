@@ -36,7 +36,7 @@ function BillingPage() {
       <PageHeader
         eyebrow="Billing"
         title="Billing"
-        description="What you pay ASC — hosting, domains, and open invoices."
+        description="Your invoices and what is coming up for renewal."
       />
       <Surface>
         <div className="border-b border-border px-5 py-3">

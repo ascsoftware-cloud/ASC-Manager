@@ -29,7 +29,7 @@ function MediaPage() {
       <PageHeader
         eyebrow="Photos"
         title="Photos"
-        description="Pictures you can drop onto pages. JPG, PNG or WEBP, up to 4 MB."
+        description="Photos you can use on your website. JPG, PNG or WEBP, up to 4 MB."
         action={
           clientId ? (
             <label className="inline-flex h-10 cursor-pointer items-center rounded-full bg-primary px-4 text-sm text-primary-foreground">

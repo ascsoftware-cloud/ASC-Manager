@@ -44,7 +44,7 @@ function EnquiriesPage() {
       <PageHeader
         eyebrow="Enquiries"
         title="Enquiries"
-        description="People who wrote from a public site. Each note says which website it came from."
+        description="Messages people sent through your website."
       />
       {user?.role === "operator" ? (
         <Field label="Client">

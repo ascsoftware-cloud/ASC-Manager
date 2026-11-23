@@ -18,7 +18,7 @@ function AuthCallbackPage() {
     async function run() {
       const sb = getSupabase();
       if (!sb) {
-        setError("Database is not configured.");
+        setError("We cannot sign you in right now. Please try again later.");
         return;
       }
 
@@ -27,7 +27,7 @@ function AuthCallbackPage() {
       const hashError = hash.get("error_description") || hash.get("error");
       if (hashError) {
         if (!cancelled) {
-          setError(decodeURIComponent(hashError).replace(/\+/g, " "));
+          setError("That link is invalid or has expired.");
         }
         return;
       }

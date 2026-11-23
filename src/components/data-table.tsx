@@ -193,7 +193,7 @@ export function DataTable<T>({
                           type="button"
                           onClick={() => toggleSort(c.id)}
                           className={cn(
-                            "-mx-1 inline-flex min-h-8 items-center gap-1 rounded-sm px-1 hover:text-foreground focus-visible:outline-2",
+                            "-mx-1 inline-flex min-h-11 items-center gap-1 rounded-sm px-1 hover:text-foreground focus-visible:outline-2 sm:min-h-8",
                             sorted && "text-foreground",
                           )}
                         >

@@ -109,7 +109,7 @@ function ClientsPage() {
                 to="/clients/$clientId"
                 params={{ clientId: c.id }}
                 search={{ tab: "overview" }}
-                className="font-medium text-foreground hover:text-primary hover:underline"
+                className="inline-flex min-h-11 items-center font-medium text-foreground hover:text-primary hover:underline sm:min-h-0"
               >
                 {c.name}
               </Link>
@@ -233,7 +233,7 @@ function NewClientDialog({
           <DialogHeader>
             <DialogTitle>New client</DialogTitle>
             <DialogDescription>
-              Creates the tenant and emails an invite. They set their own
+              Creates the client account and emails them an invite. They set their own
               password. They will not see any other client.
             </DialogDescription>
           </DialogHeader>

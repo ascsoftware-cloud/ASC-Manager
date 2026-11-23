@@ -20,7 +20,7 @@ function TeamPage() {
       <PageHeader
         eyebrow="Account"
         title="Team"
-        description="Add the people who work on your sites. Choose which pages and which sites each person can use, and send a password reset any time."
+        description="Add the people who work on your website. Choose what each person can use, and send a password reset any time."
       />
       {clientId ? <TeamManager clientId={clientId} /> : null}
     </div>

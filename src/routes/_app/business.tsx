@@ -27,8 +27,8 @@ function BusinessPage() {
   if (!client) {
     return (
       <PageHeader
-        title="No business yet"
-        description="ASC will add your company here when the tenant exists."
+        title="Your business is not set up yet"
+        description="We are still setting up your account. Your details will appear here soon."
       />
     );
   }
@@ -38,7 +38,7 @@ function BusinessPage() {
       <PageHeader
         eyebrow="Business"
         title="Business"
-        description="Phone, hours, address — stored for your public site once it is wired."
+        description="Your phone number, opening hours and address. They show on your website."
       />
       {user?.role === "operator" ? (
         <label className="max-w-md">
@@ -68,7 +68,7 @@ function BusinessForm({ clientId }: { clientId: string }) {
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    void saveAction("Saved in Manager — not live until the public site is wired.", () =>
+    void saveAction("Saved", () =>
       updateClient(clientId, { phone, email, whatsapp, address, hours, contactName }),
     );
   }

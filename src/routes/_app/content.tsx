@@ -118,10 +118,10 @@ function WebsitePage() {
   if (!clientId || !siteId) {
     return (
       <EmptyState framed
-        title="No site yet"
+        title="Your website is not live yet"
         detail={
           user?.role === "client"
-            ? "ASC still needs to attach a public site to this account. SEO, FAQ, gallery and the rest show here after that."
+            ? "We are still setting it up. Once it is live you can edit it here."
             : "Add a public site on Sites, then this client can edit it from Website."
         }
       />
@@ -134,7 +134,7 @@ function WebsitePage() {
         <PageHeader
           eyebrow="Website"
           title="Website"
-          description="Welcome, hours, and every extra ASC switched on for this public site — SEO, FAQ, testimonials, gallery, services, staff."
+          description="Change what visitors see: your welcome line, opening hours and the extra sections on your site."
         />
         {user?.role === "operator" ? (
           <NativeSelect className="max-w-xs" value={clientId} onChange={(e) => setPicked(e.target.value)}>
